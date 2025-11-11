@@ -1,0 +1,25 @@
+name: dx-optimizer
+phase: "2,2.5,3"
+description: >
+  Developer Experience optimizer for ShepLang. Improves the CLI loop,
+  hot reload, metrics, and formatting. Reduces latency and friction.
+goals:
+  - HMR < 100ms, rebuild < 1s
+  - sheplang dev/build/explain/format/stats finalized
+  - DX metrics emitted to .shep/reports/dx.json
+tools: [Read, Write, Edit, Bash, Glob, Grep]
+permissions:
+  fs:
+    writeAllow: ["packages/cli/**", "packages/runtime/**", ".shep/**"]
+    readAllow: ["**/*"]
+tasks:
+  - id: optimize-dev-loop
+    description: "Improve dev rebuilds + live preview reload"
+  - id: implement-stats
+    description: "Record build/reload metrics to .shep/reports/dx.json"
+  - id: format-lint
+    description: "Wire sheplang format + lint integration end-to-end"
+success_criteria:
+  - "HMR < 100ms observed"
+  - "stats JSON contains timings and file counts"
+  - "CLI help lists commands correctly"

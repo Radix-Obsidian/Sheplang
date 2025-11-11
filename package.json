@@ -1,0 +1,10 @@
+{
+  "name": "sheplang-root",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify": "powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1",
+    "build": "pnpm -w -r build",
+    "test": "pnpm -w -r test --run"
+  }
+}

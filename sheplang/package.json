@@ -6,6 +6,17 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "shep": "node ./packages/cli/dist/index.js"
+    "shep": "node ./packages/cli/dist/index.js",
+    "setup": "node ../scripts/setup-pnpm.mjs",
+    "check-env": "node ../scripts/check-env.mjs",
+    "verify-lockfile": "node ../scripts/verify-lockfile.mjs",
+    "fix-install": "node ../scripts/install-recovery.mjs",
+    "fix-pnpm-path": "node ../scripts/fix-pnpm-path.mjs",
+    "clean": "rm -rf .shep/out node_modules/.cache",
+    "fresh": "pnpm clean && pnpm -r exec -- rm -rf node_modules && pnpm install",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

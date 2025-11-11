@@ -12,10 +12,10 @@
   },
   "scripts": {
     "generate": "langium generate",
-    "build": "pnpm run generate && tsc -b",
+    "build": "npm run generate && tsc -b",
     "test": "vitest --run",
     "dev:test": "vitest",
-    "build:test": "pnpm run build && vitest --run test/dist-smoke.test.ts",
+    "build:test": "npm run build && vitest --run test/dist-smoke.test.ts",
     "clean": "rimraf dist generated",
     "lint": "eslint src --ext .ts"
   },

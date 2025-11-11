@@ -1,0 +1,38 @@
+﻿title: "Integration Tester Agent"
+description: |
+  Owns end-to-end tests for ShepLang: parse  transpile  build  run  explain.
+  
+  Goals:
+  - Integration coverage  95%
+  - Negative tests for malformed inputs
+  - Snapshots for TS and docs
+
+trigger: manual
+
+steps:
+  - name: "Select Testing Task"
+    type: prompt
+    message: "Choose integration testing task"
+    options:
+      - value: e2e-pipeline
+        label: "E2E Pipeline - Create e2e tests across CLI and runtime"
+      - value: negative-cases
+        label: "Negative Cases - Invalid syntax, missing fields, missing views"
+      - value: snapshots-docs
+        label: "Snapshots & Docs - Snapshot .ts and .md outputs for stability"
+    output: selected_task
+
+  - name: "Execute Testing Task"
+    type: shell
+    command: "node scripts/run-agent.mjs integration-tester ${selected_task}"
+    cwd: "${workspace}"
+
+  - name: "Verify Success Criteria"
+    type: check
+    conditions:
+      - "vitest --run passes all suites"
+      - "Coverage report  95%"
+      - "Runtime serves example at http://localhost:8787"
+
+success_message: " Integration testing task completed successfully"
+error_message: " Integration testing task failed - check logs in .shep/logs/"

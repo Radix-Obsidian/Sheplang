@@ -1,0 +1,54 @@
+name: ShepLang E2E Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    
+    - name: Install dependencies
+      run: pnpm install
+    
+    - name: Build packages
+      run: pnpm -r build
+    
+    - name: Run tests
+      run: pnpm test
+    
+    - name: Run E2E tests
+      run: node sheplang/packages/cli/test/e2e/run-e2e.mjs
+    
+    - name: Run snapshot tests
+      run: node sheplang/packages/cli/test/snapshots/snapshot-test.mjs
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.node-version }}
+        path: |
+          .shep/out
+          .shep/logs
+          .shep/diffs

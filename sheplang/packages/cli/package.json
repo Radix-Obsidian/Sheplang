@@ -2,23 +2,33 @@
   "name": "@sheplang/cli",
   "version": "0.0.1",
   "type": "module",
-  "bin": { "shep": "dist/index.js" },
+  "bin": { "sheplang": "dist/index.js" },
   "scripts": {
-    "dev": "ts-node src/index.ts",
     "build": "tsc -b",
+    "dev": "node --enable-source-maps dist/commands/dev.js",
     "test": "vitest --run",
-    "lint": "eslint src --ext .ts"
+    "test:e2e": "node test/e2e/run-e2e.mjs",
+    "test:snapshots": "node test/snapshots/snapshot-test.mjs",
+    "test:all": "node test/e2e/e2e-runner.js",
+    "test:ci": "node test/e2e/e2e-runner.js --ci",
+    "format": "prettier -w \"**/*.{ts,js,md,json}\"",
+    "lint": "eslint .",
+    "stats": "node --enable-source-maps dist/commands/stats.js"
   },
   "dependencies": {
     "@sheplang/language": "workspace:*",
-    "@sheplang/compiler": "workspace:*",
-    "chalk": "^5.3.0",
-    "yargs": "^17.7.2"
+    "@sheplang/transpiler": "workspace:*",
+    "@sheplang/runtime": "workspace:*",
+    "chokidar": "^3.6.0",
+    "kleur": "^4.1.5",
+    "execa": "^8.0.1",
+    "source-map-support": "^0.5.21"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
-    "ts-node": "^10.9.2",
-    "@types/node": "^20.10.0",
-    "@types/yargs": "^17.0.32"
+    "vitest": "^1.6.1",
+    "eslint": "^9.0.0",
+    "prettier": "^3.1.0",
+    "@types/node": "^20.10.0"
   }
 }

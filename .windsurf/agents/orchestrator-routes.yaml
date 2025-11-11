@@ -1,0 +1,31 @@
+routes:
+  # Generic task router if no explicit phase is given
+  - match:
+      task: "enforce TS-only"
+    send:
+      agent: build-engineer
+      task: enforce-ts-only
+  - match:
+      task: "dev loop"
+    send:
+      agent: dx-optimizer
+      task: optimize-dev-loop
+  - match:
+      task: "finalize transpiler"
+    send:
+      agent: transpiler-engineer
+      task: finalize-transpiler
+  - match:
+      task: "implement CLI"
+    send:
+      agent: cli-developer
+      task: implement-commands
+  - match:
+      task: "e2e tests"
+    send:
+      agent: integration-tester
+      task: e2e-pipeline
+defaults:
+  on_unknown:
+    agent: orchestrator
+    task: "help"

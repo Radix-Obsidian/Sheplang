@@ -1,0 +1,75 @@
+commands:
+  - name: "/agents run"
+    description: "Run a named agent on a task"
+    usage: "/agents run <agent-name> on <task> [phase=<id>]"
+    schema:
+      args:
+        - name: agent-name
+          required: true
+        - name: on
+          required: true
+          literal: "on"
+        - name: task
+          required: true
+        - name: phase
+          required: false
+    action:
+      kind: script
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+        AGENT="$1"
+        SHIFTED="${*:3}"    # everything after "on"
+        TASK="$SHIFTED"
+        PHASE=""
+        if [[ "$*" == *"phase="* ]]; then
+          PHASE="$(echo "$*" | sed -E 's/.*phase=([0-9.]+).*/\1/')"
+        fi
+
+        echo "[orchestrator] requested agent='$AGENT' task='$TASK' phase='${PHASE:-n/a}'"
+        if [[ "$AGENT" == "orchestrator" || -n "${PHASE}" ]]; then
+          node scripts/orchestrate.mjs "$AGENT" "$TASK" "$PHASE"
+        else
+          node scripts/run-agent.mjs "$AGENT" "$TASK"
+        fi
+  - name: "/agents workflow"
+    description: "Trigger a Windsurf workflow"
+    usage: "/agents workflow <workflow-name>"
+    schema:
+      args:
+        - name: workflow-name
+          required: true
+    action:
+      kind: workflow
+      workflow: ".windsurf/workflows/${workflow-name}.yaml"
+  
+  - name: "/agents help"
+    description: "List available agents and common tasks"
+    usage: "/agents help"
+    action:
+      kind: static
+      output: |
+        === ShepLang Agent System ===
+        
+        Agents:
+          - transpiler-engineer : finalize-transpiler | snapshots | verify-determinism
+          - dx-optimizer        : optimize-dev-loop | implement-stats | format-lint
+          - build-engineer      : enforce-ts-only | workspace-build | perf-improve
+          - cli-developer       : implement-commands | cli-ux | ci-wire
+          - integration-tester  : e2e-pipeline | negative-cases | snapshots-docs
+          - orchestrator        : coordinate phase=2.5 | coordinate phase=3
+        
+        Workflows (use /agents workflow <name>):
+          - transpiler-engineer      : Execute transpiler tasks with prompts
+          - dx-optimizer             : Execute DX optimization tasks
+          - build-engineer           : Execute build engineering tasks
+          - cli-developer            : Execute CLI development tasks
+          - integration-tester       : Execute integration testing tasks
+          - phase-2.5-orchestration  : Run complete Phase 2.5 (5 agents)
+          - phase-3-orchestration    : Run complete Phase 3 (3 agents)
+          - quick-test               : Test agent system health
+        
+        Usage:
+          /agents run <agent> on <task>        - Direct execution
+          /agents workflow <workflow-name>     - Interactive workflow
+          /agents help                         - Show this help

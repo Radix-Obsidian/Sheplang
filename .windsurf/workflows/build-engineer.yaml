@@ -1,0 +1,38 @@
+title: "Build Engineer Agent"
+description: |
+  Ensures TypeScript-only build, correct workspace references, and fast incremental builds.
+  
+  Goals:
+  - TypeScript-only source (no .js)
+  - tsc -b works across all workspaces
+  - Build < 30s
+
+trigger: manual
+
+steps:
+  - name: "Select Build Task"
+    type: prompt
+    message: "Choose build engineering task"
+    options:
+      - value: enforce-ts-only
+        label: "Enforce TS-Only - Remove stray .js sources; ensure ESM outputs in dist"
+      - value: workspace-build
+        label: "Workspace Build - Wire tsc project references and pnpm workspaces"
+      - value: perf-improve
+        label: "Performance Improve - Speed up builds via incremental + caching"
+    output: selected_task
+
+  - name: "Execute Build Task"
+    type: shell
+    command: "node scripts/run-agent.mjs build-engineer ${selected_task}"
+    cwd: "${workspace}"
+
+  - name: "Verify Success Criteria"
+    type: check
+    conditions:
+      - "pnpm -w -r build completes < 30s"
+      - "No .js sources in repository (excluding dist/)"
+      - "All packages emit ESM with proper exports"
+
+success_message: "✓ Build engineering task completed successfully"
+error_message: "✗ Build engineering task failed - check logs in .shep/logs/"

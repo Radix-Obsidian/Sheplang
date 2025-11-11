@@ -1,0 +1,32 @@
+app TestTodoApp
+
+data TodoItem:
+  fields:
+    title: text
+    completed: yes/no
+    priority: text
+  rules:
+    - "user can update own items"
+
+view TodoList:
+  list TodoItem
+  button "Add Task" -> CreateTodo
+  button "Clear Completed" -> ClearCompleted
+
+view TaskForm:
+  button "Save" -> SaveTodo
+  button "Cancel" -> ShowList
+
+action CreateTodo():
+  show TaskForm
+
+action SaveTodo(title, priority):
+  add TodoItem with title, priority, completed=false
+  show TodoList
+
+action ClearCompleted():
+  # This would delete completed items
+  show TodoList
+
+action ShowList():
+  show TodoList

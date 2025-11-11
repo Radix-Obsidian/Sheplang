@@ -1,0 +1,25 @@
+name: transpiler-engineer
+phase: "1,2.5"
+description: >
+  Expert in AST → TypeScript code generation for ShepLang.
+  Owns deterministic codegen, snapshot tests, and safety around file emission.
+goals:
+  - Map AppModel nodes to pure TS modules
+  - Produce deterministic output in .shep/out/<App>/entry.ts
+  - Maintain snapshot stability across versions
+tools: [Read, Write, Edit, Bash, Glob]
+permissions:
+  fs:
+    writeAllow: [".shep/out/**", "packages/transpiler/**", "packages/language/**", "packages/cli/**"]
+    readAllow: ["**/*.shep", "packages/**", "examples/**"]
+tasks:
+  - id: finalize-transpiler
+    description: "Complete AppModel → TS templates and edge cases"
+  - id: snapshots
+    description: "Create & update snapshot tests for generated TS"
+  - id: verify-determinism
+    description: "Run two builds and assert identical outputs (hash/snap)"
+success_criteria:
+  - "Transpile todo.shep → .shep/out/App/entry.ts"
+  - "Snapshot tests pass deterministically"
+  - "No writes outside allowed paths"

@@ -1,0 +1,24 @@
+name: integration-tester
+phase: "2.5,3"
+description: >
+  Owns end-to-end tests for ShepLang: parse → transpile → build → run → explain.
+goals:
+  - Integration coverage ≥ 95%
+  - Negative tests for malformed inputs
+  - Snapshots for TS and docs
+tools: [Read, Write, Edit, Bash, Glob]
+permissions:
+  fs:
+    writeAllow: ["packages/**", "tests/**", ".shep/**"]
+    readAllow: ["**/*"]
+tasks:
+  - id: e2e-pipeline
+    description: "Create e2e tests across CLI and runtime"
+  - id: negative-cases
+    description: "Invalid syntax, missing fields, missing views"
+  - id: snapshots-docs
+    description: "Snapshot .ts and .md outputs for stability"
+success_criteria:
+  - "vitest --run passes all suites"
+  - "Coverage report ≥ 95%"
+  - "Runtime serves example at http://localhost:8787"

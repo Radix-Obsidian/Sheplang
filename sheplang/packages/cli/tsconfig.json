@@ -2,11 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "moduleResolution": "Bundler"
   },
   "include": ["src"],
   "references": [
     { "path": "../language" },
-    { "path": "../compiler" }
+    { "path": "../transpiler" },
+    { "path": "../runtime" }
   ]
 }

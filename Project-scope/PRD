@@ -1,371 +1,231 @@
-# ShepLang (formerly VibeCoder) — LEGO Plan with Working Builds at Every Step
+Perfect ✅ — below are **fully detailed Markdown checklists** ready to drop into your
+`/Project-scope/` directory inside **Windsurf**.
 
-## Summary
-
-You’re right. No stubs. No “we’ll replace later.” From now on, **each phase ends with a fully working, tested, and shippable slice** that *links cleanly* to the next—LEGO-style. Below is the **locked plan**, repo, commands, acceptance tests, and file stubs you can paste into Windsurf to build **ShepLang** (new name) end-to-end.
-
-**Why “ShepLang”?** It fits Golden Sheep AI, reads friendly, and signals “guidance” for founders. Extension: **`.shep`**.
-
-## Phase / Product
-
-**Phase 0–3 (LEGO build):** ShepLang Alpha v0.1 — Parser → AST → TS codegen → Runner → Explain.
+They’re written to be **followed by ADEs (like Windsurf or Cursor)** — zero placeholders,
+each item is actionable and test-verifiable.
+Everything follows your **Alpha PRD** and **DX + TypeScript-only** principles.
 
 ---
 
-## The One True Stack (unchanged, decisive)
+# 🧩 `/Project-scope/Phase-2.5-Checklist.md`
 
-* **DSL/Parser:** **Langium** (TypeScript-native)
-* **Transpiler/Codegen:** **TypeScript Compiler API** (no ts-morph)
-* **Runner (dev):** **ts-node**
-* **CLI (prod):** **esbuild** single-file bundle
-* **Target:** **TypeScript (ES2024)** → React-friendly views + Node actions
-* **Tooling:** **pnpm**, **ESLint + Prettier**, **Vitest**, **strict tsconfig**
-* **Explain:** Markdown + inline comments
+````markdown
+# Phase 2.5 — Transpiler & DX Completion Checklist
+**Goal:** Finalize Phase 1 + Phase 2 deliverables into a unified TypeScript-only ShepLang system.
 
 ---
 
-## Repo Blueprint (copy/paste into Windsurf)
-
-```
-/sheplang
-  ├─ package.json
-  ├─ pnpm-workspace.yaml
-  ├─ tsconfig.base.json
-  ├─ .eslintrc.cjs
-  ├─ .prettierrc
-  ├─ README.md
-  ├─ /examples
-  │   └─ todo.shep
-  ├─ /out                 # generated TS + explain (gitignored)
-  ├─ /packages
-  │   ├─ /language        # Langium grammar → parser/AST/services
-  │   │   ├─ package.json
-  │   │   ├─ langiumconfig.json
-  │   │   └─ src
-  │   │      ├─ shep.langium        # grammar (truth)
-  │   │      ├─ preprocessor.ts     # indent → braces (keeps natural syntax)
-  │   │      ├─ index.ts            # parse & return typed AST
-  │   │      └─ mapper.ts           # AST → AppModel (no placeholders)
-  │   ├─ /compiler        # Transpiler + Explain + FS
-  │   │   ├─ package.json
-  │   │   └─ src
-  │   │      ├─ types.ts
-  │   │      ├─ templates.ts
-  │   │      ├─ transpiler.ts
-  │   │      ├─ explain.ts
-  │   │      └─ fsio.ts
-  │   └─ /cli             # shep CLI
-  │       ├─ package.json
-  │       └─ src
-  │          ├─ index.ts
-  │          └─ commands.ts
-  └─ /tooling
-      └─ build.mjs
-```
+## ✅ Overview
+- [x] Phase 0 (Parser) confirmed stable (`v0.0.1-alpha-p0`)
+- [x] Phase 1 partially implemented (`AppModel` + basic transpiler)
+- [x] Phase 2 runtime and CLI partially functional
+- [ ] This phase completes both and unifies them for full DX workflow
 
 ---
 
-## LEGO Phase Plan (each phase ships a working artifact)
-
-### Phase 0 — **Parser Complete** (Grammar + Preprocessor + AST + Mapper)
-
-**Outcome:** `shep parse examples/todo.shep` prints **validated AST JSON** + **friendly errors**.
-**No stubs.** Langium is wired; mapper produces **AppModel** used by later phases.
-
-**Scope**
-
-* `shep.langium` grammar for `app`, `data`, `fields:`, `rules:`, `view`, `list`, `button`, `action`, `add`, `show`.
-* `preprocessor.ts` turns indents into `{}` so authors keep natural `.shep` style.
-* `index.ts` exposes `parseShep(source: string)` → **Langium AST** (typed) with locations.
-* `mapper.ts` converts Langium AST → **AppModel** (compiler/types.ts).
-
-**Acceptance Tests (must pass)**
-
-* `pnpm shep parse examples/todo.shep` exits 0 and prints `AppModel` JSON.
-* Invalid token shows: `Line X, Col Y — expected 'fields:' after 'data Todo:'` (natural language).
-* Round-trip: preprocessor preserves line numbers in errors.
-
-**Commands**
-
-```
-pnpm i
-pnpm -r build     # builds language package
-pnpm -r test      # vitest parser tests
-pnpm -r --filter ./packages/cli dev parse ./examples/todo.shep
-```
+## 🧱 Core Objectives
+- [ ] Enforce **TypeScript-only** build (no `.js` sources or temp files)
+- [ ] Achieve **full CLI + runtime integration**
+- [ ] Verify **AppModel → Transpile → Preview** pipeline end-to-end
+- [ ] Maintain **DX speed targets** (rebuild <1s, HMR <100ms)
+- [ ] Achieve **90%+ test coverage**
 
 ---
 
-### Phase 1 — **Transpiler Complete** (AST → Valid TS)
+## ⚙️ Tasks
 
-**Outcome:** `shep build examples/todo.shep` writes **compiling TypeScript** to `/out/MyTodos/**` + **explain.md**.
+### 1. Transpiler Finalization (`@sheplang/transpiler`)
+- [ ] Ensure deterministic TS output from `AppModel`
+- [ ] Confirm file output: `.shep/out/<AppName>/entry.ts`
+- [ ] Add snapshot tests comparing output to expected TS
+- [ ] Handle edge cases (empty fields, unknown ops, malformed views)
+- [ ] Pass all transpiler-specific Vitest suites
 
-**Scope**
+### 2. CLI Commands (`@sheplang/cli`)
+- [ ] `parse` — parses `.shep` and prints diagnostics cleanly
+- [ ] `build` — transpiles `.shep` to `.shep/out` folder
+- [ ] `dev` — watches source, rebuilds, and triggers runtime reload
+- [ ] `explain` — generates `.shep/docs/<App>.md`
+- [ ] `format` — runs Prettier on workspace
+- [ ] `stats` — measures build time and writes `.shep/reports/dx.json`
 
-* `transpiler.ts` walks **AppModel** → emits:
+### 3. Runtime Verification (`@sheplang/runtime`)
+- [ ] Express server starts at `localhost:8787`
+- [ ] Hot reload via WebSocket on file change
+- [ ] Serves first view title + list successfully
+- [ ] Stops cleanly on exit (no zombie processes)
+- [ ] No dependency conflicts with ShepKit reserved port (8788)
 
-  * `/models/*.ts` (TS types from `data`)
-  * `/actions/*.ts` (async functions from `action`)
-  * `/views/*.ts` (React-friendly functions from `view`)
-  * `/index.ts` (bootstrap)
-* `templates.ts` includes inline comments explaining mappings.
-* `explain.ts` renders **Explain Report** (Markdown) tied to AST nodes.
+### 4. Integration Path
+- [ ] CLI commands import parser + transpiler + runtime correctly
+- [ ] Verify TypeScript compiler resolution (`pnpm build --recursive`)
+- [ ] No ESM import errors or circular dependencies
+- [ ] Run end-to-end test for `examples/todo.shep` pipeline:
+  - Parse → Transpile → Serve → Reload
 
-**Acceptance Tests**
+### 5. Documentation Generation
+- [ ] Ensure `sheplang explain` outputs markdown summary:
+  - App name
+  - Data models and fields
+  - Views and lists
+  - Actions and parameters
+- [ ] Verify generated file `.shep/docs/<App>.md` opens without error
 
-* `tsc` on generated files = **clean**.
-* `explain.md` lists each `data/view/action` with a human explanation.
-* Deterministic build: Same input → identical output (snapshot test).
-
-**Commands**
-
-```
-pnpm shep build ./examples/todo.shep
-pnpm -r test
-```
-
----
-
-### Phase 2 — **Runner Complete** (Execute/Preview)
-
-**Outcome:** `shep run examples/todo.shep` builds, then **executes** generated Node entry (console preview) and prints UI + action logs.
-
-**Scope**
-
-* `cli/index.ts` adds `run`:
-
-  1. parse → map → transpile → write `/out`
-  2. `ts-node` runs `/out/<App>/index.ts`
-* Minimal “preview” = console logs (Alpha rule: **no web server** yet).
-* Proper exit codes and error messages.
-
-**Acceptance Tests**
-
-* `shep run` logs:
-
-  * “Starting MyTodos…”
-  * “List Todo []”
-  * “Button Add Task triggers CreateTodo”
-  * Action invocation sample (simulated)
+### 6. Testing and Validation
+- [ ] All unit and integration tests pass via `pnpm test`
+- [ ] Test coverage ≥ 90%
+- [ ] Example `.shep` apps build without manual intervention
+- [ ] `pnpm build` completes cleanly for all packages
+- [ ] CLI help screen lists all commands correctly
 
 ---
 
-### Phase 3 — **CLI Bundle & IDE Integration Ready**
-
-**Outcome:** Single-file CLI (`shep`) bundled with esbuild; runs on any Node 20+ environment. Windsurf task configured.
-
-**Scope**
-
-* `tooling/build.mjs` bundles CLI with `#!/usr/bin/env node`.
-* Add `bin` in `packages/cli/package.json`.
-* Windsurf task: “Shep: Build & Run Current File”.
-
-**Acceptance Tests**
-
-* `pnpm -r build` produces `packages/cli/dist/cli.js`.
-* `node packages/cli/dist/cli.js build ./examples/todo.shep` succeeds.
-* Lint & format pass (ESLint/Prettier).
+## 🧪 Verification Script
+```bash
+pnpm -w -r build
+pnpm --filter @sheplang/cli exec sheplang dev examples/todo.shep
+pnpm --filter @sheplang/cli exec sheplang build examples/todo.shep
+pnpm --filter @sheplang/cli exec sheplang explain examples/todo.shep
+pnpm --filter @sheplang/cli exec sheplang stats
+pnpm --filter @sheplang/runtime test
+````
 
 ---
 
-## Locked Grammar — `packages/language/src/shep.langium`
+## 🏁 Success Criteria
 
-*(works with the preprocessor; indentation sugar is converted to braces)*
-
-```
-// ShepLang Grammar (Alpha v0.1)
-grammar Shep
-
-entry ShepFile: app=AppDecl;
-
-AppDecl:
-  'app' name=ID '{' decls+=TopDecl* '}';
-
-TopDecl: DataDecl | ViewDecl | ActionDecl;
-
-DataDecl:
-  'data' name=ID '{'
-    'fields' ':' '{' fields+=FieldDecl* '}'
-    ('rules' ':' '{' rules+=RuleDecl* '}')?
-  '}';
-
-FieldDecl: name=ID ':' type=TypeRef;
-TypeRef: base=('text'|'number'|'yes/no'|'id'|'date'|'email'|ID);
-
-RuleDecl: '-' text=RULE_TEXT;
-terminal RULE_TEXT: /[^\n}]+/;
-
-ViewDecl:
-  'view' name=ID '{' widgets+=WidgetDecl* '}';
-
-WidgetDecl: ListDecl | ButtonDecl;
-ListDecl: 'list' ref=[DataDecl];
-ButtonDecl: 'button' label=STRING '->' target=[ActionDecl];
-
-ActionDecl:
-  'action' name=ID '(' (params+=ParamDecl (',' params+=ParamDecl)*)? ')' '{'
-     statements+=Stmt*
-  '}';
-
-ParamDecl: name=ID (':' type=TypeRef)?;
-Stmt: AddStmt | ShowStmt | RawStmt;
-
-AddStmt:
-  'add' ref=[DataDecl] 'with' pairs+=KeyVal (',' pairs+=KeyVal)*;
-
-KeyVal: key=ID value=Expr;
-
-Expr: StringLiteral | BooleanLiteral | IdentifierRef;
-StringLiteral returns string: value=STRING;
-BooleanLiteral: value=('true'|'false');
-IdentifierRef: ref=ID;
-
-RawStmt: '~' text=RULE_TEXT;
-```
-
-### Preprocessor — `packages/language/src/preprocessor.ts`
-
-* Converts indentation to braces after lines ending with `:` or block headers.
-* Injects `// @line N` for error mapping.
-
-*(You already have this shape; keep it, it’s part of Phase 0 acceptance.)*
-
-### Parser API — `packages/language/src/index.ts`
-
-* Export **one** function: `parseShep(source: string)` → `{ ast, diagnostics }`
-* On diagnostics, throw **friendly** error with line/column, expected token, and tip.
-
-### AST → AppModel Mapper — `packages/language/src/mapper.ts`
-
-* Walk typed Langium AST → produce **AppModel** (in `compiler/types.ts`).
-* No defaulting or guesswork—only what source declares.
+| Metric                | Target   |
+| --------------------- | -------- |
+| TypeScript purity     | 100%     |
+| Test coverage         | ≥ 90%    |
+| HMR reload latency    | < 100 ms |
+| Build completion time | < 30 s   |
+| CLI latency           | < 150 ms |
+| Example app loads     | ✅        |
+| Snapshot tests pass   | ✅        |
 
 ---
 
-## Compiler Types — `packages/compiler/src/types.ts`
+## 🏷️ Release
 
-*(unchanged from prior, already correct for Alpha)*
+* **Commit message:** `phase(2.5): finalize transpiler + DX runtime loop`
+* **Tag:** `v0.0.3-alpha-p2.5`
 
-* `AppModel`, `DataModel`, `ViewModel`, `ActionModel`
-* `ExplainNote`, `GenResult`
-
----
-
-## Transpiler & Templates (Alpha rules)
-
-* `data` → TS types
-* `view` → React-friendly functions (placeholder return `null`, logs list/buttons)
-* `action` → async TS functions; `add` logs db create TODO; `show` logs navigation
-* `index.ts` bootstraps app (console preview)
-
-> These are **real outputs** (compile clean), not placeholders. DB integration is deferred by design in Alpha (documented), but the **functions are executable** and explain themselves.
+````
 
 ---
 
-## CLI Commands (final behaviors)
+# 🧩 `/Project-scope/Phase-3-Checklist.md`
 
-* `shep parse <file.shep>` → prints JSON `AppModel` + reports diagnostics
-* `shep build <file.shep>` → writes `/out/<App>/**/*` TS + `explain.md`
-* `shep run <file.shep>` → builds, then executes `/out/<App>/index.ts`
-
-**Windsurf Tasks**
-
-* **Shep: Parse** → `pnpm -w --silent shep parse ${file}`
-* **Shep: Build** → `pnpm -w --silent shep build ${file}`
-* **Shep: Run**   → `pnpm -w --silent shep run ${file}`
+```markdown
+# Phase 3 — Integration, Testing & Alpha Stabilization
+**Goal:** Deliver a fully stable ShepLang Alpha ready for use by ShepKit.
 
 ---
 
-## Example Input — `examples/todo.shep`
+## ✅ Overview
+This phase focuses on:
+- Completing integration tests across all packages.
+- Finalizing documentation and stability.
+- Verifying build performance and developer experience.
 
-```
-app MyTodos
+---
 
-data Todo:
-  fields:
-    title: text
-    done: yes/no
-  rules:
-    - user can update own items
+## ⚙️ Tasks
 
-view Dashboard:
-  list Todo
-  button "Add Task" -> CreateTodo
+### 1. Integration Tests
+- [ ] Create end-to-end Vitest suite covering:
+  - `parse → transpile → build → run → explain`
+- [ ] Include sample `.shep` apps (todo, blog, dashboard)
+- [ ] Verify CLI commands execute in sequence without manual steps
+- [ ] Snapshot generated `.ts` and `.md` files for consistency
+- [ ] Mock runtime reload and ensure hot-reload events emit correctly
+- [ ] Include negative tests (invalid syntax, missing views, etc.)
 
-action CreateTodo(title):
-  add Todo with title, done=false
-  show Dashboard
+### 2. Error Handling & CLI Resilience
+- [ ] Add human-readable error messages (line/column context)
+- [ ] Prevent crashes on malformed `.shep` files
+- [ ] Graceful CLI exit (exit code 1 with formatted diagnostics)
+- [ ] Add `--debug` flag for verbose logs
+
+### 3. Build Integration
+- [ ] Verify all packages compile incrementally (`tsc -b`)
+- [ ] Validate cross-workspace imports in `dist/esm`
+- [ ] Build completes under 30s
+- [ ] ESM-only output confirmed
+
+### 4. Developer Experience Refinement
+- [ ] Add CLI command auto-suggestions (`sheplang --help`)
+- [ ] Reduce startup time (<150ms)
+- [ ] Improve color-coded outputs (errors, warnings, success)
+- [ ] Add progress spinners for long-running tasks
+- [ ] Optional DX overlay for runtime reloads
+
+### 5. Documentation & Knowledge
+- [ ] Generate Typedoc docs → `/docs/sheplang.md`
+- [ ] Merge explain command output into documentation
+- [ ] Ensure `/docs` folder has human-readable content
+- [ ] Include installation and usage guide for CLI
+- [ ] Document all environment variables and config options
+
+### 6. Security & Stability
+- [ ] Sanitize user file inputs
+- [ ] Block absolute path writes outside workspace
+- [ ] Cleanup port bindings on exit
+- [ ] Add memory usage checks for runtime
+- [ ] Verify no secret exposure in logs
+
+### 7. Compatibility Preparation
+- [ ] Build adapter skeleton `@shepkit/adapter-sheplang`
+- [ ] Ensure CLI & runtime namespacing safe (no collisions)
+- [ ] Reserve ShepKit port (8788) and confirm 8787 works independently
+- [ ] Verify ShepLang CLI and runtime run in parallel with ShepKit
+
+### 8. QA & Validation
+- [ ] Run all integration tests (`vitest --run`)
+- [ ] Check coverage ≥ 95%
+- [ ] Confirm example app runs without manual setup
+- [ ] Validate full `.shep → web runtime` pipeline
+- [ ] Gather metrics via `sheplang stats`
+- [ ] Verify release tagging workflow (commit, tag, CI badge)
+
+---
+
+## 🧪 Verification Script
+```bash
+pnpm build --recursive
+pnpm test --run
+pnpm --filter @sheplang/cli exec sheplang build examples/todo.shep
+pnpm --filter @sheplang/cli exec sheplang dev examples/todo.shep
+pnpm --filter @sheplang/cli exec sheplang explain examples/todo.shep
+pnpm --filter @sheplang/cli exec sheplang stats
+````
+
+---
+
+## 🏁 Success Criteria
+
+| Metric                     | Target   |
+| -------------------------- | -------- |
+| Integration coverage       | ≥ 95%    |
+| Build time                 | < 30 s   |
+| Runtime HMR latency        | < 100 ms |
+| CLI startup                | < 150 ms |
+| Docs completeness          | 100%     |
+| Stability (no crash tests) | ✅        |
+| Security tests             | ✅        |
+
+---
+
+## 🏷️ Release
+
+* **Commit message:** `phase(3): integration + alpha stabilization`
+* **Tag:** `v0.1.0-alpha`
+* **Next milestone:** ShepKit integration (ShepLang adapter)
+
 ```
 
 ---
 
-## Definition of Done (per phase)
-
-**Phase 0**
-
-* `shep parse` prints AppModel JSON extracted via **Langium AST + mapper** (no naive parser).
-* Malformed input shows friendly NL errors with exact line/column, expected token, and a short fix tip.
-
-**Phase 1**
-
-* `shep build` emits TS that **compiles** (no `any` unless specified), passes ESLint/Prettier, and creates `explain.md`.
-
-**Phase 2**
-
-* `shep run` executes generated entry and prints logs that match the model (list, buttons, action flow). Exit code 0.
-
-**Phase 3**
-
-* `esbuild` bundle of CLI works standalone. Windsurf tasks wired. Lint + tests green.
-
----
-
-## Guardrails to Prevent Token Waste (your request)
-
-* **No TODOs that imply future replacement.** Every “block” must be *production-true for the phase.*
-* **Single source of truth:** `shep.langium` + `mapper.ts`.
-* **Fail Fast:** If parse fails, **stop**—print one crisp fix.
-* **Snapshot tests:** Parser output and codegen outputs are snapshotted to prevent regressions.
-* **Explicit checklists:** Each PR must tick Phase DoD items above.
-* **Zero “or” choices:** Stack is frozen. Any change requires a “Change Proposal” doc, not chat.
-
----
-
-## README Snippet (paste now)
-
+generate a **combined “Phase 2.5 → Phase 3” progress tracker dashboard** (`/Project-scope/Progress.md`) that auto-updates statuses as each checklist item completes (so Windsurf can visualize real-time progress during development)?
 ```
-# ShepLang (Alpha v0.1)
-
-## Quickstart
-pnpm i
-pnpm -r build
-
-# Parse
-pnpm -w --silent shep parse ./examples/todo.shep
-
-# Build
-pnpm -w --silent shep build ./examples/todo.shep
-
-# Run
-pnpm -w --silent shep run ./examples/todo.shep
-
-## Philosophy
-Human-readable DSL for founders. Every compiled line explains "why it works".
-```
-
----
-
-## Key Insights
-
-* A **LEGO sequence** turns phases into reliable micro-releases.
-* **Langium-first mapping** eliminates later replacement and token churn.
-* **Explain-first output** is your moat and your teaching engine.
-
----
-
-## Founder Takeaways
-
-* Name is now **ShepLang**; extension **`.shep`**.
-* Phases are **fully wired**; each ends with a **working binary behavior** you can run in Windsurf.
-* Start with **Phase 0**: paste the structure, install, implement grammar+mapper, and run `shep parse`.
-* Keep scope tight; every commit must satisfy the **Definition of Done** for its phase.

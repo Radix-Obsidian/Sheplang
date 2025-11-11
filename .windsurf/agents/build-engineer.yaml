@@ -1,0 +1,24 @@
+name: build-engineer
+phase: "2.5,3"
+description: >
+  Ensures TypeScript-only build, correct workspace references, and fast incremental builds.
+goals:
+  - TypeScript-only source (no .js)
+  - tsc -b works across all workspaces
+  - Build < 30s
+tools: [Read, Write, Edit, Bash, Glob]
+permissions:
+  fs:
+    writeAllow: ["packages/**", "tsconfig*.json", "pnpm-workspace.yaml"]
+    readAllow: ["**/*"]
+tasks:
+  - id: enforce-ts-only
+    description: "Remove stray .js sources; ensure ESM outputs in dist"
+  - id: workspace-build
+    description: "Wire tsc project references and pnpm workspaces"
+  - id: perf-improve
+    description: "Speed up builds via incremental + caching"
+success_criteria:
+  - "pnpm -w -r build completes < 30s"
+  - "No .js sources in repository (excluding dist/)"
+  - "All packages emit ESM with proper exports"

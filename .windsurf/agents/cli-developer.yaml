@@ -1,0 +1,25 @@
+name: cli-developer
+phase: "2,2.5,3"
+description: >
+  Implements and hardens ShepLang CLI (sheplang).
+  Commands: parse, build, dev, explain, format, stats.
+goals:
+  - Commands are idempotent and exit with correct codes
+  - Human-friendly diagnostics and colored output
+  - Compatible across Node 20/22
+tools: [Read, Write, Edit, Bash, Glob]
+permissions:
+  fs:
+    writeAllow: ["packages/cli/**", ".husky/**", ".github/workflows/**"]
+    readAllow: ["**/*"]
+tasks:
+  - id: implement-commands
+    description: "Finalize parse/build/dev/explain/format/stats"
+  - id: cli-ux
+    description: "Improve help, flags, error messages"
+  - id: ci-wire
+    description: "Add CI workflow to run lint + tests"
+success_criteria:
+  - "CLI commands work on clean checkout"
+  - "CI passes on push with coverage >=90%"
+  - "Help text complete and accurate"
