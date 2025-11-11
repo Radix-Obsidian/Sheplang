@@ -1,10 +1,10 @@
-import { createShepServices } from './shep-module';
-import { preprocessWithMap } from './preprocessor';
+import { createShepServices } from './shep-module.js';
+import { preprocessWithMap } from './preprocessor.js';
 import type { ShepFile } from '../generated/ast';
 import { EmptyFileSystem, URI } from 'langium';
-import { mapToAppModel } from './mapper';
+import { mapToAppModel } from './mapper.js';
 import type { AppModel } from './types.js';
-import { formatFriendlyError, formatErrorMessage } from './error-formatter';
+import { formatFriendlyError, formatErrorMessage } from './error-formatter.js';
 
 export type ParsedResult = {
   ast: ShepFile;
@@ -50,5 +50,5 @@ export async function parseAndMap(source: string, filePath = 'input.shep') {
 }
 
 export { mapToAppModel };
-export { preprocessIndentToBraces, preprocessWithMap } from './preprocessor';
+export { preprocessIndentToBraces, preprocessWithMap } from './preprocessor.js';
 export type { AppModel } from './types';

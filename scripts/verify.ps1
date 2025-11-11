@@ -43,7 +43,9 @@ try {
 
   # 3. Transpile example
   Write-Output '[3/5] Transpiling example app...'
-  pnpm --filter @sheplang/cli exec sheplang build $Example
+  $CLI = Join-Path -Path $PSScriptRoot -ChildPath "..\sheplang\packages\cli\dist\index.js"
+  
+  node "$CLI" build "$Example"
   if ($LASTEXITCODE -ne 0) { 
     throw "Transpile failed with exit code $LASTEXITCODE" 
   }
@@ -51,8 +53,8 @@ try {
 
   # 4. Start dev server and validate preview
   Write-Output '[4/5] Starting dev server and validating preview...'
-  $DevProcess = Start-Process pnpm -ArgumentList "--filter", "@sheplang/cli", "exec", "sheplang", "dev", $Example -PassThru -NoNewWindow
-  Start-Sleep -Seconds 3
+  $DevProcess = Start-Process "node" -ArgumentList "`"$CLI`"", "dev", "`"$Example`"" -PassThru -NoNewWindow
+  Start-Sleep -Seconds 2
 
   try {
     $response = Invoke-WebRequest "http://localhost:8787/" -UseBasicParsing -TimeoutSec 5
@@ -71,12 +73,12 @@ try {
 
   # 5. Run Explain + Stats (sanity checks)
   Write-Output '[5/5] Running explain and stats...'
-  pnpm --filter @sheplang/cli exec sheplang explain $Example
+  node "$CLI" explain "$Example"
   if ($LASTEXITCODE -ne 0) { 
     Write-Output 'Explain command returned non-zero exit code (may not be implemented yet)'
   }
   
-  pnpm --filter @sheplang/cli exec sheplang stats
+  node "$CLI" stats
   if ($LASTEXITCODE -ne 0) { 
     Write-Output 'Stats command returned non-zero exit code (may not be implemented yet)'
   }

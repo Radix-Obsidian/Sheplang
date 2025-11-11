@@ -1,29 +1,22 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { parseAndMap } from '@sheplang/language';
+import { readFileSync } from "node:fs";
+import { transpileShepToBoba } from "@adapters/sheplang-to-boba";
 
-export async function explainCommand(file: string): Promise<void> {
-  const src = await fs.readFile(file, 'utf8');
-  const { appModel, diagnostics } = await parseAndMap(src, 'file://' + file);
-  if (!appModel || diagnostics.length) {
-    console.error('Parse errors:', diagnostics);
-    process.exit(1);
-  }
-  const outDir = path.join('.shep', 'docs');
-  await fs.mkdir(outDir, { recursive: true });
-  const md = [
-    `# ${appModel.name}`,
-    ``,
-    `## Data`,
-    ...appModel.datas.map(d => `- **${d.name}**: ${d.fields.map(f => `${f.name}:${f.type}`).join(', ')}`),
-    ``,
-    `## Views`,
-    ...appModel.views.map(v => `- **${v.name}** (list: ${v.list ?? '-'})`),
-    ``,
-    `## Actions`,
-    ...appModel.actions.map(a => `- **${a.name}**(${(a.params??[]).map(p=>p.name).join(', ')})`)
-  ].join('\n');
-  const outPath = path.join(outDir, `${appModel.name}.md`);
-  await fs.writeFile(outPath, md, 'utf8');
-  console.log('Docs:', outPath);
+export async function cmdExplain(args: string[]) {
+  const file = args[0];
+  if (!file) throw new Error("explain: missing <file>");
+  const src = readFileSync(file, "utf8");
+  const { canonicalAst, code } = transpileShepToBoba(src);
+
+  const components = (canonicalAst.body ?? []).filter((n: any) => n.type === "ComponentDecl").map((n: any) => n.name);
+  const routes = (canonicalAst.body ?? []).filter((n: any) => n.type === "RouteDecl").map((n: any) => `${n.path} -> ${n.target}`);
+  const states = (canonicalAst.body ?? []).filter((n: any) => n.type === "StateDecl").map((n: any) => n.name);
+
+  console.log(`Explain — ${file}
+Components: ${components.join(", ") || "(none)"}
+Routes:     ${routes.join(", ") || "(none)"}
+State:      ${states.join(", ") || "(none)"}
+
+Emitted BobaScript (canonical):
+--------------------------------
+${code}`);
 }

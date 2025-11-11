@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "compilerOptions": {
+    "composite": true
+  },
+  "references": [
+    { "path": "../../../adapters/sheplang-to-boba" },
+    { "path": "../language" }
+  ]
+}

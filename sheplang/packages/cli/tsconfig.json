@@ -4,12 +4,16 @@
     "outDir": "dist",
     "rootDir": "src",
     "resolveJsonModule": true,
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@adapters/sheplang-to-boba": ["../../../adapters/sheplang-to-boba/src"]
+    }
   },
   "include": ["src"],
   "references": [
     { "path": "../language" },
     { "path": "../transpiler" },
-    { "path": "../runtime" }
+    { "path": "../runtime" },
+    { "path": "../../../adapters/sheplang-to-boba" }
   ]
 }

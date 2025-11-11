@@ -1,0 +1,9 @@
+{
+  "extends": "../../sheplang/tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": false
+  },
+  "include": ["src", "test"]
+}
