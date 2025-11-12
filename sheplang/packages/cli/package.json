@@ -1,12 +1,23 @@
 {
-  "name": "@sheplang/cli",
-  "version": "0.0.1",
+  "name": "sheplang",
+  "version": "0.1.3",
+  "private": false,
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": { "sheplang": "dist/index.js" },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run --dir .",
     "dev": "node --enable-source-maps dist/commands/dev.js",
-    "test": "vitest --run",
     "test:e2e": "node test/e2e/run-e2e.mjs",
     "test:snapshots": "node test/snapshots/snapshot-test.mjs",
     "test:all": "node test/e2e/e2e-runner.js",
@@ -18,8 +29,6 @@
   "dependencies": {
     "@adapters/sheplang-to-boba": "workspace:*",
     "@sheplang/language": "workspace:*",
-    "@sheplang/transpiler": "workspace:*",
-    "@sheplang/runtime": "workspace:*",
     "chokidar": "^3.6.0",
     "express": "^4.19.2",
     "ws": "^8.18.0",

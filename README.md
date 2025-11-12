@@ -15,12 +15,9 @@
 **ShepLang** is a human-first scripting language for non-coders.  
 It lets you describe your app in everyday words — like a storyboard — and automatically transforms that into real, production-ready code.
 
-**BobaScript** is the engine underneath.  
-It compiles ShepLang into executable TypeScript/Next.js projects, runs them live, and explains what’s happening in plain English through *Explain Mode*.
+**BobaScript** is the engine underneath. # ShepLang + BobaScript
 
-Together, they form an **idea-to-app engine** — turning your concepts into deployable web apps in minutes.
-
----
+**Build full-stack MVPs with declarative ShepLang → executable BobaScript**
 
 ## 💡 Why It Matters
 
@@ -35,16 +32,163 @@ It’s programming that feels more like storytelling than syntax.
 
 ---
 
-## 🚀 Current Capabilities
+## 🚀 Quick Install (NPM)
 
-✅ Parse & transpile `.shep` → `.boba` (deterministic snapshots)  
-✅ Real-time preview server (`sheplang dev`) with HMR  
-✅ Explain Mode — human-readable breakdown of app structure  
-✅ CLI commands (`parse`, `build`, `dev`, `explain`, `stats`)  
-✅ Web Playground (Vite + TypeScript) for live editing  
-✅ Windows PowerShell verify script — one command to validate everything
+```bash
+# Install globally
+npm install -g sheplang
 
----
+# Or run directly
+npx sheplang --help
+```
+
+## 📦 What You Get
+
+- **ShepLang Parser**: Full language validation and AST generation
+- **BobaScript Transpiler**: Deterministic code compilation
+- **Development Server**: Live preview with hot module reloading
+- **CLI Tools**: Build, explain, analyze commands
+
+## ⚡ Usage
+
+```bash
+# Create a simple app
+echo 'component App { "Hello World" }' > hello.shep
+
+# Start development
+sheplang dev hello.shep
+# → http://localhost:8787
+
+# Build for production  
+sheplang build hello.shep
+# → dist/hello.boba
+```
+
+## 🏗️ Repository Structure (Monorepo)
+
+```
+sheplang/
+├── packages/
+│   ├── language/          # Langium parser (@sheplang/language)
+│   └── cli/              # Main CLI package (sheplang)
+├── adapters/
+│   └── sheplang-to-boba/ # Transpiler (@adapters/sheplang-to-boba)
+├── playground/           # Web playground (Vite)
+├── examples/            # Sample .shep files
+└── e2e/                # End-to-end tests
+```
+
+## 📝 Language Examples
+
+### Components & State
+```shep
+component TodoApp {
+  state todos = []
+  "My Todo List"
+}
+
+component Header props { title: "MyApp", count: 0 } {
+  "Welcome Header"
+}
+```
+
+### Actions & Routes
+```shep
+action AddTodo(item) { "Todo added" }
+action DeleteTodo(id) { "Todo removed" }
+
+route "/" -> TodoApp
+route "/about" -> About
+```
+
+### Full Application
+```shep
+component Dashboard {
+  state users = []
+  "User Dashboard"  
+}
+
+action FetchUsers() { "Loading users..." }
+action CreateUser(name, email) { "User created" }
+
+route "/" -> Dashboard
+route "/users" -> UserList
+```
+
+## 🛠️ CLI Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `help` | Show all commands | `sheplang help` |
+| `parse <file>` | Validate & show AST | `sheplang parse app.shep` |
+| `build <file>` | Compile to BobaScript | `sheplang build app.shep --out dist` |
+| `dev <file>` | Development server | `sheplang dev app.shep --port 3000` |
+| `explain <file>` | Human-readable summary | `sheplang explain app.shep` |
+| `stats` | Repository analytics | `sheplang stats` |
+| `--version` | Show version | `sheplang --version` |
+
+## 🚦 Development Setup
+
+### Prerequisites
+- Node.js 20+
+- pnpm 9+
+- PowerShell 7+ (Windows)
+
+### Build from Source
+```bash
+git clone https://github.com/your-org/sheplang.git
+cd sheplang/sheplang
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm -w -r build
+
+# Run tests
+pnpm -w -r test
+
+# Test CLI locally
+node ./packages/cli/dist/index.js --help
+```
+
+### Package Development
+```bash
+# Build specific package
+pnpm --filter @sheplang/language build
+
+# Test specific package
+pnpm --filter sheplang test
+
+# Start playground
+pnpm --filter @sheplang/playground dev
+```
+
+## 📦 Publishing
+
+Packages are automatically published to NPM on tag push:
+
+```bash
+git tag v0.1.3
+git push --follow-tags
+```
+
+Published packages:
+- `sheplang` - Main CLI (umbrella package)
+- `@sheplang/language` - Language parser
+- `@adapters/sheplang-to-boba` - Transpiler
+
+## ✅ Acceptance Tests
+
+- ✅ `pnpm -w -r build` → green
+- ✅ `pnpm -w -r test` → green  
+- ✅ `node packages/cli/dist/index.js help` → prints commands
+- ✅ `npx sheplang --version` → 0.1.3
+- ✅ `npx sheplang dev examples/todo.shep` → serves at :8787
+
+## 📄 License
+
+MIT - Built with ❤️ by Golden Sheep AI---
 
 ## 🧩 Architecture Overview
 

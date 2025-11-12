@@ -1,0 +1,84 @@
+
+---
+
+## 🧪 2. TTD_BobaScript.md
+
+```markdown
+# 🧪 Technical Test Document (TTD)
+
+Project: ShepLang + BobaScript Unified Alpha  
+Environment: Node 20+, pnpm workspaces  
+Testing Suite: Vitest + Playwright + Langium diagnostics  
+
+---
+
+## 🧠 Testing Philosophy
+
+Every phase ships *working software*.  
+No stubs, placeholders, or mock-only logic.  
+Each test validates an **end-to-end outcome** — not isolated syntax.
+
+All builds must pass unit, integration, and E2E gates before commit.
+
+---
+
+## 🧩 Test Environment
+
+| Component | Tool |
+|------------|------|
+| Unit Tests | Vitest (isolated) |
+| Integration | Vitest + mock FS |
+| E2E | Playwright (runtime validation) |
+| Coverage | c8 (≥95%) |
+| Lint | ESLint + Prettier pre-commit |
+| Docs Tests | Markdown-lint + link-check |
+
+---
+
+## 🔍 Test Matrix
+
+| Area | Test Type | Example |
+|------|------------|----------|
+| Parser | Unit | Parse `.boba` → AST matches schema |
+| Transpiler | Integration | AST → bytecode sequence |
+| VM | Unit + Integration | Push/pop stack correctness |
+| CLI | E2E | `boba run examples/todo.boba` outputs expected text |
+| Explain Mode | Unit | Line → natural language explanation |
+| Adapter | Integration | `.shep` → `.boba` deterministic mapping |
+| DX | E2E | Hot reload + dev server output |
+| Error Handling | Unit | Bad syntax throws human-readable error |
+
+---
+
+## ⚙️ Coverage Targets
+
+| Layer | Threshold |
+|-------|------------|
+| Parser | 100% |
+| Transpiler | 95% |
+| Runtime (VM) | 90% |
+| CLI | 90% |
+| Explain Mode | 95% |
+| Integration | 100% of pipeline |
+| Docs generator | 90% lines |
+
+---
+
+## 🧰 CI Workflow (GitHub Actions)
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - run: pnpm i
+      - run: pnpm -w lint
+      - run: pnpm -w build
+      - run: pnpm -w test --run --coverage
+

@@ -1,231 +1,126 @@
-Perfect ✅ — below are **fully detailed Markdown checklists** ready to drop into your
-`/Project-scope/` directory inside **Windsurf**.
+# 📘 Product Requirements Document (PRD)
 
-They’re written to be **followed by ADEs (like Windsurf or Cursor)** — zero placeholders,
-each item is actionable and test-verifiable.
-Everything follows your **Alpha PRD** and **DX + TypeScript-only** principles.
-
----
-
-# 🧩 `/Project-scope/Phase-2.5-Checklist.md`
-
-````markdown
-# Phase 2.5 — Transpiler & DX Completion Checklist
-**Goal:** Finalize Phase 1 + Phase 2 deliverables into a unified TypeScript-only ShepLang system.
+Project: **ShepLang + BobaScript Unified Alpha**
+Owner: Golden Sheep AI  
+IDE Environment: Windsurf / Cascade  
+Repo Root: `/sheplang/`  
+Phases Covered: 0 → 3  
 
 ---
 
-## ✅ Overview
-- [x] Phase 0 (Parser) confirmed stable (`v0.0.1-alpha-p0`)
-- [x] Phase 1 partially implemented (`AppModel` + basic transpiler)
-- [x] Phase 2 runtime and CLI partially functional
-- [ ] This phase completes both and unifies them for full DX workflow
+## 🧭 Mission
+
+To create a beginner-friendly programming ecosystem for non-technical founders —  
+a pair of languages that teach logic while building real, deployable applications.
+
+**ShepLang** is the visual, declarative layer (reads like thought).  
+**BobaScript** is the executable scripting language (runs like TypeScript with a heart).
+
+Together, they form the foundation for **Shepherd Studio** and **ShepKit**,  
+our future ADE and CLI suite.
 
 ---
 
-## 🧱 Core Objectives
-- [ ] Enforce **TypeScript-only** build (no `.js` sources or temp files)
-- [ ] Achieve **full CLI + runtime integration**
-- [ ] Verify **AppModel → Transpile → Preview** pipeline end-to-end
-- [ ] Maintain **DX speed targets** (rebuild <1s, HMR <100ms)
-- [ ] Achieve **90%+ test coverage**
+## 🌟 Vision
+
+> “Code that reads like ideas.  
+> Runs like JavaScript.  
+> Teaches like Python.”
+
+We want to make AI-driven development *human again* —  
+a system where building a full-stack app feels conversational,  
+not syntactic.
 
 ---
 
-## ⚙️ Tasks
+## 🎯 Objectives
 
-### 1. Transpiler Finalization (`@sheplang/transpiler`)
-- [ ] Ensure deterministic TS output from `AppModel`
-- [ ] Confirm file output: `.shep/out/<AppName>/entry.ts`
-- [ ] Add snapshot tests comparing output to expected TS
-- [ ] Handle edge cases (empty fields, unknown ops, malformed views)
-- [ ] Pass all transpiler-specific Vitest suites
-
-### 2. CLI Commands (`@sheplang/cli`)
-- [ ] `parse` — parses `.shep` and prints diagnostics cleanly
-- [ ] `build` — transpiles `.shep` to `.shep/out` folder
-- [ ] `dev` — watches source, rebuilds, and triggers runtime reload
-- [ ] `explain` — generates `.shep/docs/<App>.md`
-- [ ] `format` — runs Prettier on workspace
-- [ ] `stats` — measures build time and writes `.shep/reports/dx.json`
-
-### 3. Runtime Verification (`@sheplang/runtime`)
-- [ ] Express server starts at `localhost:8787`
-- [ ] Hot reload via WebSocket on file change
-- [ ] Serves first view title + list successfully
-- [ ] Stops cleanly on exit (no zombie processes)
-- [ ] No dependency conflicts with ShepKit reserved port (8788)
-
-### 4. Integration Path
-- [ ] CLI commands import parser + transpiler + runtime correctly
-- [ ] Verify TypeScript compiler resolution (`pnpm build --recursive`)
-- [ ] No ESM import errors or circular dependencies
-- [ ] Run end-to-end test for `examples/todo.shep` pipeline:
-  - Parse → Transpile → Serve → Reload
-
-### 5. Documentation Generation
-- [ ] Ensure `sheplang explain` outputs markdown summary:
-  - App name
-  - Data models and fields
-  - Views and lists
-  - Actions and parameters
-- [ ] Verify generated file `.shep/docs/<App>.md` opens without error
-
-### 6. Testing and Validation
-- [ ] All unit and integration tests pass via `pnpm test`
-- [ ] Test coverage ≥ 90%
-- [ ] Example `.shep` apps build without manual intervention
-- [ ] `pnpm build` completes cleanly for all packages
-- [ ] CLI help screen lists all commands correctly
+| Phase | Goal | Deliverable |
+|-------|------|-------------|
+| 0 | Language Grammar | Langium grammar + parser for `.shep` + `.boba` |
+| 1 | Transpiler & Bytecode | Compiler for BobaScript (AST → bytecode) + ShepLang → Boba bridge |
+| 2 | Runtime & CLI | BobaScript VM, REPL, file runner, ShepLang CLI commands |
+| 2.5 | Integration | Verify both pipelines, shared TypeScript backend, CLI merge |
+| 3 | Testing, Docs, Packaging | E2E, Explain Mode, NPM packaging, Docs |
 
 ---
 
-## 🧪 Verification Script
+## 🧰 Tech Stack
+
+| Layer | Tooling |
+|-------|----------|
+| Parser / DSL | Langium + TypeScript (ES2022) |
+| Compiler | TypeScript Compiler API |
+| VM Runtime | Node.js (Stack-based interpreter) |
+| REPL | Inquirer + Chalk + ts-node |
+| Docs | Typedoc + Explain Mode (AI-generated) |
+| Tests | Vitest + Playwright |
+| Packaging | pnpm monorepo with project references |
+| Hosting | Local preview (8787) + optional Vercel deploy |
+
+---
+
+## 👥 Target Personas
+
+| Persona | Description | Goal |
+|----------|--------------|------|
+| Non-technical Founder | Thinks in ideas, not code | Build a prototype app |
+| Designer / Maker | Understands flows visually | Translate UI logic into executable behavior |
+| Educator / Mentor | Teaches code by example | Explain execution step-by-step |
+| AI Researcher | Fine-tunes LLMs | Use BobaScript to test AI code reasoning |
+
+---
+
+## 🚀 Phase Overview
+
+### **Phase 0 — Grammar & Parser**
+- Build Langium grammars for both `.shep` (declarative) and `.boba` (imperative)
+- Test parsing and AST generation
+- Output: JSON AST + diagnostics
+
+### **Phase 1 — Compiler + Bytecode**
+- Transpile `.boba` to intermediate bytecode (stack VM spec)
+- Extend ShepLang compiler to output `.boba`
+- Output: `dist/app.boba.js` + `.bytecode.json`
+
+### **Phase 2 — Runtime + CLI**
+- Implement Boba VM and REPL
+- Add Explain Mode (every step logs human description)
+- Extend ShepLang CLI (`sheplang build`, `sheplang explain`, `boba run`)
+- Output: runnable VM + CLI interaction
+
+### **Phase 2.5 — Integration**
+- Complete verification of ShepLang → BobaScript adapter
+- Unified TypeScript compiler pipeline
+- Run integration tests (parser → transpiler → runtime → explain)
+- Output: green E2E run
+
+### **Phase 3 — Docs + Packaging**
+- Generate Typedoc + Explain Mode Markdown
+- 100% coverage test suite
+- Publish to npm (`@goldensheep/sheplang` + `@goldensheep/boba`)
+- Output: final alpha release v0.1.0-alpha
+
+---
+
+## ✅ Success Metrics
+
+| Metric | Target |
+|---------|--------|
+| Parse time | < 50ms for 200 lines |
+| Build time | < 2s (tsc incremental) |
+| Test coverage | ≥ 95% |
+| REPL latency | < 100ms eval |
+| Onboarding | < 10 min from clone → run |
+| Docs generation | < 1 min full build |
+| User satisfaction | 4.8/5 (DX survey) |
+
+---
+
+## 🧱 Validation Block
+**Commit Rule:** Do not push until all validation commands pass.
+
 ```bash
-pnpm -w -r build
-pnpm --filter @sheplang/cli exec sheplang dev examples/todo.shep
-pnpm --filter @sheplang/cli exec sheplang build examples/todo.shep
-pnpm --filter @sheplang/cli exec sheplang explain examples/todo.shep
-pnpm --filter @sheplang/cli exec sheplang stats
-pnpm --filter @sheplang/runtime test
-````
-
----
-
-## 🏁 Success Criteria
-
-| Metric                | Target   |
-| --------------------- | -------- |
-| TypeScript purity     | 100%     |
-| Test coverage         | ≥ 90%    |
-| HMR reload latency    | < 100 ms |
-| Build completion time | < 30 s   |
-| CLI latency           | < 150 ms |
-| Example app loads     | ✅        |
-| Snapshot tests pass   | ✅        |
-
----
-
-## 🏷️ Release
-
-* **Commit message:** `phase(2.5): finalize transpiler + DX runtime loop`
-* **Tag:** `v0.0.3-alpha-p2.5`
-
-````
-
----
-
-# 🧩 `/Project-scope/Phase-3-Checklist.md`
-
-```markdown
-# Phase 3 — Integration, Testing & Alpha Stabilization
-**Goal:** Deliver a fully stable ShepLang Alpha ready for use by ShepKit.
-
----
-
-## ✅ Overview
-This phase focuses on:
-- Completing integration tests across all packages.
-- Finalizing documentation and stability.
-- Verifying build performance and developer experience.
-
----
-
-## ⚙️ Tasks
-
-### 1. Integration Tests
-- [ ] Create end-to-end Vitest suite covering:
-  - `parse → transpile → build → run → explain`
-- [ ] Include sample `.shep` apps (todo, blog, dashboard)
-- [ ] Verify CLI commands execute in sequence without manual steps
-- [ ] Snapshot generated `.ts` and `.md` files for consistency
-- [ ] Mock runtime reload and ensure hot-reload events emit correctly
-- [ ] Include negative tests (invalid syntax, missing views, etc.)
-
-### 2. Error Handling & CLI Resilience
-- [ ] Add human-readable error messages (line/column context)
-- [ ] Prevent crashes on malformed `.shep` files
-- [ ] Graceful CLI exit (exit code 1 with formatted diagnostics)
-- [ ] Add `--debug` flag for verbose logs
-
-### 3. Build Integration
-- [ ] Verify all packages compile incrementally (`tsc -b`)
-- [ ] Validate cross-workspace imports in `dist/esm`
-- [ ] Build completes under 30s
-- [ ] ESM-only output confirmed
-
-### 4. Developer Experience Refinement
-- [ ] Add CLI command auto-suggestions (`sheplang --help`)
-- [ ] Reduce startup time (<150ms)
-- [ ] Improve color-coded outputs (errors, warnings, success)
-- [ ] Add progress spinners for long-running tasks
-- [ ] Optional DX overlay for runtime reloads
-
-### 5. Documentation & Knowledge
-- [ ] Generate Typedoc docs → `/docs/sheplang.md`
-- [ ] Merge explain command output into documentation
-- [ ] Ensure `/docs` folder has human-readable content
-- [ ] Include installation and usage guide for CLI
-- [ ] Document all environment variables and config options
-
-### 6. Security & Stability
-- [ ] Sanitize user file inputs
-- [ ] Block absolute path writes outside workspace
-- [ ] Cleanup port bindings on exit
-- [ ] Add memory usage checks for runtime
-- [ ] Verify no secret exposure in logs
-
-### 7. Compatibility Preparation
-- [ ] Build adapter skeleton `@shepkit/adapter-sheplang`
-- [ ] Ensure CLI & runtime namespacing safe (no collisions)
-- [ ] Reserve ShepKit port (8788) and confirm 8787 works independently
-- [ ] Verify ShepLang CLI and runtime run in parallel with ShepKit
-
-### 8. QA & Validation
-- [ ] Run all integration tests (`vitest --run`)
-- [ ] Check coverage ≥ 95%
-- [ ] Confirm example app runs without manual setup
-- [ ] Validate full `.shep → web runtime` pipeline
-- [ ] Gather metrics via `sheplang stats`
-- [ ] Verify release tagging workflow (commit, tag, CI badge)
-
----
-
-## 🧪 Verification Script
-```bash
-pnpm build --recursive
-pnpm test --run
-pnpm --filter @sheplang/cli exec sheplang build examples/todo.shep
-pnpm --filter @sheplang/cli exec sheplang dev examples/todo.shep
-pnpm --filter @sheplang/cli exec sheplang explain examples/todo.shep
-pnpm --filter @sheplang/cli exec sheplang stats
-````
-
----
-
-## 🏁 Success Criteria
-
-| Metric                     | Target   |
-| -------------------------- | -------- |
-| Integration coverage       | ≥ 95%    |
-| Build time                 | < 30 s   |
-| Runtime HMR latency        | < 100 ms |
-| CLI startup                | < 150 ms |
-| Docs completeness          | 100%     |
-| Stability (no crash tests) | ✅        |
-| Security tests             | ✅        |
-
----
-
-## 🏷️ Release
-
-* **Commit message:** `phase(3): integration + alpha stabilization`
-* **Tag:** `v0.1.0-alpha`
-* **Next milestone:** ShepKit integration (ShepLang adapter)
-
-```
-
----
-
-generate a **combined “Phase 2.5 → Phase 3” progress tracker dashboard** (`/Project-scope/Progress.md`) that auto-updates statuses as each checklist item completes (so Windsurf can visualize real-time progress during development)?
-```
+pnpm -w build && pnpm -w test --run
+pnpm --filter @sheplang/cli exec sheplang parse examples/todo.shep
+pnpm --filter @boba/cli exec boba run examples/todo.boba

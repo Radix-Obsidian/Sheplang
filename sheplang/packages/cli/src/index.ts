@@ -19,6 +19,9 @@ async function main() {
       await cmdExplain(rest); break;
     case "stats":
       await cmdStats(); break;
+    case "--version":
+    case "version":
+      console.log("0.1.3"); break;
     case "help":
     default:
       printHelp();
