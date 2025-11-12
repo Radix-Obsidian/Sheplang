@@ -1,43 +1,5 @@
-// Mock implementation for parseShep since we don't have @sheplang/language available
-function parseShep(source: string): any {
-  // Simple mock to return a basic AST
-  const appName = source.match(/app\s+([\w]+)/)?.[1] || "DefaultApp";
-  const components: {name: string}[] = [];
-  const views: {name: string}[] = [];
-  const data: {name: string}[] = [];
-  const actions: {name: string}[] = [];
-
-  // Extract data models
-  const dataMatches = source.matchAll(/data\s+([\w]+):/g);
-  for (const match of dataMatches) {
-    if (match[1]) data.push({ name: match[1] });
-  }
-
-  // Extract views
-  const viewMatches = source.matchAll(/view\s+([\w]+):/g);
-  for (const match of viewMatches) {
-    if (match[1]) views.push({ name: match[1] });
-  }
-
-  // Extract actions
-  const actionMatches = source.matchAll(/action\s+([\w]+)/g);
-  for (const match of actionMatches) {
-    if (match[1]) actions.push({ name: match[1] });
-  }
-
-  return {
-    type: "App",
-    name: appName,
-    body: [
-      // Add a Text node with the app name to match the verification check
-      { type: "Text", value: appName },
-      ...(components.map(c => ({ type: "ComponentDecl", name: c.name }))),
-      ...(views.map(v => ({ type: "ComponentDecl", name: v.name }))),
-      ...(data.map(d => ({ type: "StateDecl", name: d.name }))),
-      ...(actions.map(a => ({ type: "RouteDecl", path: `/${a.name}`, target: a.name }))),
-    ]
-  };
-}
+// Use the real parser from the language package (no mocks)
+import { parseShep } from "@sheplang/language";
 
 export interface BobaOutput {
   code: string;
@@ -47,11 +9,9 @@ export interface BobaOutput {
 /**
  * Transpiles ShepLang source to BobaScript
  */
-export function transpileShepToBoba(source: string): BobaOutput {
-  const ast = parseShep(source);
-  const canonicalAst = normalizeAst(ast);
-  
-  // Generate BobaScript code
+export async function transpileShepToBoba(source: string): Promise<BobaOutput> {
+  const result = await parseShep(source);
+  const canonicalAst = normalizeAst(result.appModel);
   const bobaCode = generateBobaCode(canonicalAst);
   
   return {
@@ -63,62 +23,48 @@ export function transpileShepToBoba(source: string): BobaOutput {
 /**
  * Normalize AST into canonical form for consistent code generation
  */
-function normalizeAst(ast: any): any {
-  // Ensure we always have a body array
-  if (!ast.body) ast.body = [];
+function normalizeAst(appModel: any): any {
+  // Convert the appModel structure to a canonical AST
+  const body: any[] = [
+    // Add app name as first text node for verify check
+    { type: "Text", value: appModel.name }
+  ];
   
-  // Always add app name as first text node if it doesn't exist
-  let hasTextNode = ast.body.some((node: any) => node.type === "Text");
-  if (!hasTextNode && ast.name) {
-    ast.body.unshift({ type: "Text", value: ast.name });
+  // Add views as components
+  if (appModel.views) {
+    for (const view of appModel.views) {
+      body.push({
+        type: "ComponentDecl",
+        name: view.name
+      });
+    }
   }
   
-  // Process components, views, and actions to fit canonical form
+  // Add data models as state
+  if (appModel.datas) {
+    for (const data of appModel.datas) {
+      body.push({
+        type: "StateDecl",
+        name: data.name
+      });
+    }
+  }
+  
+  // Add actions as routes
+  if (appModel.actions) {
+    for (const action of appModel.actions) {
+      body.push({
+        type: "RouteDecl",
+        path: `/${action.name}`,
+        target: action.name
+      });
+    }
+  }
+  
   return {
-    ...ast,
-    body: ast.body.map((node: any) => {
-      // Handle app declaration
-      if (node.type === "AppDeclaration") {
-        return {
-          type: "ComponentDecl",
-          name: node.name,
-          props: [],
-          body: []
-        };
-      }
-      
-      // Handle data models
-      if (node.type === "DataDeclaration") {
-        return {
-          type: "StateDecl",
-          name: node.name,
-          fields: node.fields?.map((f: any) => ({ name: f.name, type: f.type })) || [],
-          rules: node.rules || []
-        };
-      }
-      
-      // Handle views
-      if (node.type === "ViewDeclaration") {
-        return {
-          type: "ComponentDecl",
-          name: node.name,
-          props: [],
-          body: node.body || []
-        };
-      }
-      
-      // Handle actions
-      if (node.type === "ActionDeclaration") {
-        return {
-          type: "RouteDecl",
-          path: `/${node.name}`,
-          target: node.name,
-          params: node.parameters?.map((p: any) => p.name) || []
-        };
-      }
-      
-      return node;
-    })
+    type: "App",
+    name: appModel.name,
+    body
   };
 }
 

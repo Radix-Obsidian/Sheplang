@@ -10,17 +10,17 @@ export async function cmdStats() {
   } catch {}
   let totalChars = 0;
   for (const f of files) totalChars += readFileSync(f, "utf8").length;
-  const sample = files[0];
-  let emitted = 0;
-  if (sample) {
-    const { code } = transpileShepToBoba(readFileSync(sample, "utf8"));
-    emitted = code.length;
+  let emittedSample: Record<string, any> = {};
+  if (files[0]) {
+    const sample = readFileSync(files[0], "utf8");
+    const { code } = await transpileShepToBoba(sample);
+    emittedSample = { emittedSampleBytes: Buffer.byteLength(code, "utf8") };
   }
   const repoSize = dirSize(resolve(process.cwd()));
   console.log(JSON.stringify({
     examples: files.length,
     exampleChars: totalChars,
-    emittedSampleBytes: emitted,
+    ...emittedSample,
     repoSizeBytes: repoSize
   }, null, 2));
 }

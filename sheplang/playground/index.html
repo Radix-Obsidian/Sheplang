@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"/><title>ShepLang Playground</title></head>
+<body>
+  <section style="display:grid;grid-template-columns:1fr 1fr;gap:12px;height:95vh;padding:8px">
+    <textarea id="src" style="width:100%;height:100%;font-family:monospace">app MyTodos
+
+view Dashboard:
+  "MyTodos"</textarea>
+    <div style="display:grid;grid-template-rows:auto 1fr 1fr;gap:8px">
+      <h1 id="title">Preview</h1>
+      <pre id="boba" style="overflow:auto;border:1px solid #ddd;padding:8px"></pre>
+      <pre id="ast" style="overflow:auto;border:1px solid #ddd;padding:8px"></pre>
+    </div>
+  </section>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

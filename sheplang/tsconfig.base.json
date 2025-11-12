@@ -11,10 +11,6 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@sheplang/compiler": ["packages/compiler/src/types.ts"],
-      "@sheplang/language": ["packages/language/src/index.ts"]
-    }
+    "baseUrl": "."
   }
 }

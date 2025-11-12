@@ -8,7 +8,7 @@ export async function cmdBuild(args: string[], flags: Record<string, any>) {
   if (!file) throw new Error("build: missing <file>");
   const outDir = resolve(String(flags.out ?? "dist"));
   const src = readFileSync(file, "utf8");
-  const { code } = transpileShepToBoba(src);
+  const { code } = await transpileShepToBoba(src);
   const outFile = resolve(outDir, basename(file).replace(/\.shep$/i, ".boba"));
   writeTextFileSync(outFile, code);
   console.log(outFile);

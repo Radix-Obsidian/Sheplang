@@ -4,7 +4,8 @@
     "noEmit": false,
     "declaration": true,
     "declarationMap": false,
-    "skipLibCheck": true
+    "outDir": "dist",
+    "rootDir": "."
   },
-  "include": ["src"]
+  "include": ["src", "generated"]
 }

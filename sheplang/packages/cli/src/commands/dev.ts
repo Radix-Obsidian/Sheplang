@@ -18,11 +18,13 @@ export async function cmdDev(args: string[], flags: Record<string, any>) {
   const port = Number(flags.port ?? 8787);
   const watcher = chokidar.watch([resolve(file)], { ignoreInitial: true });
 
-  const server = await createPreviewServer(port, () => readPreviewHTML(file));
+  let currentHTML = await readPreviewHTML(file);
+  const server = await createPreviewServer(port, () => currentHTML);
 
-  const rebuild = debounce(() => {
+  const rebuild = debounce(async () => {
     try {
-      server.updateHTML(readPreviewHTML(file));
+      currentHTML = await readPreviewHTML(file);
+      server.updateHTML(currentHTML);
       broadcastReload();
       // eslint-disable-next-line no-console
       console.log("[HMR] reloaded");
@@ -35,14 +37,13 @@ export async function cmdDev(args: string[], flags: Record<string, any>) {
   console.log(`dev server running at http://localhost:${port}`);
 }
 
-function readPreviewHTML(file: string): string {
+async function readPreviewHTML(file: string): Promise<string> {
   const src = readFileSync(file, "utf8");
-  const { code, canonicalAst } = transpileShepToBoba(src);
+  const { code, canonicalAst } = await transpileShepToBoba(src);
   // Minimal deterministic preview. We render:
   // - <h1> from first Text node OR {App.name} if present.
   // - Include the BobaScript output in a <pre> for inspection.
-  // Force MyTodos as title to match verification script
-  const title = "MyTodos";
+  const title = findTitle(canonicalAst) ?? findAppName(canonicalAst) ?? "Preview";
   const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return `<!doctype html>
 <html>

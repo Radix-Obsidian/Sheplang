@@ -1,9 +1,14 @@
 {
   "extends": "../../sheplang/tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "dist",
-    "noEmit": false
+    "noEmit": false,
+    "composite": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
   },
-  "include": ["src", "test"]
+  "include": ["src"],
+  "references": [
+    { "path": "../../sheplang/packages/language" }
+  ]
 }
