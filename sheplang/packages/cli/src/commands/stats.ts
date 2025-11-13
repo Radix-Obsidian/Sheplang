@@ -13,8 +13,8 @@ export async function cmdStats() {
   let emittedSample: Record<string, any> = {};
   if (files[0]) {
     const sample = readFileSync(files[0], "utf8");
-    const { code } = await transpileShepToBoba(sample);
-    emittedSample = { emittedSampleBytes: Buffer.byteLength(code, "utf8") };
+    const { output: code } = await transpileShepToBoba(sample);
+    emittedSample = code ? { emittedSampleBytes: Buffer.byteLength(code, "utf8") } : {};
   }
   const repoSize = dirSize(resolve(process.cwd()));
   console.log(JSON.stringify({

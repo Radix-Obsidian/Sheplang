@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
   - "../adapters/*"
+  - "shepkit"
   - "examples"
   - "playground"
   - "e2e"

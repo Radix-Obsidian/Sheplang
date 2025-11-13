@@ -1,7 +1,9 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync as nodeMkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
+export { nodeMkdirSync as mkdirSync };
+
 export function writeTextFileSync(path: string, content: string) {
-  mkdirSync(dirname(path), { recursive: true });
+  nodeMkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content, "utf8");
 }

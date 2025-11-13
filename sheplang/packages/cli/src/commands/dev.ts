@@ -39,12 +39,12 @@ export async function cmdDev(args: string[], flags: Record<string, any>) {
 
 async function readPreviewHTML(file: string): Promise<string> {
   const src = readFileSync(file, "utf8");
-  const { code, canonicalAst } = await transpileShepToBoba(src);
+  const { output: code, canonicalAst } = await transpileShepToBoba(src);
   // Minimal deterministic preview. We render:
   // - <h1> from first Text node OR {App.name} if present.
   // - Include the BobaScript output in a <pre> for inspection.
   const title = findTitle(canonicalAst) ?? findAppName(canonicalAst) ?? "Preview";
-  const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escaped = (code || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return `<!doctype html>
 <html>
 <head><meta charset="utf-8"><title>${title}</title></head>
