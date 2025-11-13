@@ -5,7 +5,7 @@ import { EmptyFileSystem, URI } from 'langium';
 import { mapToAppModel } from './mapper.js';
 import type { AppModel } from './types.js';
 import { formatFriendlyError, formatErrorMessage } from './error-formatter.js';
-import type { Diagnostic, CompilationResult } from './types/diagnostics';
+import type { Diagnostic, CompilationResult } from './types/diagnostics.js';
 
 export type ParsedResult = {
   ast: ShepFile;
@@ -84,5 +84,5 @@ export async function parseAndMap(source: string, filePath = 'input.shep') {
 
 export { mapToAppModel };
 export { preprocessIndentToBraces, preprocessWithMap } from './preprocessor.js';
-export type { AppModel } from './types';
-export type { Diagnostic, CompilationResult } from './types/diagnostics';
+export type { AppModel } from './types.js';
+export type { Diagnostic, CompilationResult } from './types/diagnostics.js';
