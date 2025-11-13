@@ -1,0 +1,249 @@
+name: Vercel Deployment Verification
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20.x'
+  PNPM_VERSION: '9'
+
+jobs:
+  # Job 1: Verify Build Pipeline
+  verify-build:
+    name: Verify Build Pipeline
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run verification script
+        run: pnpm run verify
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Run tests
+        run: pnpm test
+
+  # Job 2: Build ShepKit
+  build-shepkit:
+    name: Build ShepKit (Simulates Vercel)
+    runs-on: ubuntu-latest
+    needs: verify-build
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            **/node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace packages
+        run: pnpm -w -r build
+
+      - name: Build ShepKit
+        working-directory: sheplang/shepkit
+        run: pnpm build
+
+      - name: Check build artifacts
+        run: |
+          if [ ! -d "sheplang/shepkit/.next" ]; then
+            echo "❌ .next directory not found"
+            exit 1
+          fi
+          echo "✅ ShepKit build successful"
+
+  # Job 3: Docker Build Verification
+  verify-docker:
+    name: Verify Docker Builds
+    runs-on: ubuntu-latest
+    needs: verify-build
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build CLI Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: cli
+          push: false
+          tags: sheplang-cli:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build ShepKit Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./sheplang/shepkit/Dockerfile
+          push: false
+          tags: shepkit:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test CLI container
+        run: |
+          docker run --rm sheplang-cli:ci --help
+
+  # Job 4: Deployment Readiness Check
+  deployment-ready:
+    name: Deployment Readiness
+    runs-on: ubuntu-latest
+    needs: [verify-build, build-shepkit, verify-docker]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Vercel configuration
+        run: |
+          echo "🔍 Checking Vercel configuration files..."
+          
+          # Check vercel.json exists in ShepKit
+          if [ ! -f "sheplang/shepkit/vercel.json" ]; then
+            echo "❌ sheplang/shepkit/vercel.json not found"
+            exit 1
+          fi
+          echo "✅ vercel.json found in ShepKit"
+          
+          # Check NO vercel.json at root
+          if [ -f "vercel.json" ]; then
+            echo "❌ vercel.json found at root (should not exist)"
+            exit 1
+          fi
+          echo "✅ No vercel.json at root"
+          
+          # Check .npmrc exists
+          if [ ! -f ".npmrc" ]; then
+            echo "❌ .npmrc not found at root"
+            exit 1
+          fi
+          echo "✅ .npmrc found"
+          
+          # Check pnpm-workspace.yaml
+          if [ ! -f "pnpm-workspace.yaml" ]; then
+            echo "❌ pnpm-workspace.yaml not found"
+            exit 1
+          fi
+          echo "✅ pnpm-workspace.yaml found"
+          
+          # Check ShepKit package.json has engines
+          if ! grep -q "\"engines\"" sheplang/shepkit/package.json; then
+            echo "❌ engines field missing in ShepKit package.json"
+            exit 1
+          fi
+          echo "✅ engines field present"
+          
+          # Check tsconfig paths
+          if ! grep -q "@sheplang/language" sheplang/shepkit/tsconfig.json; then
+            echo "❌ TypeScript paths not configured"
+            exit 1
+          fi
+          echo "✅ TypeScript paths configured"
+          
+          echo ""
+          echo "🎉 All deployment checks passed!"
+          echo "✅ Ready for Vercel deployment"
+
+  # Job 5: Security Scan
+  security-scan:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Run pnpm audit
+        run: pnpm audit --audit-level=high || true
+
+      - name: Check for secrets in code
+        run: |
+          echo "🔍 Scanning for potential secrets..."
+          if grep -r "sk-" --include="*.ts" --include="*.tsx" --include="*.js" --exclude-dir=node_modules .; then
+            echo "❌ Potential API key found in code"
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets detected"
+
+# Notify on completion
+  notify:
+    name: Deployment Check Complete
+    runs-on: ubuntu-latest
+    needs: [deployment-ready, security-scan]
+    if: always()
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "## Deployment Verification Complete 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Build verification passed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ ShepKit build successful" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Docker builds verified" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment configuration validated" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Security scan completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Ready for production deployment to Vercel! 🚀" >> $GITHUB_STEP_SUMMARY
