@@ -10,10 +10,11 @@
     "skipLibCheck": true,
     "noEmit": false,
     "composite": true,
-    "outDir": "./dist",
+    "outDir": "./lib",
+    "rootDir": ".",
     "declaration": true,
     "declarationMap": false
   },
-  "include": ["src", "test"],
-  "exclude": ["dist", "node_modules", "generated"]
+  "include": ["src", "generated"],
+  "exclude": ["dist", "lib", "node_modules", "test"]
 }
