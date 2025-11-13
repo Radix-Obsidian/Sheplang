@@ -295,85 +295,133 @@ export function useShepKitAI(initialMode: AIMode = 'chat') {
 
 ---
 
-### Phase 2: Core Features (Calls 6-12)
+### Phase 2: Core Features (Calls 6-12) - **EDUCATION-FIRST**
 
-#### Call 6: Component Generation ("Wow" Feature)
+#### Call 6: **Explain Mode** (Core Educational Feature)
+**Priority:** HIGHEST - This is ShepKit's differentiator  
+**Feature:** Right-click any code → "Explain This"
+
+**Example:**
+```
+User selects: data Task { fields: { title: text } }
+
+AI Response:
+"This creates a Task data model! 🎯
+
+📋 **What it does:** Defines the blueprint for tasks in your app
+📝 **Fields section:** Lists what info each task stores
+💡 **Why this matters:** Every app needs to organize its data
+
+**Behind the scenes:** This becomes:
+- A database table to store tasks
+- TypeScript types for safety
+- API endpoints to manage tasks
+
+Want to see the generated BobaScript? 🔍"
+```
+
+**Implementation:**
+- Add `ExplainPanel` component with friendly UI
+- Integrate with Monaco editor (right-click context menu)
+- Show BobaScript/TypeScript equivalents on demand
+- Track learning progress
+
+#### Call 7: **Code Comparison View** (Educational Transparency)
+**Feature:** "Show me the [BobaScript/TypeScript/JavaScript]"
+
+**Side-by-Side View:**
+```
+┌─ ShepLang (What You Write) ─┐  ┌─ BobaScript (Generated) ──┐
+│ data Task {                 │  │ interface Task {          │
+│   fields: {                 │  │   title: string;          │
+│     title: text             │  │   completed: boolean;     │
+│   }                         │  │ }                         │
+│ }                           │  │                           │
+└─────────────────────────────┘  └───────────────────────────┘
+```
+
+**Implementation:**
+- Add `CodeComparisonPanel` component
+- Toggle buttons for each language layer
+- Syntax highlighting for all languages
+- Explain the transformation process
+
+#### Call 8: **Interactive Tutorials** (Guided Learning)
+**Feature:** Built-in learning paths with AI guidance
+
+**Tutorial Example: "Your First App"**
+```
+Step 1: "Let's create a Task data model. Type this:"
+[Code editor with: data Task { fields: { title: text } }]
+
+AI: "Great! You just created your first data model. 
+This tells your app what information tasks should store.
+Next, let's add more fields..."
+```
+
+**Implementation:**
+- Tutorial system with step-by-step guidance
+- AI celebrates progress and explains each step
+- Interactive code editor within tutorials
+- Progress tracking and badges
+
+#### Call 9: Component Generation ("Wow" Feature)
 **Feature:** Generate ShepLang components from descriptions  
+**Educational Twist:** Always explain what was generated and why
+
 **Example:**
 ```
 User: "Create a Dog Reminder screen"
 
 AI Returns:
 {
-  code: `
-    data Dog {
-      fields: {
-        name: text
-        breed: text
-        nextCheckup: date
-      }
-      rules: [
-        user can add dogs
-        user can update own dogs
-      ]
-    }
-    
-    view DogReminder {
-      list: Dog
-      buttons: [
-        "Add Dog" -> addDog()
-        "Schedule Checkup" -> scheduleCheckup(dog)
-      ]
-    }
-    
-    action addDog() {
-      ops: [
-        add Dog { name, breed, nextCheckup }
-        show DogReminder
-      ]
-    }
-  `,
-  explanation: "Created a Dog tracking system with...",
-  componentName: "DogReminder"
+  code: `[ShepLang code]`,
+  explanation: "I created a Dog tracking system with:
+  
+  📊 **Data Model**: Stores dog info (name, breed, checkup dates)
+  🔒 **Security Rules**: Users can only manage their own dogs
+  📱 **User Interface**: List view with action buttons
+  
+  This follows the pattern: Data → Rules → Views → Actions
+  Want me to explain any part in detail?",
+  educationalNotes: [
+    "Notice how rules are separate from data - this is for security",
+    "The view connects to the data automatically",
+    "Actions define what users can do"
+  ]
 }
 ```
 
-**Implementation:**
-- Add `GeneratePanel` component
-- Add syntax validation before insertion
-- Add preview pane
-- Add "Insert to Editor" button
+#### Call 10: Syntax Error Debugging (Educational)
+**Feature:** AI explains errors like a patient teacher
 
-#### Call 7: Syntax Error Debugging
-**Feature:** AI explains ShepLang errors in friendly language  
 **Example:**
 ```
 Error: "missing fields:"
 
 AI Response:
-"It looks like your data definition doesn't have a fields section. 
-In ShepLang, every data block needs to define its fields. Try adding:
+"No worries! This is a common mistake. 🤗
 
-fields: {
-  name: text
-  ...
+**The Problem:** Your data block is missing a 'fields' section.
+
+**Why this matters:** ShepLang needs to know what information 
+your data will store. It's like creating a form - you need 
+to list all the blanks to fill in.
+
+**The Fix:**
+data Task {
+  fields: {          ← Add this section
+    title: text      ← List your fields here
+    done: boolean
+  }
 }
 
-right after your data declaration."
+**Pro tip:** Every data block needs fields, even if it's just one!"
 ```
 
-**Implementation:**
-- Hook into existing diagnostic system
-- Pass errors to AI with context
-- Display friendly explanations
-- Suggest fixes
-
-#### Call 8-12: Additional Features
-- **Call 8:** Code explanation ("What does this do?")
-- **Call 9:** Scaffolding (complete apps from prompts)
-- **Call 10:** Best practices checker
-- **Call 11:** Quick fixes automation
-- **Call 12:** Chat history & context management
+#### Call 11-12: Advanced Educational Features
+- **Call 11:** Learning progress tracking & personalized paths
+- **Call 12:** "Teach a friend" mode (export explanations)
 
 ---
 
@@ -547,6 +595,402 @@ NEXT_PUBLIC_SHEPKIT_AI_ENABLED=true
 - Stream all LLM responses
 - Cache system prompts
 - Optimize for mobile
+
+---
+
+## 🎓 Educational Framework - Core Differentiator
+
+### **ShepKit's Educational Mission**
+
+ShepKit isn't just an app builder - it's **the best way to learn modern development** through ShepLang's elegant design. The AI assistant serves as both a **code generator** and a **patient teacher**.
+
+### **Supported Languages & Learning Path**
+
+**Primary Languages (ShepKit Native):**
+- ✅ **ShepLang** - The elegant DSL for non-technical founders
+- ✅ **BobaScript** - The runtime/VM layer (generated from ShepLang)
+
+**Secondary Languages (Educational Context):**
+- ✅ **TypeScript** - What BobaScript compiles to (show the connection)
+- ✅ **JavaScript** - The final runtime (explain the full pipeline)
+
+**Learning Philosophy:**
+```
+Idea → ShepLang → BobaScript → TypeScript → JavaScript → Running App
+      ↑         ↑            ↑           ↑
+   Natural   Elegant      Structured   Universal
+  Language   Syntax       Types        Runtime
+```
+
+### **AI Educational Modes**
+
+#### **1. Explain Mode (Core Feature)**
+**Trigger:** Right-click any code → "Explain This"
+
+**Example Flow:**
+```sheplang
+data Task {
+  fields: {
+    title: text
+    completed: boolean
+    dueDate: date
+  }
+  rules: [
+    user can add tasks
+    user can update own tasks
+  ]
+}
+```
+
+**AI Response:**
+> "This creates a **Task data model**. Let me break it down:
+> 
+> **`data Task`** - Defines a new data type called Task
+> **`fields:`** - Lists what information each task stores
+> **`title: text`** - Each task has a title (like 'Buy groceries')
+> **`completed: boolean`** - True/false for whether it's done
+> **`dueDate: date`** - When the task is due
+> **`rules:`** - Who can do what with tasks
+> 
+> **Behind the scenes:** This becomes a TypeScript interface and database schema. Want to see the generated code?"
+
+#### **2. Show Me the Code Mode**
+**Trigger:** "Show me the [BobaScript/TypeScript/JavaScript]"
+
+**Side-by-Side View:**
+```
+┌─ ShepLang ─────────────┐  ┌─ BobaScript ──────────────┐
+│ data Task {            │  │ interface Task {          │
+│   fields: {            │  │   title: string;          │
+│     title: text        │  │   completed: boolean;     │
+│     completed: boolean │  │   dueDate: Date;          │
+│   }                    │  │ }                         │
+│ }                      │  │                           │
+└────────────────────────┘  └───────────────────────────┘
+```
+
+#### **3. Teach Me Mode**
+**Trigger:** "I want to learn about [concept]"
+
+**Interactive Lessons:**
+- **Data Modeling**: "Let's build a library system together"
+- **User Permissions**: "Who should access what in your app?"
+- **App Flow**: "How users navigate through screens"
+- **Deployment**: "Getting your app live on the internet"
+
+#### **4. Why This Way Mode**
+**Trigger:** Hover over syntax elements
+
+**Tooltips:**
+- `fields: { ... }` → "Why we group data fields together"
+- `rules: [ ... ]` → "Why security rules are separate from data"
+- `view TaskList` → "Why views are different from data"
+
+### **Educational AI System Prompt**
+
+```typescript
+const EDUCATIONAL_SYSTEM_PROMPT = `You are ShepKit's AI teacher, helping non-technical founders learn development through ShepLang.
+
+CORE MISSION: Make programming concepts accessible and exciting.
+
+LANGUAGES YOU TEACH:
+✅ ShepLang (primary) - Elegant, founder-friendly syntax
+✅ BobaScript (generated) - Structured intermediate representation  
+✅ TypeScript (compiled) - Type-safe JavaScript
+✅ JavaScript (runtime) - What actually runs in browsers
+
+TEACHING PRINCIPLES:
+1. Start with the "why" before the "how"
+2. Use real-world analogies (restaurants, libraries, stores)
+3. Show the progression: ShepLang → BobaScript → TypeScript → JavaScript
+4. Celebrate small wins ("Great! You just created your first data model!")
+5. Connect concepts to business value ("This rule prevents data breaches")
+
+EXPLANATION STYLE:
+- Use friendly, encouraging tone
+- Break complex concepts into bite-sized pieces
+- Provide concrete examples
+- Show both the ShepLang way AND the traditional way
+- Always offer to dive deeper or simplify
+
+NEVER:
+- Overwhelm with technical jargon
+- Skip the educational value for speed
+- Generate code without explaining it
+- Assume prior programming knowledge
+
+ALWAYS:
+- Explain WHY something works this way
+- Show the business impact
+- Offer to explain underlying concepts
+- Provide next learning steps`;
+```
+
+### **Educational Features Implementation**
+
+#### **Phase 2 Addition: Educational Core (Calls 6-8)**
+
+**Call 6: Explain Mode**
+```typescript
+// Add to useShepKitAI hook
+const explainCode = async (code: string, selection?: string) => {
+  const response = await fetch('/api/ai/shepkit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mode: 'explain',
+      input: selection || code,
+      context: {
+        currentFile: context.currentFile,
+        educationLevel: 'beginner', // beginner | intermediate | advanced
+        showComparisons: true, // Show BobaScript/TypeScript equivalents
+      },
+    }),
+  });
+  return response.json();
+};
+```
+
+**Call 7: Code Comparison View**
+```typescript
+// Component: CodeComparisonPanel
+const CodeComparisonPanel = ({ shepLangCode }: { shepLangCode: string }) => {
+  const [showBoba, setShowBoba] = useState(false);
+  const [showTypeScript, setShowTypeScript] = useState(false);
+  
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <h3>ShepLang (What You Write)</h3>
+        <CodeEditor value={shepLangCode} language="sheplang" readOnly />
+      </div>
+      
+      {showBoba && (
+        <div>
+          <h3>BobaScript (Generated)</h3>
+          <CodeEditor value={bobaCode} language="typescript" readOnly />
+        </div>
+      )}
+      
+      {showTypeScript && (
+        <div>
+          <h3>TypeScript (Compiled)</h3>
+          <CodeEditor value={tsCode} language="typescript" readOnly />
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+**Call 8: Interactive Tutorials**
+```typescript
+// Built-in tutorial system
+const tutorials = [
+  {
+    id: 'first-app',
+    title: 'Your First App: Task Manager',
+    steps: [
+      {
+        instruction: "Let's create a Task data model. Type this:",
+        code: `data Task {\n  fields: {\n    title: text\n  }\n}`,
+        explanation: "This creates a blueprint for tasks in your app.",
+        nextConcept: "data-fields"
+      },
+      // ... more steps
+    ]
+  },
+  // ... more tutorials
+];
+```
+
+### **Educational UI Components**
+
+#### **1. Explain Panel**
+```typescript
+const ExplainPanel = ({ explanation, code, showComparisons }) => (
+  <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+    <div className="flex items-start gap-3">
+      <BookOpenIcon className="w-5 h-5 text-blue-600 mt-1" />
+      <div>
+        <h4 className="font-semibold text-blue-900">Understanding This Code</h4>
+        <div className="prose prose-sm mt-2">{explanation}</div>
+        
+        {showComparisons && (
+          <div className="mt-4 space-y-2">
+            <button onClick={() => setShowBoba(!showBoba)}>
+              🔍 Show BobaScript Version
+            </button>
+            <button onClick={() => setShowTS(!showTS)}>
+              🔍 Show TypeScript Version
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+```
+
+#### **2. Learning Progress Tracker**
+```typescript
+const LearningProgress = ({ user }) => (
+  <div className="bg-green-50 p-4 rounded-lg">
+    <h4 className="font-semibold text-green-900">Your Learning Journey</h4>
+    <div className="mt-2 space-y-2">
+      <ProgressBar label="Data Modeling" progress={75} />
+      <ProgressBar label="User Permissions" progress={50} />
+      <ProgressBar label="App Deployment" progress={25} />
+    </div>
+    <p className="text-sm text-green-700 mt-2">
+      🎉 You've mastered the basics! Ready for intermediate concepts?
+    </p>
+  </div>
+);
+```
+
+#### **3. Concept Tooltips**
+```typescript
+const ConceptTooltip = ({ concept, children }) => (
+  <Tooltip
+    content={
+      <div className="max-w-xs">
+        <h5 className="font-semibold">{concept.title}</h5>
+        <p className="text-sm mt-1">{concept.explanation}</p>
+        <button className="text-blue-600 text-sm mt-2">
+          Learn more about {concept.title} →
+        </button>
+      </div>
+    }
+  >
+    {children}
+  </Tooltip>
+);
+```
+
+### **Educational API Routes**
+
+#### **Explain Mode Handler**
+```typescript
+async function handleExplain(input: string, context: any) {
+  const result = await generateObject({
+    model: openai('gpt-4o'),
+    schema: z.object({
+      explanation: z.string(),
+      keyPoints: z.array(z.string()),
+      bobaScriptEquivalent: z.string().optional(),
+      typeScriptEquivalent: z.string().optional(),
+      businessValue: z.string(),
+      nextSteps: z.array(z.string()),
+      difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+    }),
+    system: EDUCATIONAL_SYSTEM_PROMPT,
+    prompt: `Explain this ShepLang code in a friendly, educational way:
+
+${input}
+
+Context: ${JSON.stringify(context)}
+
+Focus on:
+1. What this code does in plain English
+2. Why it's structured this way
+3. How it helps build better apps
+4. What the user should learn next`,
+  });
+  
+  return Response.json(result.object);
+}
+```
+
+### **Learning Pathways**
+
+#### **Beginner Path: "From Idea to App"**
+1. **Concepts First**: What is an app? Data? Users? Screens?
+2. **ShepLang Basics**: Your first data model
+3. **Adding Behavior**: Rules and actions
+4. **User Interface**: Views and navigation
+5. **Going Live**: Deployment and sharing
+
+#### **Intermediate Path: "Building Real Apps"**
+1. **Complex Data**: Relationships between models
+2. **Advanced Rules**: Complex permissions and validation
+3. **User Experience**: Forms, lists, and interactions
+4. **Performance**: Making apps fast and reliable
+5. **Scaling**: Handling more users and data
+
+#### **Advanced Path: "Understanding the Stack"**
+1. **BobaScript Deep Dive**: How ShepLang becomes BobaScript
+2. **TypeScript Connection**: Type safety and compilation
+3. **Runtime Behavior**: How JavaScript executes your app
+4. **Architecture Patterns**: Building maintainable systems
+5. **Custom Extensions**: Extending ShepKit itself
+
+### **Educational Success Metrics**
+
+#### **Learning Engagement**
+- Time spent in Explain mode
+- Tutorial completion rates
+- Code comparison usage
+- Question frequency in chat
+
+#### **Skill Progression**
+- Concepts mastered per session
+- Code quality improvements
+- Independent problem-solving
+- Advanced feature adoption
+
+#### **Knowledge Transfer**
+- Ability to explain ShepLang to others
+- Understanding of underlying technologies
+- Confidence in building complex apps
+- Transition to traditional development (if desired)
+
+### **Educational Content Examples**
+
+#### **Data Modeling Lesson**
+```
+👨‍🏫 "Think of data like organizing a filing cabinet:
+
+📁 Each 'data' block is a file folder type
+📄 Each 'field' is a form you fill out
+🔒 Each 'rule' is who can access which files
+
+In ShepLang:
+data Customer {
+  fields: {
+    name: text        // 📝 Customer's name
+    email: text       // 📧 How to contact them
+    joinDate: date    // 📅 When they signed up
+  }
+  rules: [
+    admin can manage customers    // 👑 Full access
+    user can view own profile     // 👤 Limited access
+  ]
+}
+
+This becomes a database table, TypeScript types, and API endpoints automatically!"
+```
+
+#### **App Flow Lesson**
+```
+👨‍🏫 "Apps are like guided tours through your data:
+
+🏠 Landing page: 'Welcome! What would you like to do?'
+📋 List view: 'Here are all your tasks'
+✏️ Edit form: 'Change this task'
+✅ Success page: 'Task updated!'
+
+In ShepLang:
+view TaskDashboard {
+  list: Task
+  buttons: [
+    "Add Task" -> createTask()     // 🚀 Start new task
+    "View Done" -> completedTasks() // ✅ See finished work
+  ]
+}
+
+Each view is a screen in your app!"
+```
 
 ---
 
