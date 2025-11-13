@@ -1,7 +1,8 @@
 import { transpileShepToBoba } from "@adapters/sheplang-to-boba";
 import { EXAMPLES } from "./examples.js";
+import { createEditor, getEditorValue, setEditorValue } from "./editor.js";
 
-const input = document.querySelector<HTMLTextAreaElement>("#src")!;
+const editorContainer = document.querySelector<HTMLDivElement>("#editor")!;
 const ast = document.querySelector<HTMLPreElement>("#ast")!;
 const boba = document.querySelector<HTMLPreElement>("#boba")!;
 const h1 = document.querySelector<HTMLHeadingElement>("#title")!;
@@ -12,17 +13,25 @@ const toast = document.querySelector<HTMLSpanElement>("#copy-toast")!;
 
 function render() {
   try {
-    const src = input.value;
+    const src = getEditorValue();
     const { code, canonicalAst } = transpileShepToBoba(src);
     boba.textContent = code;
     ast.textContent = JSON.stringify(canonicalAst, null, 2);
     h1.textContent = findTitle(canonicalAst) ?? findAppName(canonicalAst) ?? "Preview";
   } catch (e: any) {
     boba.textContent = `ERROR: ${e?.message ?? String(e)}`;
+    ast.textContent = '';
   }
 }
 
-input.addEventListener("input", () => render());
+// Initialize Monaco editor
+const editor = createEditor({
+  container: editorContainer,
+  initialValue: EXAMPLES[0].source.trim() + "\n",
+  onChange: () => render(),
+  onRun: () => render(),
+  onSave: () => flash("Saved to localStorage (TODO)"),
+});
 
 // Init picker + default example
 for (const ex of EXAMPLES) {
@@ -33,11 +42,11 @@ for (const ex of EXAMPLES) {
 }
 picker.addEventListener("change", () => {
   const ex = EXAMPLES.find((e) => e.name === picker.value)!;
-  input.value = ex.source.trim() + "\n";
-  render();
+  setEditorValue(ex.source.trim() + "\n");
 });
 picker.value = EXAMPLES[0].name;
-input.value = EXAMPLES[0].source.trim() + "\n";
+
+// Initial render
 render();
 
 function findTitle(ast: any): string | null {
