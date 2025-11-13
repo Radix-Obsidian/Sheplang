@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd sheplang/shepkit && pnpm install && pnpm run build",
-  "outputDirectory": "sheplang/shepkit/.next",
-  "installCommand": "pnpm install",
-  "framework": null
-}
