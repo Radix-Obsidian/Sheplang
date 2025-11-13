@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "verify": "powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1",
+    "verify": "node ./scripts/verify.js",
     "verify:ci": "pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test",
     "build": "pnpm -r --filter '!@sheplang/e2e' run build",
     "test": "pnpm -w -r test --run",
