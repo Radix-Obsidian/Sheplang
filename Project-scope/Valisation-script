@@ -1,4 +1,0 @@
-pnpm -w build
-pnpm -w test --run
-pnpm --filter @boba/cli exec boba run examples/todo.boba
-Write-Host "✅ All Tests Passed"
