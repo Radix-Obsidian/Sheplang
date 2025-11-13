@@ -2,6 +2,7 @@ packages:
   - sheplang/packages/*
   - adapters/*
   - sheplang/shepkit
+  - sheplang/sandbox
   - sheplang/examples
   - sheplang/playground
   - sheplang/e2e
