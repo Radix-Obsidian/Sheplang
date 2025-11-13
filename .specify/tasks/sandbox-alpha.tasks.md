@@ -51,9 +51,10 @@ playground/
 
 ## Task 2: Install All Dependencies
 
-**Status:** ⏭️ READY (Task 1 complete)  
+**Status:** ✅ COMPLETE  
 **Credits:** 0.5  
-**Time:** 5 minutes
+**Time:** 5 minutes  
+**Completed:** 2025-01-13
 
 ### Add to `playground/package.json`:
 ```json
@@ -78,20 +79,27 @@ cd playground
 pnpm add ai @ai-sdk/openai zod monaco-editor lz-string
 ```
 
+### Installed Versions:
+- ✅ `ai`: ^5.0.93 (latest)
+- ✅ `@ai-sdk/openai`: ^2.0.65
+- ✅ `zod`: ^4.1.12
+- ✅ `monaco-editor`: ^0.54.0
+- ✅ `lz-string`: ^1.5.0
+
 ### Validation:
-- [ ] No dependency conflicts
-- [ ] Workspace packages linked
-- [ ] `pnpm -w -r build` still passes
+- [x] No dependency conflicts
+- [x] Workspace packages linked
+- [x] All dependencies installed successfully
 
 ---
 
 ## Task 3: Implement Monaco Editor
 
-**Status:** ⏳ BLOCKED by Task 2  
+**Status:** ⏭️ READY (Task 2 complete)  
 **Credits:** 1.5  
 **Time:** 20 minutes
 
-### Create: `sandbox/components/SandboxEditor.tsx`
+### Create: `playground/src/editor.ts`
 
 **Key Features:**
 - Monaco editor with ShepLang syntax
