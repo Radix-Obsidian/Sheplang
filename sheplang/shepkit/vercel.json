@@ -3,7 +3,6 @@
   "devCommand": "pnpm run dev",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "nodeVersion": "20.x",
   "env": {
     "OPENAI_API_KEY": {
       "description": "OpenAI API key for AI features",
