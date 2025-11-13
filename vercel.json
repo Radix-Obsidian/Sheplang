@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/sheplang/shepkit/$1" }
+  ],
+  "buildCommand": "cd sheplang/shepkit && pnpm run build",
+  "outputDirectory": "sheplang/shepkit/.next",
+  "framework": "nextjs",
+  "rootDirectory": "sheplang/shepkit"
+}
