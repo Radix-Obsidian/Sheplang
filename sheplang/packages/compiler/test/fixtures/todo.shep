@@ -1,0 +1,13 @@
+component TodoApp {
+  state todos = []
+  state newTodo = ""
+  
+  "My Todo List"
+  
+  action AddTodo(item) {
+    todos.push(item)
+    newTodo = ""
+  }
+}
+
+route "/" -> TodoApp

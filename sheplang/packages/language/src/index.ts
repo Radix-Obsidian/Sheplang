@@ -5,13 +5,21 @@ import { EmptyFileSystem, URI } from 'langium';
 import { mapToAppModel } from './mapper.js';
 import type { AppModel } from './types.js';
 import { formatFriendlyError, formatErrorMessage } from './error-formatter.js';
+import type { Diagnostic, CompilationResult } from './types/diagnostics';
 
 export type ParsedResult = {
   ast: ShepFile;
   appModel: AppModel;
-  diagnostics: { message: string; line: number; column: number; severity: 'error' | 'warning' }[];
+  diagnostics: Diagnostic[];
+  success: boolean;
 };
 
+/**
+ * Parse ShepLang source code
+ * @param source Source code to parse
+ * @param filePath Optional file path for better error messages
+ * @returns Parsed result with AST, app model, and diagnostics
+ */
 export async function parseShep(source: string, filePath = 'input.shep'): Promise<ParsedResult> {
   const { text: preprocessed, map } = preprocessWithMap(source);
   const services = createShepServices(EmptyFileSystem).Shep;
@@ -24,31 +32,57 @@ export async function parseShep(source: string, filePath = 'input.shep'): Promis
     const originalLine = map[outLine - 1] ?? outLine;
     return {
       message: d.message,
-      line: originalLine,
-      column: d.range.start.character + 1,
-      severity: d.severity === 1 ? 'error' as const : 'warning' as const
-    };
+      severity: d.severity === 1 ? 'error' : 'warning',
+      start: {
+        line: originalLine,
+        column: d.range.start.character + 1,
+        offset: d.range.start.offset
+      },
+      end: {
+        line: d.range.end ? (map[d.range.end.line] ?? d.range.end.line + 1) : originalLine,
+        column: d.range.end ? d.range.end.character + 1 : d.range.start.character + 1,
+        offset: d.range.end ? d.range.end.offset : d.range.start.offset
+      },
+      code: d.code,
+      source: 'sheplang'
+    } as Diagnostic;
   });
-  if (diagnostics.some((d: any) => d.severity === 'error')) {
-    // Use first diagnostic for friendly message
-    const first: any = document.diagnostics?.[0];
-    const friendly = formatFriendlyError(first);
-    // Remap line to original
-    const outLine = first.range.start.line + 1;
-    const originalLine = map[outLine - 1] ?? outLine;
-    const finalMsg = formatErrorMessage({ ...friendly, line: originalLine });
-    throw new Error(finalMsg);
+
+  // Only try to build model if we don't have parse errors
+  let appModel: AppModel | null = null;
+  const success = !diagnostics.some(d => d.severity === 'error');
+  
+  if (success) {
+    try {
+      appModel = mapToAppModel(ast);
+    } catch (error: any) {
+      // Add model mapping errors as diagnostics
+      diagnostics.push({
+        message: `Model mapping error: ${error.message}`,
+        severity: 'error',
+        start: { line: 1, column: 1, offset: 0 },
+        code: 'MODEL_MAPPING_ERROR',
+        source: 'sheplang'
+      });
+      return { ast, appModel: null as unknown as AppModel, diagnostics, success: false };
+    }
   }
-  const appModel = mapToAppModel(ast);
-  return { ast, appModel, diagnostics };
+
+  return { 
+    ast, 
+    appModel: appModel as AppModel, // We know it's not null if success is true
+    diagnostics,
+    success
+  };
 }
 
 // Helper used by tests to mirror expected API that directly returns appModel
 export async function parseAndMap(source: string, filePath = 'input.shep') {
-  const { ast, appModel, diagnostics } = await parseShep(source, filePath);
-  return { diagnostics, appModel };
+  const { ast, appModel, diagnostics, success } = await parseShep(source, filePath);
+  return { diagnostics, appModel, success };
 }
 
 export { mapToAppModel };
 export { preprocessIndentToBraces, preprocessWithMap } from './preprocessor.js';
 export type { AppModel } from './types';
+export type { Diagnostic, CompilationResult } from './types/diagnostics';
