@@ -2,9 +2,8 @@ packages:
   - sheplang/packages/*
   - adapters/*
   - sheplang/shepkit
-  - sheplang/sandbox
-  - sheplang/examples
   - sheplang/playground
+  - sheplang/examples
   - sheplang/e2e
 
 ignoredBuiltDependencies:

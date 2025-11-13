@@ -1,7 +1,8 @@
-# Specification: ShepLang Sandbox Alpha
+# Specification: ShepLang Sandbox Alpha (Playground)
 
 **Phase:** 1 - Sandbox Alpha  
 **Status:** Ready for Implementation  
+**Location:** `/sheplang/playground/` (Vite-based)  
 **Related:** [ROADMAP.md](../../Project-scope/ROADMAP.md)  
 **Replaces:** ShepKit as initial launch target
 
@@ -41,7 +42,7 @@ Build a small, stable, "wow-in-10-minutes" sandbox for ShepLang that:
 - `@sheplang/runtime` or existing preview runtime
 
 **Simple deployment:**
-- Built as a Next.js app
+- Built with Vite (existing setup)
 - Deployed on Vercel as `sandbox.sheplang.dev`
 
 ### ❌ Out of Scope for Sandbox Alpha
@@ -138,10 +139,10 @@ Desktop-first layout (mobile usable but not optimized):
 
 ### High-level
 
-**Frontend:** Next.js 14 (App Router) + React  
-**AI:** Vercel AI SDK  
+**Frontend:** Vite + TypeScript (Vanilla or lightweight framework)  
+**AI:** Vercel AI SDK (backend endpoint)  
 **Language:** Use existing packages as dependencies  
-**State:** React state (no heavy state library needed)  
+**State:** Vanilla JS state or simple store  
 **Storage:** localStorage for user projects  
 
 ```
@@ -319,20 +320,19 @@ Only add:
 ### Folder Structure:
 ```
 /sheplang/
-  sandbox/              # NEW: Sandbox Alpha app
-    app/
-      page.tsx          # Main sandbox page
-      api/
-        ai/
-          route.ts      # AI endpoint
-    components/
-      Editor.tsx
-      Preview.tsx
-      AIAssistant.tsx
-      Examples.tsx
-    lib/
-      storage.ts        # localStorage helpers
-      share.ts          # URL encoding/decoding
+  playground/           # Sandbox Alpha (existing Vite app)
+    src/
+      main.ts           # Entry point (existing)
+      examples.ts       # Examples (existing)
+      editor.ts         # NEW: Monaco wrapper
+      preview.ts        # NEW: Preview panel
+      ai-client.ts      # NEW: AI API calls
+      storage.ts        # NEW: localStorage helpers
+      share.ts          # NEW: URL encoding/decoding
+    api/                # NEW: Backend for AI
+      ai-handler.ts     # AI endpoint
+    index.html          # Existing
+    vite.config.ts      # Existing
 ```
 
 ---

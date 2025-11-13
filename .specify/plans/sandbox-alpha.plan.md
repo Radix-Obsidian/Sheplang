@@ -1,9 +1,9 @@
-# Technical Plan: ShepLang Sandbox Alpha
+# Technical Plan: ShepLang Sandbox Alpha (Playground)
 
 **Spec:** [sandbox-alpha.spec.md](../specs/sandbox-alpha.spec.md)  
 **Status:** Ready for Implementation  
 **Target:** 10-14 Windsurf Credits  
-**Location:** `/sheplang/sandbox/`
+**Location:** `/sheplang/playground/` (Vite-based)
 
 ---
 
@@ -28,7 +28,7 @@ pnpm run verify
 
 ### Sandbox Lives In ONE Place:
 ```
-/sheplang/sandbox/     # NEW Next.js app here
+/sheplang/playground/     # Existing Vite app (enhance this)
 ```
 
 ---
@@ -36,10 +36,10 @@ pnpm run verify
 ## 📦 Implementation Overview
 
 ### Architecture
-- **Frontend:** Next.js 14 App Router
+- **Frontend:** Vite + TypeScript
 - **Editor:** Monaco with ShepLang syntax
 - **Preview:** Uses existing transpiler pipeline
-- **AI:** Vercel AI SDK with OpenAI
+- **AI:** Vercel AI SDK with OpenAI (backend endpoint)
 - **Storage:** localStorage only (no backend)
 - **Share:** URL encoding (no database)
 
@@ -55,18 +55,21 @@ pnpm run verify
 
 ## 🎯 10-Step Build Plan
 
-### Step 1: Create Next.js App
+### Step 1: Verify Playground Setup
 ```bash
-cd sheplang
-npx create-next-app@latest sandbox --typescript --tailwind --app
+cd sheplang/playground
+# Check existing setup
+pnpm list
+# Verify it runs
+pnpm dev
 ```
 
 ### Step 2: Install Dependencies
 ```bash
-cd sandbox
-pnpm add ai @ai-sdk/openai @ai-sdk/react zod
-pnpm add @monaco-editor/react lz-string
-pnpm add @sheplang/language @adapters/sheplang-to-boba
+cd playground
+pnpm add ai @ai-sdk/openai zod
+pnpm add monaco-editor lz-string
+# Workspace packages already included
 ```
 
 ### Step 3-10: Component Implementation

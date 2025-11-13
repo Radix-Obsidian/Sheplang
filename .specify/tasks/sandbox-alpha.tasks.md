@@ -1,9 +1,9 @@
-# Tasks: ShepLang Sandbox Alpha
+# Tasks: ShepLang Sandbox Alpha (Playground)
 
 **Plan:** [sandbox-alpha.plan.md](../plans/sandbox-alpha.plan.md)  
 **Spec:** [sandbox-alpha.spec.md](../specs/sandbox-alpha.spec.md)  
 **Status:** Ready to Execute  
-**Location:** `/sheplang/sandbox/`
+**Location:** `/sheplang/playground/` (Vite-based)
 
 ---
 
@@ -16,39 +16,36 @@
 
 ---
 
-## Task 1: Create Next.js Sandbox App
+## Task 1: Verify Playground Setup & Cleanup
 
 **Status:** ✅ COMPLETE  
-**Credits:** 1.0  
+**Credits:** 0.5  
 **Time:** 10 minutes  
 **Completed:** 2025-01-13
 
-### Commands:
-```bash
-cd sheplang
-npx create-next-app@latest sandbox \
-  --typescript \
-  --tailwind \
-  --app \
-  --no-src-dir \
-  --import-alias "@/*"
-```
+### What Was Done:
+- Removed incorrect `/sandbox/` folder
+- Verified `/playground/` exists with Vite
+- Confirmed workspace recognizes playground
+- Cleaned up pnpm-workspace.yaml
 
-### Update Workspace:
-Edit `/pnpm-workspace.yaml`:
-```yaml
-packages:
-  - 'sheplang/packages/*'
-  - 'adapters/*'
-  - 'sheplang/shepkit'
-  - 'sheplang/playground'
-  - 'sheplang/sandbox'    # ADD THIS
+### Existing Playground Has:
+```bash
+playground/
+  src/
+    main.ts           # ✅ Entry point
+    examples.ts       # ✅ ShepLang examples
+  package.json        # ✅ Has language dependencies
+  vite.config.ts      # ✅ Vite configured
+  index.html          # ✅ HTML template
 ```
 
 ### Validation:
-- [x] Sandbox folder created (already existed)
-- [x] Next.js runs with `pnpm dev`
-- [x] Workspace recognizes sandbox
+- [x] Playground folder exists with Vite setup
+- [x] Has ShepLang integration (@sheplang/language)
+- [x] Has BobaScript adapter (@adapters/sheplang-to-boba)
+- [x] Workspace recognizes playground
+- [x] No sandbox folder conflicts
 
 ---
 
@@ -58,26 +55,27 @@ packages:
 **Credits:** 0.5  
 **Time:** 5 minutes
 
-### Add to `sandbox/package.json`:
+### Add to `playground/package.json`:
 ```json
 {
   "dependencies": {
-    "ai": "^3.4.0",
-    "@ai-sdk/openai": "^0.0.66",
-    "@ai-sdk/react": "^0.0.66",
-    "zod": "^3.23.0",
-    "@monaco-editor/react": "^4.6.0",
-    "lz-string": "^1.5.0",
-    "@sheplang/language": "workspace:*",
-    "@adapters/sheplang-to-boba": "workspace:*"
+    "@sheplang/language": "workspace:*",      // Already has
+    "@adapters/sheplang-to-boba": "workspace:*",  // Already has
+    "ai": "^3.4.0",                           // ADD
+    "@ai-sdk/openai": "^0.0.66",              // ADD
+    "zod": "^3.23.0",                         // ADD
+    "monaco-editor": "^0.45.0",               // ADD (not React version)
+    "lz-string": "^1.5.0"                     // ADD
   }
 }
 ```
 
+**Note:** Using `monaco-editor` (vanilla) not `@monaco-editor/react` since playground is Vite + TypeScript
+
 ### Commands:
 ```bash
-cd sandbox
-pnpm install
+cd playground
+pnpm add ai @ai-sdk/openai zod monaco-editor lz-string
 ```
 
 ### Validation:
