@@ -3,7 +3,7 @@
 # Single source of truth for regression checks
 
 param(
-  [string]$Example = "examples/todo.shep"
+  [string]$Example = "../examples/todo.shep"
 )
 
 # Check PowerShell version
@@ -84,15 +84,15 @@ try {
   }
   Write-Output 'Sanity checks complete'
 
-  # 6. Playground build (smoke)
-  Write-Output '[6/6] Building playground (smoke)...'
-  pnpm --filter @sheplang/playground build
+  # 6. ShepYard build (smoke)
+  Write-Output '[6/6] Building ShepYard (smoke)...'
+  pnpm --filter @shepyard/cds build
   if ($LASTEXITCODE -ne 0) {
-    throw "Playground build failed with exit code $LASTEXITCODE"
+    throw "ShepYard build failed with exit code $LASTEXITCODE"
   }
-  $pgIndex = Join-Path $PSScriptRoot "..\sheplang\playground\dist\index.html"
-  if (-not (Test-Path $pgIndex)) { throw "Playground build missing index.html" }
-  Write-Output 'Playground built'
+  $pgIndex = Join-Path $PSScriptRoot "..\shepyard\dist\index.html"
+  if (-not (Test-Path $pgIndex)) { throw "ShepYard build missing index.html" }
+  Write-Output 'ShepYard built'
 
   Write-Output ''
   Write-Output '=== VERIFY OK ==='

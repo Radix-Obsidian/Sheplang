@@ -1,4 +1,4 @@
-import { AppModel } from './types';
+import type { AppModel } from './types';
 
 /**
  * Generate TypeScript type definitions for data models

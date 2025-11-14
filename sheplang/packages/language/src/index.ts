@@ -1,6 +1,6 @@
 import { createShepServices } from './shep-module.js';
 import { preprocessWithMap } from './preprocessor.js';
-import type { ShepFile } from '../generated/ast';
+import type { ShepFile } from '../generated/ast.js';
 import { EmptyFileSystem, URI } from 'langium';
 import { mapToAppModel } from './mapper.js';
 import type { AppModel } from './types.js';
@@ -51,4 +51,4 @@ export async function parseAndMap(source: string, filePath = 'input.shep') {
 
 export { mapToAppModel };
 export { preprocessIndentToBraces, preprocessWithMap } from './preprocessor.js';
-export type { AppModel } from './types';
+export type { AppModel } from './types.js';

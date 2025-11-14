@@ -5,6 +5,7 @@
   "scripts": {
     "verify": "powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1",
     "build": "pnpm -w -r build",
-    "test": "pnpm -w -r test --run"
+    "test": "pnpm -w -r test --run",
+    "dev:shepyard": "pnpm --filter @shepyard/cds dev"
   }
 }

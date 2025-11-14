@@ -1,11 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
     "declaration": true,
-    "declarationMap": false,
-    "outDir": "dist",
-    "rootDir": "."
+    "sourceMap": false,
+    "noEmit": false
   },
-  "include": ["src", "generated"]
+  "include": ["src", "generated"],
+  "exclude": ["dist", "node_modules", "test"]
 }
