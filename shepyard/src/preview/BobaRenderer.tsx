@@ -88,6 +88,15 @@ export function BobaRenderer({ app, className = '' }: BobaRendererProps) {
   const [currentRoute, setCurrentRoute] = useState<string>('/');
   const [actionLog, setActionLog] = useState<string[]>([]);
 
+  // Handle null app (Phase 4: Error handling)
+  if (!app) {
+    return (
+      <div className="flex items-center justify-center h-full p-6">
+        <p className="text-gray-500">No app data available</p>
+      </div>
+    );
+  }
+
   // Find current component based on route
   const getCurrentComponent = (): string => {
     if (!app.routes || app.routes.length === 0) {
@@ -109,20 +118,12 @@ export function BobaRenderer({ app, className = '' }: BobaRendererProps) {
   // Currently routes are navigated via route buttons in the UI
 
   // Render the component if it exists
+  // Phase 4: Remove try-catch to let errors bubble to ErrorBoundary
   let componentElement: ReactElement | string | number | null = null;
   
   if (component?.render) {
-    try {
-      const bobaElement = component.render();
-      componentElement = renderBobaElement(bobaElement);
-    } catch (error) {
-      console.error('Error rendering component:', error);
-      componentElement = createElement(
-        'div',
-        { className: 'text-red-600 p-4' },
-        'Error rendering component: ' + (error instanceof Error ? error.message : 'Unknown error')
-      );
-    }
+    const bobaElement = component.render();
+    componentElement = renderBobaElement(bobaElement);
   }
 
   return (
