@@ -14,6 +14,50 @@ export interface ShepExample {
   source: string;   // inline ShepLang source code
 }
 
+/**
+ * ShepThon backend examples
+ */
+export interface ShepThonExample {
+  id: string;
+  name: string;
+  description: string;
+  filePath: string;
+  source: string;
+}
+
+export const SHEPTHON_EXAMPLES: ShepThonExample[] = [
+  {
+    id: 'dog-reminders-backend',
+    name: 'Dog Reminders (Backend)',
+    description: 'ShepThon backend with models, endpoints, and jobs',
+    filePath: 'examples/shepthon/dog-reminders.shepthon',
+    source: `app DogReminders {
+  model Reminder {
+    id: id
+    text: string
+    time: datetime
+    done: bool = false
+  }
+
+  endpoint GET "/reminders" -> [Reminder] {
+    return db.Reminder.findAll()
+  }
+
+  endpoint POST "/reminders" (text: string, time: datetime) -> Reminder {
+    let reminder = db.Reminder.create({ text, time })
+    return reminder
+  }
+
+  job "mark-due-as-done" every 5 minutes {
+    let due = db.Reminder.findAll()
+    for r in due {
+      db.Reminder.update(r.id, { done: true })
+    }
+  }
+}`,
+  },
+];
+
 export const SHEP_EXAMPLES: ShepExample[] = [
   {
     id: 'todo',
