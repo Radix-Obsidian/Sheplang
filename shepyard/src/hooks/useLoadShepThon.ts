@@ -38,36 +38,35 @@ export function useLoadShepThon() {
       return;
     }
 
+    // TEMPORARY: Disable auto-loading due to parser hanging
+    // TODO: Move to Web Worker (see research: vite-plugin-comlink)
+    console.log('[ShepThon] Auto-loading disabled - parser causes browser hang');
+    console.log('[ShepThon] Solution: Implement Web Worker with Comlink');
+    setShepThonError('ShepThon auto-loading temporarily disabled. Parser needs Web Worker implementation.');
+    return;
+
     // Load ShepThon backend (defer to next tick to avoid blocking)
-    const loadBackend = () => {
-      setShepThonLoading(true);
-
-      // Use setTimeout to defer heavy parsing to next event loop tick
-      setTimeout(() => {
-        console.log('[ShepThon] Starting to load:', shepthonExample.id);
-        try {
-          console.log('[ShepThon] Calling loadShepThon...');
-          const result = loadShepThon(shepthonExample.source);
-          console.log('[ShepThon] Load result:', result.success);
-
-          if (result.success && result.metadata) {
-            console.log('[ShepThon] Setting metadata:', result.metadata.name);
-            setShepThonMetadata(result.metadata);
-          } else {
-            console.error('[ShepThon] Load failed:', result.error);
-            setShepThonError(result.error || 'Failed to load ShepThon backend');
-          }
-        } catch (error) {
-          console.error('[ShepThon] Exception during load:', error);
-          const errorMessage = error instanceof Error 
-            ? error.message 
-            : 'Unknown error loading ShepThon';
-          setShepThonError(errorMessage);
-        }
-      }, 100); // Increase timeout to 100ms for breathing room
-    };
-
-    loadBackend();
+    // COMMENTED OUT - Causes browser hang
+    // const loadBackend = () => {
+    //   setShepThonLoading(true);
+    //   setTimeout(() => {
+    //     console.log('[ShepThon] Starting to load:', shepthonExample.id);
+    //     try {
+    //       const result = loadShepThon(shepthonExample.source);
+    //       if (result.success && result.metadata) {
+    //         setShepThonMetadata(result.metadata);
+    //       } else {
+    //         setShepThonError(result.error || 'Failed to load ShepThon backend');
+    //       }
+    //     } catch (error) {
+    //       const errorMessage = error instanceof Error 
+    //         ? error.message 
+    //         : 'Unknown error loading ShepThon';
+    //       setShepThonError(errorMessage);
+    //     }
+    //   }, 100);
+    // };
+    // loadBackend();
   }, [activeExampleId, setShepThonMetadata, setShepThonError, setShepThonLoading, clearShepThon]);
 
   // Cleanup on unmount
