@@ -11,6 +11,9 @@ export function registerShepLangSyntax(monaco: typeof Monaco) {
 
   // Define ShepLang tokens
   monaco.languages.setMonarchTokensProvider('sheplang', {
+    // Define symbols regex (REQUIRED by Monaco when using @symbols)
+    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    
     tokenizer: {
       root: [
         // Keywords
@@ -70,6 +73,9 @@ export function registerShepLangSyntax(monaco: typeof Monaco) {
 
   // Define ShepThon tokens
   monaco.languages.setMonarchTokensProvider('shepthon', {
+    // Define symbols regex (REQUIRED by Monaco when using @symbols)
+    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    
     tokenizer: {
       root: [
         // Keywords
