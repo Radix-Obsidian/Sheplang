@@ -89,7 +89,17 @@ class Parser {
     const endpoints: EndpointDefinition[] = [];
     const jobs: JobDefinition[] = [];
     
+    // Safety check to prevent infinite loops
+    let maxIterations = 1000;
+    let iterations = 0;
+    
     while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      // Infinite loop protection
+      if (++iterations > maxIterations) {
+        this.error('Parser exceeded maximum iterations - possible infinite loop');
+        break;
+      }
+      
       this.skipNewlines();
       
       if (this.match(TokenType.MODEL)) {
@@ -104,7 +114,9 @@ class Parser {
       } else if (this.check(TokenType.RBRACE)) {
         break;
       } else {
+        // Unexpected token - advance to prevent infinite loop
         this.error(`Unexpected token: ${this.peek().value}`);
+        this.advance(); // Force advance!
         this.synchronize();
       }
       

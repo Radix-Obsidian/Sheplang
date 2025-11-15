@@ -4,6 +4,8 @@ import './index.css'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ResizableLayout } from './layout/ResizableLayout'
 import { ProjectPanel } from './project-panel/ProjectPanel'
+import { TitleBar } from './navigation/TitleBar'
+import { StatusBar } from './navigation/StatusBar'
 import { WelcomeCard } from './ui/WelcomeCard'
 import { ShepCodeViewer } from './editor/ShepCodeViewer'
 import { BobaRenderer } from './preview/BobaRenderer'
@@ -143,13 +145,25 @@ function App() {
     </div>
   );
 
+  const shepthonMetadata = useWorkspaceStore((state) => state.shepthon.metadata);
+
   return (
     <ErrorBoundary FallbackComponent={GenericErrorFallback}>
-      <div className="h-screen">
-        <ResizableLayout
-          leftPanel={leftPanel}
-          centerPanel={centerPanel}
-          rightPanel={rightPanel}
+      <div className="h-screen flex flex-col bg-vscode-bg">
+        <TitleBar activePath={(activeExample || activeShepThonExample)?.name} />
+        
+        <div className="flex-1 overflow-hidden">
+          <ResizableLayout
+            leftPanel={leftPanel}
+            centerPanel={centerPanel}
+            rightPanel={rightPanel}
+          />
+        </div>
+        
+        <StatusBar 
+          shepthonReady={!!shepthonMetadata}
+          problemCount={0}
+          currentExample={(activeExample || activeShepThonExample)?.name}
         />
       </div>
     </ErrorBoundary>

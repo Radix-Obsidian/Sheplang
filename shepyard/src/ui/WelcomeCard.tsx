@@ -1,37 +1,61 @@
 /**
  * WelcomeCard Component
  * 
- * Displayed when no example is selected.
- * Provides a friendly introduction to ShepYard.
+ * VS Code-style welcome screen
+ * Professional, founder-friendly introduction
  */
 
 export function WelcomeCard() {
   return (
-    <div className="h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="text-center max-w-lg px-6">
-        <div className="text-6xl mb-4">🐑</div>
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">
-          Welcome to ShepYard
+    <div className="h-full flex items-center justify-center bg-vscode-bg">
+      <div className="text-center max-w-2xl px-8">
+        <div className="text-8xl mb-6">🐑</div>
+        <h1 className="text-5xl font-bold text-vscode-fg mb-4">
+          ShepYard Alpha
         </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Creative Development Sandbox
+        <p className="text-xl text-gray-400 mb-12">
+          Full-Stack Development for Non-Technical Founders
         </p>
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <p className="text-gray-700 mb-4">
-            Your local creative space for building with ShepLang and BobaScript.
-          </p>
-          <div className="text-left space-y-2 text-sm text-gray-600">
-            <div>✓ Phase 0: Environment Setup</div>
-            <div className="font-semibold text-indigo-600">
-              → Phase 1: Examples + Read-only Viewer
-            </div>
+        
+        <div className="grid grid-cols-2 gap-4 mb-12">
+          <div className="bg-vscode-sidebar border border-vscode-border rounded-lg p-6 text-left hover:border-vscode-statusBar transition-colors">
+            <div className="text-3xl mb-3">📱</div>
+            <h3 className="text-lg font-semibold text-vscode-fg mb-2">ShepLang Screens</h3>
+            <p className="text-sm text-gray-400">
+              Build mobile UIs with simple, declarative syntax
+            </p>
           </div>
-          <div className="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-            <p className="text-sm text-indigo-900">
-              👈 Select an example from the sidebar to view its ShepLang source code
+          
+          <div className="bg-vscode-sidebar border border-vscode-border rounded-lg p-6 text-left hover:border-vscode-statusBar transition-colors">
+            <div className="text-3xl mb-3">⚡</div>
+            <h3 className="text-lg font-semibold text-vscode-fg mb-2">ShepThon Backend</h3>
+            <p className="text-sm text-gray-400">
+              Create APIs, databases, and jobs in one file
             </p>
           </div>
         </div>
+
+        <div className="bg-vscode-activityBar border border-vscode-border rounded-lg p-6">
+          <h3 className="text-base font-semibold text-vscode-fg mb-3">Get Started</h3>
+          <div className="space-y-2 text-sm text-gray-400 text-left">
+            <div className="flex items-center">
+              <span className="mr-3">📁</span>
+              <span>Click <strong className="text-vscode-info">Explorer</strong> to browse screen examples</span>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-3">⚡</span>
+              <span>Click <strong className="text-vscode-info">Backend</strong> to see ShepThon APIs</span>
+            </div>
+            <div className="flex items-center">
+              <span className="mr-3">✏️</span>
+              <span>Click any example to view and <strong className="text-vscode-success">edit</strong> code</span>
+            </div>
+          </div>
+        </div>
+        
+        <p className="text-xs text-gray-500 mt-8">
+          Built with ❤️ for founders who want to create without limits
+        </p>
       </div>
     </div>
   );

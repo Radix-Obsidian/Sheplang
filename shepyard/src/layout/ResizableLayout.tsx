@@ -61,86 +61,59 @@ export function ResizableLayout({
   };
 
   return (
-    <div className="relative h-full w-full flex flex-col">
-      {/* Toggle Buttons Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-gray-300">
-        <button
-          onClick={handleLeftToggle}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-          title={isLeftVisible ? 'Hide sidebar' : 'Show sidebar'}
-        >
-          {isLeftVisible ? '◀' : '▶'}
-          <span>{isLeftVisible ? 'Hide Sidebar' : 'Show Sidebar'}</span>
-        </button>
-
-        <div className="text-sm text-gray-600 font-medium">
-          🐑 ShepYard - Creative Development Sandbox
-        </div>
-
-        <button
-          onClick={handleRightToggle}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-          title={isRightVisible ? 'Hide preview panel' : 'Show preview panel'}
-        >
-          <span>{isRightVisible ? 'Hide Preview' : 'Show Preview'}</span>
-          {isRightVisible ? '▶' : '◀'}
-        </button>
-      </div>
-
+    <div className="relative h-full w-full">
       {/* Resizable Panel Group */}
-      <div className="flex-1 overflow-hidden">
-        <PanelGroup
-          direction="horizontal"
-          autoSaveId="shepyard-layout"
-          className="h-full"
+      <PanelGroup
+        direction="horizontal"
+        autoSaveId="shepyard-layout"
+        className="h-full"
+      >
+        {/* Left Panel - Sidebar */}
+        {isLeftVisible && (
+          <>
+            <Panel
+              id="sidebar"
+              defaultSize={20}
+              minSize={15}
+              maxSize={35}
+              collapsible={true}
+              className="bg-vscode-sidebar"
+            >
+              {leftPanel}
+            </Panel>
+
+            <ResizeHandle />
+          </>
+        )}
+
+        {/* Center Panel - Code Viewer */}
+        <Panel
+          id="center"
+          defaultSize={isLeftVisible && isRightVisible ? 50 : isLeftVisible ? 70 : isRightVisible ? 70 : 100}
+          minSize={30}
+          className="bg-vscode-bg"
         >
-          {/* Left Panel - Sidebar */}
-          {isLeftVisible && (
-            <>
-              <Panel
-                id="sidebar"
-                defaultSize={20}
-                minSize={10}
-                maxSize={40}
-                collapsible={true}
-                className="bg-white"
-              >
-                {leftPanel}
-              </Panel>
+          {centerPanel}
+        </Panel>
 
-              <ResizeHandle />
-            </>
-          )}
+        {/* Right Panel - Preview & Explain */}
+        {isRightVisible && (
+          <>
+            <ResizeHandle />
 
-          {/* Center Panel - Code Viewer */}
-          <Panel
-            id="center"
-            defaultSize={isLeftVisible && isRightVisible ? 50 : isLeftVisible ? 70 : isRightVisible ? 70 : 100}
-            minSize={30}
-            className="bg-white"
-          >
-            {centerPanel}
-          </Panel>
-
-          {/* Right Panel - Preview & Explain */}
-          {isRightVisible && (
-            <>
-              <ResizeHandle />
-
-              <Panel
-                id="preview"
-                defaultSize={30}
-                minSize={15}
-                maxSize={50}
-                collapsible={true}
-                className="bg-white border-l border-gray-200"
-              >
-                {rightPanel}
-              </Panel>
-            </>
-          )}
-        </PanelGroup>
-      </div>
+            <Panel
+              id="preview"
+              defaultSize={30}
+              minSize={20}
+              maxSize={45}
+              collapsible={true}
+              className="bg-vscode-bg border-l border-vscode-border"
+            >
+              {rightPanel}
+            </Panel>
+          </>
+        )}
+      </PanelGroup>
     </div>
   );
 }
@@ -179,16 +152,16 @@ function ResizeHandle() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #e5e7eb;
+          background: #3E3E3E;
           transition: background-color 0.2s ease;
         }
 
         .resize-handle:hover {
-          background: #3b82f6;
+          background: #007ACC;
         }
 
         .resize-handle:active {
-          background: #2563eb;
+          background: #0098FF;
         }
 
         .resize-handle-line {

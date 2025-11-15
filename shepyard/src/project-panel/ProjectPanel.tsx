@@ -51,15 +51,15 @@ export function ProjectPanel() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white border-r border-gray-200">
+    <div className="h-full flex flex-col bg-vscode-sidebar border-r border-vscode-border">
       {/* Activity Bar */}
-      <div className="flex border-b border-gray-200 bg-gray-50">
+      <div className="flex border-b border-vscode-border bg-vscode-activityBar">
         <button
           onClick={() => setActiveView('explorer')}
           className={`flex-1 py-3 text-sm font-medium transition-colors ${
             activeView === 'explorer'
-              ? 'bg-white text-indigo-600 border-b-2 border-indigo-600'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-vscode-sidebar text-vscode-fg border-b-2 border-vscode-statusBar'
+              : 'text-gray-400 hover:text-vscode-fg'
           }`}
           title="Project Explorer"
         >
@@ -69,8 +69,8 @@ export function ProjectPanel() {
           onClick={() => setActiveView('backend')}
           className={`flex-1 py-3 text-sm font-medium transition-colors ${
             activeView === 'backend'
-              ? 'bg-white text-indigo-600 border-b-2 border-indigo-600'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-vscode-sidebar text-vscode-fg border-b-2 border-vscode-statusBar'
+              : 'text-gray-400 hover:text-vscode-fg'
           }`}
           title="Backend Panel"
         >
@@ -84,15 +84,15 @@ export function ProjectPanel() {
         {activeView === 'backend' && (
           <div className="p-4">
             {shepthonLoading && (
-              <div className="text-center py-8 text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+              <div className="text-center py-8 text-gray-400">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-vscode-statusBar mx-auto mb-2"></div>
                 <p>Loading backend...</p>
               </div>
             )}
             {shepthonError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <h3 className="text-red-900 font-semibold mb-2">Backend Error</h3>
-                <p className="text-sm text-red-700">{shepthonError}</p>
+              <div className="bg-vscode-panel border border-vscode-error rounded-lg p-4 mb-4">
+                <h3 className="text-vscode-error font-semibold mb-2">Backend Error</h3>
+                <p className="text-sm text-gray-300">{shepthonError}</p>
               </div>
             )}
             <BackendPanel

@@ -1,3 +1,58 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* VS Code Dark Theme Global Styles */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-vscode-bg text-vscode-fg;
+  margin: 0;
+  font-family: 'Segoe UI', 'Ubuntu', 'Roboto', sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Monaco', 'Consolas', monospace;
+}
+
+/* Scrollbar Styling (VS Code style) */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #79797966;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #646464B3;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #BFBFBF66;
+}
+
+/* Selection */
+::selection {
+  background: #264F78;
+  color: #D4D4D4;
+}
+
+/* Focus outlines */
+button:focus,
+input:focus,
+select:focus {
+  outline: 1px solid #007ACC;
+  outline-offset: -1px;
+}
