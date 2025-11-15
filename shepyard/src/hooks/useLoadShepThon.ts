@@ -38,24 +38,33 @@ export function useLoadShepThon() {
       return;
     }
 
-    // Load ShepThon backend
-    const loadBackend = async () => {
+    // Load ShepThon backend (defer to next tick to avoid blocking)
+    const loadBackend = () => {
       setShepThonLoading(true);
 
-      try {
-        const result = loadShepThon(shepthonExample.source);
+      // Use setTimeout to defer heavy parsing to next event loop tick
+      setTimeout(() => {
+        console.log('[ShepThon] Starting to load:', shepthonExample.id);
+        try {
+          console.log('[ShepThon] Calling loadShepThon...');
+          const result = loadShepThon(shepthonExample.source);
+          console.log('[ShepThon] Load result:', result.success);
 
-        if (result.success && result.metadata) {
-          setShepThonMetadata(result.metadata);
-        } else {
-          setShepThonError(result.error || 'Failed to load ShepThon backend');
+          if (result.success && result.metadata) {
+            console.log('[ShepThon] Setting metadata:', result.metadata.name);
+            setShepThonMetadata(result.metadata);
+          } else {
+            console.error('[ShepThon] Load failed:', result.error);
+            setShepThonError(result.error || 'Failed to load ShepThon backend');
+          }
+        } catch (error) {
+          console.error('[ShepThon] Exception during load:', error);
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error loading ShepThon';
+          setShepThonError(errorMessage);
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? error.message 
-          : 'Unknown error loading ShepThon';
-        setShepThonError(errorMessage);
-      }
+      }, 100); // Increase timeout to 100ms for breathing room
     };
 
     loadBackend();
