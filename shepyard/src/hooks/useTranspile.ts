@@ -12,6 +12,7 @@ import { useWorkspaceStore } from '../workspace/useWorkspaceStore';
 import { transpileShepLang } from '../services/transpilerService';
 import { explainShepLangApp } from '../services/explainService';
 import { SHEP_EXAMPLES } from '../examples/exampleList';
+import { logService } from '../services/logService';
 
 /**
  * Hook that auto-transpiles the active example
@@ -47,6 +48,7 @@ export function useTranspile() {
     // Transpile the example source
     const performTranspile = async () => {
       setTranspiling(true);
+      logService.info('sheplang', `Transpiling ${example.name}...`);
 
       try {
         const result = await transpileShepLang(example.source);
@@ -63,6 +65,7 @@ export function useTranspile() {
           const explainData = explainShepLangApp(result.canonicalAst);
           
           setTranspileResult(result.bobaCode, bobaApp, explainData);
+          logService.success('sheplang', `✓ Successfully transpiled ${example.name}`);
         } else {
           setTranspileError(result.error || 'Transpilation failed');
         }

@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { useWorkspaceStore } from '../workspace/useWorkspaceStore';
 import { SHEPTHON_EXAMPLES } from '../examples/exampleList';
 import { shepthonWorker } from '../workers';
+import { logService } from '../services/logService';
 
 /**
  * Hook to automatically load ShepThon when example changes
@@ -41,19 +42,24 @@ export function useLoadShepThon() {
     // Load ShepThon backend in Web Worker (non-blocking!)
     const loadBackend = async () => {
       setShepThonLoading(true);
+      logService.info('shepthon', `Loading ${shepthonExample.name} in Web Worker...`);
 
       try {
         console.log('[ShepThon] Loading in Web Worker:', shepthonExample.id);
         
         // This runs in background thread - UI stays responsive!
         const result = await shepthonWorker.loadShepThonWorker(shepthonExample.source);
-
+        
         if (result.success && result.metadata) {
           console.log('[ShepThon] Loaded successfully:', result.metadata.name);
           setShepThonMetadata(result.metadata);
+          logService.success('shepthon', `✓ ${result.metadata.name} loaded successfully`);
+          logService.info('shepthon', `Parsed ${result.metadata.models.length} models, ${result.metadata.endpoints.length} endpoints, ${result.metadata.jobs.length} jobs`);
         } else {
+          const errorMsg = result.error || 'Failed to load ShepThon backend';
           console.error('[ShepThon] Load failed:', result.error);
-          setShepThonError(result.error || 'Failed to load ShepThon backend');
+          setShepThonError(errorMsg);
+          logService.error('shepthon', `✗ Failed to load backend: ${errorMsg}`);
         }
       } catch (error) {
         console.error('[ShepThon] Worker error:', error);
@@ -61,6 +67,7 @@ export function useLoadShepThon() {
           ? error.message 
           : 'Unknown error loading ShepThon';
         setShepThonError(errorMessage);
+        logService.error('shepthon', `✗ Worker error: ${errorMessage}`);
       }
     };
 

@@ -148,6 +148,31 @@ function App() {
 
   const shepthonMetadata = useWorkspaceStore((state) => state.shepthon.metadata);
   const [showBottomPanel, setShowBottomPanel] = React.useState(true);
+  const [bottomPanelHeight, setBottomPanelHeight] = React.useState(250);
+  const [isResizing, setIsResizing] = React.useState(false);
+
+  const handleMouseDown = () => setIsResizing(true);
+  
+  React.useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newHeight = window.innerHeight - e.clientY - 24; // 24 = statusbar height
+      if (newHeight >= 100 && newHeight <= 600) {
+        setBottomPanelHeight(newHeight);
+      }
+    };
+
+    const handleMouseUp = () => setIsResizing(false);
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   return (
     <ErrorBoundary FallbackComponent={GenericErrorFallback}>
@@ -166,9 +191,26 @@ function App() {
           
           {/* Bottom Panel */}
           {showBottomPanel && (
-            <div className="h-64 border-t border-vscode-border">
-              <BottomPanel />
-            </div>
+            <>
+              {/* Resize Handle */}
+              <div
+                onMouseDown={handleMouseDown}
+                className="h-1 bg-vscode-border hover:bg-vscode-statusBar cursor-ns-resize transition-colors"
+              />
+              <div style={{ height: bottomPanelHeight }} className="border-t border-vscode-border">
+                <BottomPanel onClose={() => setShowBottomPanel(false)} />
+              </div>
+            </>
+          )}
+          
+          {/* Toggle Button (when collapsed) */}
+          {!showBottomPanel && (
+            <button
+              onClick={() => setShowBottomPanel(true)}
+              className="h-6 bg-vscode-activityBar hover:bg-vscode-hover border-t border-vscode-border text-xs text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+            >
+              ▲ Show Panel
+            </button>
           )}
         </div>
         
