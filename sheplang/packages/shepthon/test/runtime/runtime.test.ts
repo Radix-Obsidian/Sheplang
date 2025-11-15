@@ -516,7 +516,7 @@ describe('ShepThonRuntime', () => {
       // GET all reminders
       const beforeJob = await runtime.callEndpoint('GET', '/reminders');
       expect(beforeJob).toHaveLength(3);
-      expect(beforeJob.every(r => r.done === false)).toBe(true);
+      expect(beforeJob.every((r: any) => r.done === false)).toBe(true);
 
       // Start job
       runtime.startJobs();
@@ -527,7 +527,7 @@ describe('ShepThonRuntime', () => {
       // GET all reminders after job
       const afterJob = await runtime.callEndpoint('GET', '/reminders');
       expect(afterJob).toHaveLength(3);
-      expect(afterJob.every(r => r.done === true)).toBe(true);
+      expect(afterJob.every((r: any) => r.done === true)).toBe(true);
     });
 
     it('should verify database isolation between endpoints', async () => {

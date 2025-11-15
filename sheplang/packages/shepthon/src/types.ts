@@ -29,7 +29,7 @@ export interface ModelDefinition {
 export interface FieldDefinition {
   name: string;
   type: FieldType;
-  defaultValue?: string | number | boolean;
+  defaultValue?: string | number | boolean | null;
 }
 
 /**
@@ -156,7 +156,7 @@ export interface Identifier {
 
 export interface Literal {
   type: 'literal';
-  value: string | number | boolean | null;
+  value: any; // Can be any JSON-serializable value (primitives, objects, arrays)
 }
 
 export interface BinaryExpression {
