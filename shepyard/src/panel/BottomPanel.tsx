@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { OutputView } from './OutputView';
 import { ProblemsView } from './ProblemsView';
-import { TerminalView } from './TerminalView';
+import { RealTerminalView } from './RealTerminalView';
 import { CLIView } from './CLIView';
 
 type PanelTab = 'output' | 'problems' | 'terminal' | 'cli' | 'debug';
@@ -62,10 +62,10 @@ export function BottomPanel({ defaultTab = 'output', onClose }: BottomPanelProps
       </div>
 
       {/* Panel Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-hidden">
         {activeTab === 'output' && <OutputView />}
         {activeTab === 'problems' && <ProblemsView />}
-        {activeTab === 'terminal' && <TerminalView />}
+        {activeTab === 'terminal' && <RealTerminalView />}
         {activeTab === 'cli' && <CLIView />}
         {activeTab === 'debug' && (
           <div className="p-4 text-gray-400 text-sm">
