@@ -19,8 +19,18 @@ type PanelView = 'explorer' | 'backend' | 'search' | 'debug';
 export function ProjectPanel() {
   const [activeView, setActiveView] = useState<PanelView>('explorer');
   const shepthonMetadata = useWorkspaceStore((state) => state.shepthon.metadata);
+  const shepthonError = useWorkspaceStore((state) => state.shepthon.error);
+  const shepthonLoading = useWorkspaceStore((state) => state.shepthon.isLoading);
   const jobsRunning = useWorkspaceStore((state) => state.shepthon.jobsRunning);
   const setJobsRunning = useWorkspaceStore((state) => state.setJobsRunning);
+  
+  // Debug logging
+  console.log('[ProjectPanel] ShepThon state:', { 
+    hasMetadata: !!shepthonMetadata, 
+    metadata: shepthonMetadata,
+    error: shepthonError,
+    loading: shepthonLoading
+  });
 
   const handleStartJobs = () => {
     try {
@@ -73,6 +83,18 @@ export function ProjectPanel() {
         {activeView === 'explorer' && <ExplorerView />}
         {activeView === 'backend' && (
           <div className="p-4">
+            {shepthonLoading && (
+              <div className="text-center py-8 text-gray-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+                <p>Loading backend...</p>
+              </div>
+            )}
+            {shepthonError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <h3 className="text-red-900 font-semibold mb-2">Backend Error</h3>
+                <p className="text-sm text-red-700">{shepthonError}</p>
+              </div>
+            )}
             <BackendPanel
               metadata={shepthonMetadata}
               onStartJobs={handleStartJobs}
