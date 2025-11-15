@@ -8,11 +8,9 @@
  * Reference: TTD_ShepThon_Core.md C3.1
  */
 
-// Import from built shepthon package (sibling directory)
-// @ts-ignore - Import from built shepthon dist
-import { parseShepThon, ShepThonRuntime } from '../../../sheplang/packages/shepthon/dist/src/index.js';
-// @ts-ignore - Import types
-import type { ShepThonApp, ModelDefinition, EndpointDefinition, JobDefinition, ParseResult } from '../../../sheplang/packages/shepthon/dist/src/types.js';
+// Import from shepthon package (via workspace dependency)
+import { parseShepThon, ShepThonRuntime } from '@sheplang/shepthon';
+import type { ShepThonApp, ModelDefinition, EndpointDefinition, JobDefinition, ParseResult } from '@sheplang/shepthon';
 
 /**
  * Metadata extracted from ShepThon AST for UI display
@@ -112,7 +110,7 @@ export function loadShepThon(source: string): ShepThonServiceResult {
   
   if (!parseResult.app) {
     const errorMessage = parseResult.diagnostics
-      .map(d => `[${d.severity}] ${d.message}`)
+      .map((d: any) => `[${d.severity}] ${d.message}`)
       .join('\n') || 'Failed to parse ShepThon source';
     
     return {
@@ -210,7 +208,7 @@ function extractModelInfo(model: ModelDefinition): ModelInfo {
   return {
     name: model.name,
     fieldCount: model.fields.length,
-    fields: model.fields.map(field => ({
+    fields: model.fields.map((field) => ({
       name: field.name,
       type: field.type,
       hasDefault: field.defaultValue !== undefined
@@ -232,7 +230,7 @@ function extractEndpointInfo(endpoint: EndpointDefinition): EndpointInfo {
     method: endpoint.method,
     path: endpoint.path,
     parameterCount: endpoint.parameters.length,
-    parameters: endpoint.parameters.map(param => ({
+    parameters: endpoint.parameters.map((param) => ({
       name: param.name,
       type: param.type,
       optional: param.optional || false
