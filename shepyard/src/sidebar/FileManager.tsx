@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { fileSystemService, type FileItem } from '../services/fileSystemService';
 import { logService } from '../services/logService';
+import { useWorkspaceStore } from '../workspace/useWorkspaceStore';
 
 export function FileManager() {
   const [projectOpen, setProjectOpen] = useState(false);
@@ -15,6 +16,8 @@ export function FileManager() {
   const [showNewFileDialog, setShowNewFileDialog] = useState(false);
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [newItemName, setNewItemName] = useState('');
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const setLocalFileContent = useWorkspaceStore((state) => state.setLocalFileContent);
 
   useEffect(() => {
     const unsubscribe = fileSystemService.subscribe(() => {
@@ -99,6 +102,27 @@ export function FileManager() {
     }
   };
 
+  const handleFileClick = async (item: FileItem) => {
+    if (item.kind === 'directory') {
+      // TODO: Navigate into folder
+      return;
+    }
+
+    if (!item.handle || item.handle.kind !== 'file') return;
+
+    try {
+      const fileHandle = item.handle as FileSystemFileHandle;
+      const content = await fileSystemService.readFile(fileHandle);
+      
+      setSelectedFile(item.name);
+      setLocalFileContent(item.name, content, fileHandle);
+      
+      logService.info('system', `📄 Opened: ${item.name}`);
+    } catch (error) {
+      logService.error('system', `✗ Failed to open: ${item.name}`);
+    }
+  };
+
   if (!fileSystemService.isSupported()) {
     return (
       <div className="p-4 text-center">
@@ -177,7 +201,10 @@ export function FileManager() {
             {files.map((item) => (
               <div
                 key={item.name}
-                className="flex items-center justify-between px-3 py-1 hover:bg-vscode-hover group cursor-pointer"
+                onClick={() => handleFileClick(item)}
+                className={`flex items-center justify-between px-3 py-1 hover:bg-vscode-hover group cursor-pointer ${
+                  selectedFile === item.name ? 'bg-vscode-selection' : ''
+                }`}
               >
                 <div className="flex items-center gap-2 flex-1">
                   <span>{item.kind === 'directory' ? '📁' : '📄'}</span>

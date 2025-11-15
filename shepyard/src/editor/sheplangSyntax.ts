@@ -23,7 +23,7 @@ export function registerShepLangSyntax(monaco: typeof Monaco) {
         [/"([^"\\]|\\.)*$/, 'string.invalid'],
         [/"/, 'string', '@string'],
         [/'([^'\\]|\\.)*$/, 'string.invalid'],
-        [/'/, 'string', '@stringS single'],
+        [/'/, 'string', '@stringSingle'],
         
         // Numbers
         [/\d+\.\d+([eE][\-+]?\d+)?/, 'number.float'],

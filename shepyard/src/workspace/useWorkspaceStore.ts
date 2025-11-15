@@ -27,10 +27,18 @@ interface ShepThonState {
   error: string | null;
 }
 
+interface LocalFileState {
+  fileName: string | null;
+  content: string;
+  handle: FileSystemFileHandle | null;
+  isDirty: boolean;
+}
+
 interface WorkspaceState {
   activeExampleId: string | null;
   transpile: TranspileState;
   shepthon: ShepThonState;
+  localFile: LocalFileState;
   setActiveExample: (id: string) => void;
   clearActiveExample: () => void;
   setTranspileResult: (bobaCode: string, bobaApp: any, explainData: ExplainResult) => void;
@@ -42,6 +50,10 @@ interface WorkspaceState {
   setShepThonLoading: (isLoading: boolean) => void;
   setJobsRunning: (running: boolean) => void;
   clearShepThon: () => void;
+  setLocalFileContent: (fileName: string, content: string, handle: FileSystemFileHandle) => void;
+  updateLocalFileContent: (content: string) => void;
+  saveLocalFile: () => Promise<boolean>;
+  clearLocalFile: () => void;
 }
 
 const initialTranspileState: TranspileState = {
@@ -59,10 +71,18 @@ const initialShepThonState: ShepThonState = {
   error: null,
 };
 
-export const useWorkspaceStore = create<WorkspaceState>((set) => ({
+const initialLocalFileState: LocalFileState = {
+  fileName: null,
+  content: '',
+  handle: null,
+  isDirty: false,
+};
+
+export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   activeExampleId: null,
   transpile: initialTranspileState,
   shepthon: initialShepThonState,
+  localFile: initialLocalFileState,
   
   setActiveExample: (id: string) => set({ 
     activeExampleId: id,
@@ -136,4 +156,48 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   })),
   
   clearShepThon: () => set({ shepthon: initialShepThonState }),
+  
+  setLocalFileContent: (fileName: string, content: string, handle: FileSystemFileHandle) => set({
+    localFile: {
+      fileName,
+      content,
+      handle,
+      isDirty: false,
+    },
+    activeExampleId: null, // Clear example when opening local file
+  }),
+  
+  updateLocalFileContent: (content: string) => set((state) => ({
+    localFile: {
+      ...state.localFile,
+      content,
+      isDirty: true,
+    }
+  })),
+  
+  saveLocalFile: async () => {
+    const { localFile } = get();
+    if (!localFile.handle) return false;
+    
+    try {
+      // @ts-ignore - File System Access API
+      const writable = await localFile.handle.createWritable();
+      await writable.write(localFile.content);
+      await writable.close();
+      
+      set((state) => ({
+        localFile: {
+          ...state.localFile,
+          isDirty: false,
+        }
+      }));
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to save file:', error);
+      return false;
+    }
+  },
+  
+  clearLocalFile: () => set({ localFile: initialLocalFileState }),
 }));

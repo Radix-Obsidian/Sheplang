@@ -47,8 +47,16 @@ export function useLoadShepThon() {
       try {
         console.log('[ShepThon] Loading in Web Worker:', shepthonExample.id);
         
-        // This runs in background thread - UI stays responsive!
-        const result = await shepthonWorker.loadShepThonWorker(shepthonExample.source);
+        // CRITICAL: Add 5-second timeout to prevent infinite loading
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Backend loading timeout (5s)')), 5000);
+        });
+        
+        // Race between worker completion and timeout
+        const result = await Promise.race([
+          shepthonWorker.loadShepThonWorker(shepthonExample.source),
+          timeoutPromise
+        ]);
         
         if (result.success && result.metadata) {
           console.log('[ShepThon] Loaded successfully:', result.metadata.name);

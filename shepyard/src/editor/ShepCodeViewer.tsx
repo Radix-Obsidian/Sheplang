@@ -5,6 +5,7 @@
  * NOW EDITABLE! VS Code Dark theme + SYNTAX HIGHLIGHTING!
  */
 
+import * as React from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { registerMonacoTheme } from '../themes/monacoTheme';
 import { registerShepLangSyntax, configureShepLangLanguage } from './sheplangSyntax';
@@ -25,12 +26,15 @@ export function ShepCodeViewer({
   className = '' 
 }: ShepCodeViewerProps) {
   const activeExampleId = useWorkspaceStore((state) => state.activeExampleId);
+  const editorRef = React.useRef<any>(null);
   
   // Detect language based on active example
   const isShepThon = SHEPTHON_EXAMPLES.some(ex => ex.id === activeExampleId);
   const language = isShepThon ? 'shepthon' : 'sheplang';
 
   const handleEditorMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    
     // Register ShepLang/ShepThon syntax
     registerShepLangSyntax(monaco);
     configureShepLangLanguage(monaco);
@@ -39,6 +43,16 @@ export function ShepCodeViewer({
     registerMonacoTheme(monaco);
     monaco.editor.setTheme('sheplang-dark');
   };
+
+  // MEMORY FIX: Dispose editor on unmount
+  React.useEffect(() => {
+    return () => {
+      if (editorRef.current) {
+        editorRef.current.dispose();
+        editorRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className={`h-full bg-vscode-bg ${className}`} data-testid="shep-code-viewer">

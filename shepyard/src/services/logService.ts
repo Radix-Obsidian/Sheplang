@@ -32,9 +32,9 @@ class LogService {
 
     this.logs.push(entry);
     
-    // Keep only last 500 logs
-    if (this.logs.length > 500) {
-      this.logs = this.logs.slice(-500);
+    // Keep only last 100 logs (memory optimization)
+    if (this.logs.length > 100) {
+      this.logs = this.logs.slice(-100);
     }
 
     this.notifyListeners();

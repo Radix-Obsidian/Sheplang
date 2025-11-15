@@ -147,6 +147,8 @@ function App() {
   );
 
   const shepthonMetadata = useWorkspaceStore((state) => state.shepthon.metadata);
+  const localFile = useWorkspaceStore((state) => state.localFile);
+  const updateLocalFileContent = useWorkspaceStore((state) => state.updateLocalFileContent);
   const [showBottomPanel, setShowBottomPanel] = React.useState(true);
   const [bottomPanelHeight, setBottomPanelHeight] = React.useState(250);
   const [isResizing, setIsResizing] = React.useState(false);
