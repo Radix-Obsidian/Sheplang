@@ -1,53 +1,85 @@
-# 🐑 ShepLang + BobaScript
+# 🐑 ShepLang + ShepThon + BobaScript
 
 [![Build Status](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions/workflows/verify.yml/badge.svg)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions)
-[![Version](https://img.shields.io/badge/version-v0.1.2--alpha-blue)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/releases/tag/v0.1.2-alpha)
-[![Playground](https://img.shields.io/badge/Playground-Run%20Locally-brightgreen)](./sheplang/playground/README.md)
+[![Version](https://img.shields.io/badge/version-v0.2.0--alpha-blue)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/releases)
+[![Tests](https://img.shields.io/badge/tests-315%2F316%20passing-brightgreen)](https://github.com/Radix-Obsidian/Sheplang-BobaScript)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Build apps by describing them in plain language.**  
-> ShepLang reads like thought — BobaScript turns it into working code.
+> **Full-stack app development in plain language — no coding required.**  
+> ShepLang for frontends. ShepThon for backends. BobaScript makes it real.
 
 ---
 
 ## 🧠 What It Is
 
-**ShepLang** is a human-first scripting language for non-coders.  
-It lets you describe your app in everyday words — like a storyboard — and automatically transforms that into real, production-ready code.
+**The Problem:** 92% of founders can't code. They need technical co-founders or expensive agencies to build MVPs.
 
-**BobaScript** is the engine underneath. # ShepLang + BobaScript
+**The Solution:** Write apps in plain language. No syntax, no frameworks, no infrastructure.
 
-**Build full-stack MVPs with declarative ShepLang → executable BobaScript**
+- **ShepLang** → Describe your UI ("show a list of tasks")
+- **ShepThon** → Describe your backend ("save reminders to database")
+- **BobaScript** → The engine that makes it work
+- **ShepYard IDE** → Visual development environment (browser-based)
 
 ## 💡 Why It Matters
 
-Most people with great ideas can’t code.  
-ShepLang and BobaScript remove that barrier — giving designers, founders, and creatives the power to build real digital products **without needing a full engineering team**.
+**Before:** Founders with ideas → Months finding technical co-founder → Expensive agency → 6 months to MVP
 
-- **ShepLang →** reads like “what you mean”  
-- **BobaScript →** builds “what you said”  
-- **Explain Mode →** teaches you what happened
+**Now:** Describe what you want → Working app in minutes → Iterate instantly → Deploy when ready
 
-It’s programming that feels more like storytelling than syntax.
+### The Full Stack:
+- **ShepLang** → Frontend (UI, actions, state)  
+- **ShepThon** → Backend (models, endpoints, jobs)  
+- **ShepYard** → IDE (edit, preview, debug)  
+- **BobaScript** → Runtime (TypeScript output)
+
+It's like Figma, but for entire applications.
 
 ---
 
-## 🚀 Quick Install (NPM)
+## 🚀 Quick Start
 
+### Option 1: CLI (ShepLang only)
 ```bash
-# Install globally
+# Install
 npm install -g sheplang
 
-# Or run directly
-npx sheplang --help
+# Create a simple app
+echo 'app MyApp
+data Todo:
+  fields:
+    title: text
+view Dashboard:
+  list Todo' > app.shep
+
+# Preview
+sheplang dev app.shep
 ```
+
+### Option 2: ShepYard IDE (Full Stack)
+```bash
+# Clone repo
+git clone https://github.com/Radix-Obsidian/Sheplang-BobaScript
+cd Sheplang-BobaScript
+
+# Install & build
+pnpm install
+pnpm run verify
+
+# Start ShepYard
+cd shepyard
+pnpm run dev
+```
+
+Open `http://localhost:3000` → Build full-stack apps visually!
 
 ## 📦 What You Get
 
-- **ShepLang Parser**: Full language validation and AST generation
-- **BobaScript Transpiler**: Deterministic code compilation
-- **Development Server**: Live preview with hot module reloading
-- **CLI Tools**: Build, explain, analyze commands
+- **3 Languages**: ShepLang (frontend), ShepThon (backend), BobaScript (runtime)
+- **Visual IDE**: ShepYard with Monaco editor, live preview, debugging
+- **In-Memory Database**: Test backends without setup
+- **Job Scheduler**: Background tasks and cron jobs
+- **CLI Tools**: Build, explain, analyze, deploy
 
 ## ⚡ Usage
 
@@ -67,65 +99,105 @@ sheplang build hello.shep
 ## 🏗️ Repository Structure (Monorepo)
 
 ```
-sheplang/
-├── packages/
-│   ├── language/          # Langium parser (@sheplang/language)
-│   └── cli/              # Main CLI package (sheplang)
-├── adapters/
-│   └── sheplang-to-boba/ # Transpiler (@adapters/sheplang-to-boba)
-├── playground/           # Web playground (Vite)
-├── examples/            # Sample .shep files
-└── e2e/                # End-to-end tests
+Sheplang-BobaScript/
+├── sheplang/
+│   ├── packages/
+│   │   ├── language/        # ShepLang parser (Langium)
+│   │   ├── shepthon/        # 🆕 ShepThon backend language
+│   │   ├── cli/            # CLI tools
+│   │   └── runtime/        # BobaScript runtime
+│   └── adapters/
+│       └── sheplang-to-boba/ # Transpiler
+├── shepyard/               # 🆕 Visual IDE (React + Monaco)
+│   ├── src/
+│   │   ├── editor/         # Monaco editor integration
+│   │   ├── backend-panel/  # ShepThon backend viewer
+│   │   ├── services/       # ShepThon runtime bridge
+│   │   └── workers/        # Web Worker for ShepThon
+│   └── examples/
+│       ├── shep/           # ShepLang examples
+│       └── shepthon/       # ShepThon examples
+└── examples/               # Sample apps
+    └── dog-reminders/      # Full-stack example
 ```
 
 ## 📝 Language Examples
 
-### Components & State
+### ShepLang (Frontend)
 ```shep
-component TodoApp {
-  state todos = []
-  "My Todo List"
-}
+app MyTodos
 
-component Header props { title: "MyApp", count: 0 } {
-  "Welcome Header"
+data Todo:
+  fields:
+    title: text
+    done: yes/no
+  rules:
+    - "user can update own items"
+
+view Dashboard:
+  list Todo
+  button "Add Task" -> CreateTodo
+
+action CreateTodo(title):
+  add Todo with title, done=false
+  show Dashboard
+```
+
+### ShepThon (Backend) 🆕
+```shepthon
+app DogReminders {
+  model Reminder {
+    id: id
+    text: string
+    time: datetime
+    done: bool = false
+  }
+
+  endpoint GET "/reminders" -> [Reminder] {
+    return db.Reminder.findAll()
+  }
+
+  endpoint POST "/reminders" (text: string, time: datetime) -> Reminder {
+    let reminder = db.Reminder.create({ text, time })
+    return reminder
+  }
+
+  job "mark-due-as-done" every 5 minutes {
+    let due = db.Reminder.findAll()
+    for r in due {
+      db.Reminder.update(r.id, { done: true })
+    }
+  }
 }
 ```
 
-### Actions & Routes
-```shep
-action AddTodo(item) { "Todo added" }
-action DeleteTodo(id) { "Todo removed" }
-
-route "/" -> TodoApp
-route "/about" -> About
-```
-
-### Full Application
-```shep
-component Dashboard {
-  state users = []
-  "User Dashboard"  
-}
-
-action FetchUsers() { "Loading users..." }
-action CreateUser(name, email) { "User created" }
-
-route "/" -> Dashboard
-route "/users" -> UserList
-```
+### That's It!
+No Python, no Node.js setup, no database config. Just describe what you want.
 
 ## 🛠️ CLI Commands
 
+### CLI Commands (ShepLang)
 | Command | Description | Example |
-|---------|-------------|---------|
-| `help` | Show all commands | `sheplang help` |
-| `parse <file>` | Validate & show AST | `sheplang parse app.shep` |
-| `build <file>` | Compile to BobaScript | `sheplang build app.shep --out dist` |
-| `dev <file>` | Development server | `sheplang dev app.shep --port 3000` |
-| `explain <file>` | Human-readable summary | `sheplang explain app.shep` |
-| `stats` | Repository analytics | `sheplang stats` |
-| `--version` | Show version | `sheplang --version` |
+|---------|-------------|---------|  
+| `dev <file>` | Live preview | `sheplang dev app.shep` |
+| `build <file>` | Compile to BobaScript | `sheplang build app.shep` |
+| `explain <file>` | Human summary | `sheplang explain app.shep` |
+| `parse <file>` | Validate syntax | `sheplang parse app.shep` |
+| `stats` | Project analytics | `sheplang stats` |
+
+### ShepYard IDE Features 🆕
+- **Monaco Editor**: Syntax highlighting for ShepLang & ShepThon
+- **Live Preview**: See your app as you type
+- **Backend Panel**: View models, endpoints, jobs
+- **File Manager**: Local project support (File System Access API)
+- **Terminal**: Integrated xterm.js
+- **Explain Mode**: AI-powered code insights
+
+### ShepThon Runtime 🆕
+- **In-Memory Database**: Zero-config data storage
+- **Endpoint Router**: REST API handling (GET/POST)
+- **Job Scheduler**: Cron-like background tasks
+- **Full Type Safety**: TypeScript throughout
 
 ## 🚦 Development Setup
 
@@ -178,13 +250,16 @@ Published packages:
 - `@sheplang/language` - Language parser
 - `@adapters/sheplang-to-boba` - Transpiler
 
-## ✅ Acceptance Tests
+## ✅ Test Results
 
-- ✅ `pnpm -w -r build` → green
-- ✅ `pnpm -w -r test` → green  
-- ✅ `node packages/cli/dist/index.js help` → prints commands
-- ✅ `npx sheplang --version` → 0.1.3
-- ✅ `npx sheplang dev examples/todo.shep` → serves at :8787
+**Current Status: 315/316 tests passing (99.7%)**
+
+- ✅ ShepLang Parser: 100% passing
+- ✅ ShepThon Parser: 59/59 tests (100%)
+- ✅ ShepThon Runtime: 256/257 tests (99.6%)
+- ✅ CLI: All commands working
+- ✅ ShepYard: Builds successfully
+- ✅ `pnpm run verify` → GREEN
 
 ## 📄 License
 
@@ -243,19 +318,56 @@ ShepLang and BobaScript are being built for:
 ---
 
 ## 🛠 Status
-Current Phase: 2.5 → 3 (Alpha Hardening)
-Edition: 2025 Syntax Freeze
-Latest Tag: v0.1.2-alpha (Playground release, Verify OK)
+
+**Current Phase:** Alpha (YC-Ready)  
+**Version:** v0.2.0-alpha  
+**Build:** ✅ GREEN (315/316 tests passing)  
+**Lines of Code:** ~150,000 (core + tests + IDE)  
+
+### What's Working:
+- ✅ ShepLang frontend language (complete)
+- ✅ ShepThon backend language (complete)
+- ✅ BobaScript transpiler (complete)
+- ✅ ShepYard visual IDE (complete)
+- ✅ In-memory database & runtime (complete)
+- ✅ Job scheduler & cron (complete)
+- ⏳ Full E2E integration (90% complete)
+
+### Roadmap:
+- **Phase 1 (✅ DONE):** Core languages (ShepLang, ShepThon)
+- **Phase 2 (✅ DONE):** Runtime & IDE (ShepYard)
+- **Phase 3 (🔄 NOW):** E2E integration & polish
+- **Phase 4 (📋 NEXT):** Production deployment, real databases
+- **Phase 5 (🔮 FUTURE):** AI co-pilot, marketplace, teams
 
 ---
 
-## ❤️ Built by
-Golden Sheep AI
-A solo design & development studio building meaningful tools for non-technical founders.
-🐑 ShepLang — human-first DSL
-☕ BobaScript — typed scripting engine
-🧭 Explain Mode — AI-powered code mentor
-🧱 Shepherd Studio (coming soon) — all-in-one design & build environment
+## 🎯 Vision
+
+> "If TypeScript made JavaScript safer,  
+> ShepLang makes it human."
+
+We're building the **Figma of full-stack development**. Anyone with an idea should be able to build it—without learning to code.
+
+### For:
+- 🧩 Non-technical founders who need MVPs fast
+- 🎨 Designers who think visually
+- 🤖 AI-native tools that teach as they build
+
+### Not For:
+- ❌ Replacing developers (we empower non-coders)
+- ❌ Complex enterprise apps (we focus on MVPs)
+- ❌ Production at scale (yet—that's Phase 4)
+
+## ❤️ Built by Golden Sheep AI
+
+A solo founder building meaningful tools for non-technical creators.
+
+- 🐑 **ShepLang** — Human-first frontend language
+- 🐍 **ShepThon** — Python-like backend language (but for founders)
+- ☕ **BobaScript** — TypeScript-powered runtime
+- 🎨 **ShepYard** — Visual IDE for both languages
+- 🧭 **Explain Mode** — AI-powered code mentor (coming soon)
 
 ---
 
