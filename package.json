@@ -7,5 +7,8 @@
     "build": "pnpm -w -r build",
     "test": "pnpm -w -r test --run",
     "dev:shepyard": "pnpm --filter @shepyard/cds dev"
+  },
+  "dependencies": {
+    "comlink": "^4.4.2"
   }
 }
