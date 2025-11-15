@@ -61,7 +61,39 @@ function App() {
   );
 
   // Render right panel (preview & explain)
-  const rightPanel = transpile.isTranspiling ? (
+  const isBackendOnly = activeShepThonExample !== undefined;
+  
+  const rightPanel = isBackendOnly ? (
+    // Backend-only example - show backend panel instead of preview
+    <div className="flex items-center justify-center h-full bg-gradient-to-br from-indigo-50 to-purple-50">
+      <div className="text-center max-w-md mx-auto p-8">
+        <div className="text-6xl mb-6">⚡</div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-3">
+          Backend Logic
+        </h3>
+        <p className="text-gray-600 mb-6">
+          This is a ShepThon backend example. Check the <strong>Backend tab</strong> in the left panel to see:
+        </p>
+        <div className="text-left bg-white rounded-lg p-4 shadow-sm space-y-2 text-sm">
+          <div className="flex items-start">
+            <span className="text-blue-500 mr-2">📦</span>
+            <span><strong>Models:</strong> Database structure</span>
+          </div>
+          <div className="flex items-start">
+            <span className="text-green-500 mr-2">🌐</span>
+            <span><strong>Endpoints:</strong> API routes</span>
+          </div>
+          <div className="flex items-start">
+            <span className="text-purple-500 mr-2">⏰</span>
+            <span><strong>Jobs:</strong> Scheduled tasks</span>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-4">
+          💡 Backend examples don't have a visual preview
+        </p>
+      </div>
+    </div>
+  ) : transpile.isTranspiling ? (
     <div className="flex items-center justify-center h-full bg-gray-50">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
