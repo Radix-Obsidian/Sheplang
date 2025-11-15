@@ -10,6 +10,7 @@
 
 import { create } from 'zustand';
 import type { ExplainResult } from '../services/explainService';
+import type { AppMetadata } from '../services/shepthonService';
 
 interface TranspileState {
   isTranspiling: boolean;
@@ -19,15 +20,28 @@ interface TranspileState {
   error: string | null;
 }
 
+interface ShepThonState {
+  isLoading: boolean;
+  metadata: AppMetadata | null;
+  jobsRunning: boolean;
+  error: string | null;
+}
+
 interface WorkspaceState {
   activeExampleId: string | null;
   transpile: TranspileState;
+  shepthon: ShepThonState;
   setActiveExample: (id: string) => void;
   clearActiveExample: () => void;
   setTranspileResult: (bobaCode: string, bobaApp: any, explainData: ExplainResult) => void;
   setTranspileError: (error: string) => void;
   setTranspiling: (isTranspiling: boolean) => void;
   clearTranspile: () => void;
+  setShepThonMetadata: (metadata: AppMetadata) => void;
+  setShepThonError: (error: string) => void;
+  setShepThonLoading: (isLoading: boolean) => void;
+  setJobsRunning: (running: boolean) => void;
+  clearShepThon: () => void;
 }
 
 const initialTranspileState: TranspileState = {
@@ -38,9 +52,17 @@ const initialTranspileState: TranspileState = {
   error: null,
 };
 
+const initialShepThonState: ShepThonState = {
+  isLoading: false,
+  metadata: null,
+  jobsRunning: false,
+  error: null,
+};
+
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   activeExampleId: null,
   transpile: initialTranspileState,
+  shepthon: initialShepThonState,
   
   setActiveExample: (id: string) => set({ 
     activeExampleId: id,
@@ -78,7 +100,40 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     }
   })),
   
-  clearTranspile: () => set({ 
-    transpile: initialTranspileState 
+  clearTranspile: () => set({
+    transpile: initialTranspileState
   }),
+  
+  setShepThonMetadata: (metadata: AppMetadata) => set((state) => ({
+    shepthon: {
+      ...state.shepthon,
+      isLoading: false,
+      metadata,
+      error: null,
+    }
+  })),
+  
+  setShepThonError: (error: string) => set((state) => ({
+    shepthon: {
+      ...state.shepthon,
+      isLoading: false,
+      error,
+    }
+  })),
+  
+  setShepThonLoading: (isLoading: boolean) => set((state) => ({
+    shepthon: {
+      ...state.shepthon,
+      isLoading,
+    }
+  })),
+  
+  setJobsRunning: (running: boolean) => set((state) => ({
+    shepthon: {
+      ...state.shepthon,
+      jobsRunning: running,
+    }
+  })),
+  
+  clearShepThon: () => set({ shepthon: initialShepThonState }),
 }));
