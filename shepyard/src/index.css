@@ -8,10 +8,11 @@
 }
 
 body {
-  @apply bg-vscode-bg text-vscode-fg;
   margin: 0;
   font-family: 'Segoe UI', 'Ubuntu', 'Roboto', sans-serif;
   font-size: 13px;
+  background-color: #1E1E1E;
+  color: #D4D4D4;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
