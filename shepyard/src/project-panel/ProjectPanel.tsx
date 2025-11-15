@@ -11,10 +11,11 @@
 import { useState } from 'react';
 import { ExplorerView } from './ExplorerView';
 import { BackendPanel } from '../backend-panel/BackendPanel';
+import { FileManager } from '../sidebar/FileManager';
 import { useWorkspaceStore } from '../workspace/useWorkspaceStore';
 import { startJobs, stopJobs } from '../services/bridgeService';
 
-type PanelView = 'explorer' | 'backend' | 'search' | 'debug';
+type PanelView = 'explorer' | 'backend' | 'files' | 'search' | 'debug';
 
 export function ProjectPanel() {
   const [activeView, setActiveView] = useState<PanelView>('explorer');
@@ -61,9 +62,20 @@ export function ProjectPanel() {
               ? 'bg-vscode-sidebar text-vscode-fg border-b-2 border-vscode-statusBar'
               : 'text-gray-400 hover:text-vscode-fg'
           }`}
-          title="Project Explorer"
+          title="Examples Explorer"
         >
-          📁 Explorer
+          📱 Examples
+        </button>
+        <button
+          onClick={() => setActiveView('files')}
+          className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            activeView === 'files'
+              ? 'bg-vscode-sidebar text-vscode-fg border-b-2 border-vscode-statusBar'
+              : 'text-gray-400 hover:text-vscode-fg'
+          }`}
+          title="File Manager"
+        >
+          📁 Files
         </button>
         <button
           onClick={() => setActiveView('backend')}
@@ -79,8 +91,9 @@ export function ProjectPanel() {
       </div>
 
       {/* View Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto relative">
         {activeView === 'explorer' && <ExplorerView />}
+        {activeView === 'files' && <FileManager />}
         {activeView === 'backend' && (
           <div className="p-4">
             {shepthonLoading && (
