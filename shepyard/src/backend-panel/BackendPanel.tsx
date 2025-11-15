@@ -8,10 +8,12 @@
  * Reference: TTD_ShepThon_Core.md C3.3
  */
 
+import React, { useState } from 'react';
 import { CollapsiblePanel } from '../ui/CollapsiblePanel';
-import { ModelsList } from './ModelsList';
-import { EndpointsList } from './EndpointsList';
-import { JobsList } from './JobsList';
+import { ModelsList } from './ModelsList.js';
+import { EndpointsList } from './EndpointsList.js';
+import { JobsList } from './JobsList.js';
+import { ExplainView } from './ExplainView.js';
 import type { AppMetadata } from '../services/shepthonService';
 
 interface BackendPanelProps {
@@ -21,6 +23,8 @@ interface BackendPanelProps {
   onStopJobs?: () => void;
   jobsRunning?: boolean;
 }
+
+type TabType = 'explain' | 'models' | 'endpoints' | 'jobs';
 
 /**
  * Main Backend Panel container
@@ -53,25 +57,51 @@ export function BackendPanel({
     );
   }
 
+  const [activeTab, setActiveTab] = useState<TabType>('explain');
+
   return (
     <CollapsiblePanel
       title={`Backend (${metadata.name})`}
       icon="⚡"
       defaultOpen={defaultOpen}
     >
+      <div className="backend-panel-tabs">
+        <button
+          className={`tab-button ${activeTab === 'explain' ? 'active' : ''}`}
+          onClick={() => setActiveTab('explain')}
+        >
+          📋 Explain
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'models' ? 'active' : ''}`}
+          onClick={() => setActiveTab('models')}
+        >
+          Models ({metadata.models.length})
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'endpoints' ? 'active' : ''}`}
+          onClick={() => setActiveTab('endpoints')}
+        >
+          Endpoints ({metadata.endpoints.length})
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'jobs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('jobs')}
+        >
+          Jobs ({metadata.jobs.length})
+        </button>
+      </div>
       <div className="space-y-4">
-        {/* Models Section */}
-        {metadata.models.length > 0 && (
+        {activeTab === 'explain' && (
+          <ExplainView metadata={metadata} />
+        )}
+        {activeTab === 'models' && (
           <ModelsList models={metadata.models} />
         )}
-
-        {/* Endpoints Section */}
-        {metadata.endpoints.length > 0 && (
+        {activeTab === 'endpoints' && (
           <EndpointsList endpoints={metadata.endpoints} />
         )}
-
-        {/* Jobs Section */}
-        {metadata.jobs.length > 0 && (
+        {activeTab === 'jobs' && (
           <JobsList 
             jobs={metadata.jobs}
             onStart={onStartJobs}
@@ -79,7 +109,6 @@ export function BackendPanel({
             isRunning={jobsRunning}
           />
         )}
-
         {/* Empty State */}
         {metadata.models.length === 0 && 
          metadata.endpoints.length === 0 && 

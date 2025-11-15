@@ -42,6 +42,6 @@ export type {
 
 // Export parser
 export { parseShepThon } from './parser.js';
-
-// Export runtime (Phase 2)
+export { checkShepThon, type CheckResult } from './checker.js';
+export type * from './types.js';
 export { ShepThonRuntime } from './runtime/index.js';

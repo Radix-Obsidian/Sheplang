@@ -83,6 +83,42 @@ action CreateTodo(title):
 `,
   },
   {
+    id: 'dog-reminders-frontend',
+    name: 'Dog Reminders (Frontend)',
+    description: 'ShepLang frontend for Dog Reminders app - connects to ShepThon backend',
+    filePath: 'examples/dog-reminders.shep',
+    source: `// Dog Reminders Frontend (ShepLang)
+// Connects to dog-reminders.shepthon backend
+
+app DogReminders
+
+data Reminder:
+  fields:
+    id: id
+    text: text
+    time: date
+    done: yes/no
+
+view RemindersPage:
+  list Reminder
+  button "Add Reminder" -> AddReminderForm
+
+view AddReminderForm:
+  button "Back to List" -> RemindersPage
+
+action LoadReminders():
+  load GET "/reminders" into reminders
+  show RemindersPage
+
+action AddReminder(text, time):
+  call POST "/reminders"(text, time)
+  action LoadReminders()
+
+action InitApp():
+  action LoadReminders()
+`,
+  },
+  {
     id: 'dog-reminder',
     name: 'Dog Care Reminder',
     description: 'Track feeding times and walks for your furry friend',
