@@ -52,34 +52,23 @@ export function CollapsiblePanel({
 
   return (
     <details
-      className={`collapsible-panel border-b border-gray-300 ${className}`}
+      className={`collapsible-panel border-b border-vscode-border ${className}`}
       open={defaultOpen}
       onToggle={handleToggle}
       data-testid="collapsible-panel"
     >
-      <summary className="flex items-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 cursor-pointer select-none transition-colors">
-        {/* Icon */}
-        {icon && <span className="text-xl">{icon}</span>}
-        
-        {/* Title */}
-        <span className="font-semibold text-gray-800 flex-1">{title}</span>
-        
-        {/* Chevron indicator (rotates when open) */}
-        <svg
-          className="w-5 h-5 text-gray-600 transition-transform details-chevron"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path d="M19 9l-7 7-7-7"></path>
-        </svg>
+      <summary className="cursor-pointer select-none flex items-center justify-between px-4 py-3 bg-vscode-activityBar border-b border-vscode-border hover:bg-vscode-hover transition-colors">
+        <div className="flex items-center space-x-2">
+          {icon && <span className="text-lg" aria-hidden="true">{icon}</span>}
+          <span className="font-semibold text-vscode-fg">{title}</span>
+        </div>
+        <span className="text-gray-400 text-sm" aria-hidden="true">
+          {defaultOpen ? '▼' : '▶'}
+        </span>
       </summary>
 
       {/* Panel content */}
-      <div className="px-4 py-3 bg-white">
+      <div className="px-4 py-3 bg-vscode-bg">
         {children}
       </div>
 

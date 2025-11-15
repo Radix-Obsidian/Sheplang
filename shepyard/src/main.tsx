@@ -6,6 +6,7 @@ import { ResizableLayout } from './layout/ResizableLayout'
 import { ProjectPanel } from './project-panel/ProjectPanel'
 import { TitleBar } from './navigation/TitleBar'
 import { StatusBar } from './navigation/StatusBar'
+import { BottomPanel } from './panel/BottomPanel'
 import { WelcomeCard } from './ui/WelcomeCard'
 import { ShepCodeViewer } from './editor/ShepCodeViewer'
 import { BobaRenderer } from './preview/BobaRenderer'
@@ -146,18 +147,29 @@ function App() {
   );
 
   const shepthonMetadata = useWorkspaceStore((state) => state.shepthon.metadata);
+  const [showBottomPanel, setShowBottomPanel] = React.useState(true);
 
   return (
     <ErrorBoundary FallbackComponent={GenericErrorFallback}>
       <div className="h-screen flex flex-col bg-vscode-bg">
         <TitleBar activePath={(activeExample || activeShepThonExample)?.name} />
         
-        <div className="flex-1 overflow-hidden">
-          <ResizableLayout
-            leftPanel={leftPanel}
-            centerPanel={centerPanel}
-            rightPanel={rightPanel}
-          />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-hidden">
+            <ResizableLayout
+              leftPanel={leftPanel}
+              centerPanel={centerPanel}
+              rightPanel={rightPanel}
+            />
+          </div>
+          
+          {/* Bottom Panel */}
+          {showBottomPanel && (
+            <div className="h-64 border-t border-vscode-border">
+              <BottomPanel />
+            </div>
+          )}
         </div>
         
         <StatusBar 
