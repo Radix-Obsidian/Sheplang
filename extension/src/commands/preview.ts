@@ -103,19 +103,23 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
       
       console.log('[Preview] Received message from webview:', message.type);
       
-      // Handle request for user input (Add Task button)
+      // Handle request for user input (dynamic parameter)
       if (message.type === 'promptForTitle') {
-        const title = await vscode.window.showInputBox({
-          prompt: 'Enter task title',
-          placeHolder: 'e.g., Buy groceries'
+        const paramName = message.paramName || 'title';
+        const capitalizedParam = paramName.charAt(0).toUpperCase() + paramName.slice(1);
+        
+        const userInput = await vscode.window.showInputBox({
+          prompt: `Enter ${paramName}`,
+          placeHolder: `e.g., My ${capitalizedParam}`
         });
         
-        if (title) {
+        if (userInput) {
           panel.webview.postMessage({
             type: 'addTaskWithTitle',
-            title,
+            title: userInput,
             viewName: message.viewName,
-            actionName: message.actionName
+            actionName: message.actionName,
+            paramName: paramName
           });
         }
         return;
@@ -627,8 +631,8 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
           break;
         
         case 'addTaskWithTitle':
-          // Execute the action with the title from VS Code input box
-          executeActionWithTitle(message.actionName, message.viewName, message.title);
+          // Execute the action with input from VS Code input box
+          executeActionWithTitle(message.actionName, message.viewName, message.title, message.paramName);
           break;
         
         case 'editTaskWithTitle':
@@ -760,17 +764,26 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
             button.onclick = () => {
               console.log('[Webview] Button clicked:', btn.label);
               
-              // Check if action needs user input (has title parameter)
+              // Check if action needs user input
               const action = currentAST.actions.find(a => a.name === btn.action);
-              if (action && action.params && action.params.some(p => p.name === 'title')) {
-                // Ask extension to show input box
-                vscode.postMessage({
-                  type: 'promptForTitle',
-                  actionName: btn.action,
-                  viewName: view.name
-                });
+              if (action && action.params && action.params.length > 0) {
+                // Check if it's a single-parameter action
+                if (action.params.length === 1) {
+                  const paramName = action.params[0].name;
+                  // Ask extension to show input box for single parameter
+                  vscode.postMessage({
+                    type: 'promptForTitle',
+                    actionName: btn.action,
+                    viewName: view.name,
+                    paramName: paramName  // Pass the actual parameter name
+                  });
+                } else {
+                  // Multi-parameter actions need a form (Phase 2)
+                  console.log('[Webview] Multi-parameter action not yet supported:', action.params);
+                  showToast('⚠️ Multi-field forms coming soon! (Phase 2)', 'info');
+                }
               } else {
-                // Execute action directly
+                // Execute action directly (no parameters)
                 executeAction(btn.action, view.name);
               }
             };
@@ -840,28 +853,21 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
           console.log('[Webview] Add operation:', op);
           console.log('[Webview] op.data:', op.data);
           console.log('[Webview] op.fields:', op.fields);
-          console.log('[Webview] op.with:', op.with);
           
-          // Handle add operations by making POST calls to backend
+          // Dynamic add operation - construct endpoint and body
           try {
-            // Extract data type (e.g., "Todo")
-            const dataType = op.data;
-            console.log('[Webview] dataType:', dataType);
+            const modelName = op.data;
+            const endpoint = getEndpointPath(modelName);
             
-            // Build request body from op.fields or op.with
-            const body = {};
-            if (op.fields && typeof op.fields === 'object') {
-              Object.assign(body, op.fields);
-              console.log('[Webview] Copied from op.fields:', body);
-            } else if (op.with && typeof op.with === 'object') {
-              Object.assign(body, op.with);
-              console.log('[Webview] Copied from op.with:', body);
-            }
+            // Build request body from op.fields
+            const body = op.fields || {};
             
-            // Add operations should be handled via executeActionWithTitle
-            // (triggered by promptForTitle message from button click)
-            console.log('[Webview] Add operation - should use executeActionWithTitle instead');
-            showToast('Please use the button to add tasks', 'info');
+            console.log('[Webview] Creating ' + modelName + ' via POST ' + endpoint, body);
+            const result = await callBackend('POST', endpoint, body);
+            console.log('[Webview] ✅ ' + modelName + ' created:', result);
+            
+            showToast('✅ Created!', 'success');
+            await loadData();
           } catch (error) {
             console.error('[Webview] ❌ Add failed:', error);
             showToast('❌ Error: ' + error.message, 'error');
@@ -872,9 +878,9 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
       }
     }
     
-    // Execute action with user-provided title (from VS Code input box)
-    async function executeActionWithTitle(actionName, viewName, title) {
-      console.log('[Webview] Executing action with title:', actionName, title);
+    // Execute action with user-provided input (from VS Code input box)
+    async function executeActionWithTitle(actionName, viewName, userInput, paramName) {
+      console.log('[Webview] Executing action with input:', actionName, userInput, 'param:', paramName);
       
       const action = currentAST.actions.find(a => a.name === actionName);
       if (!action) {
@@ -882,20 +888,34 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
         return;
       }
       
-      // Execute each operation, replacing 'title' parameter
+      // Execute each operation
       for (const op of action.ops) {
-        if (op.kind === 'add' && op.data === 'Todo') {
+        if (op.kind === 'add') {
           try {
-            const body = {
-              title: title,
-              done: false
-            };
+            const modelName = op.data;
+            const endpoint = getEndpointPath(modelName);
             
-            console.log('[Webview] Creating Todo via POST /todos', body);
-            const result = await callBackend('POST', '/todos', body);
-            console.log('[Webview] ✅ Todo created:', result);
+            // Build request body - use the actual parameter name
+            const body = {};
             
-            showToast('✅ Task added!', 'success');
+            // Set the user input to the parameter name
+            if (paramName) {
+              body[paramName] = userInput;
+            } else {
+              // Fallback to 'title' for backward compatibility
+              body['title'] = userInput;
+            }
+            
+            // Add any other fields from op.fields
+            if (op.fields && typeof op.fields === 'object') {
+              Object.assign(body, op.fields);
+            }
+            
+            console.log('[Webview] Creating ' + modelName + ' via POST ' + endpoint, body);
+            const result = await callBackend('POST', endpoint, body);
+            console.log('[Webview] ✅ ' + modelName + ' created:', result);
+            
+            showToast('✅ Created!', 'success');
             await loadData();
           } catch (error) {
             console.error('[Webview] ❌ Add failed:', error);
