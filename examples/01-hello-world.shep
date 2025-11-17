@@ -1,12 +1,15 @@
 app HelloWorld
 
-# Simple welcome screen - no backend needed
-# Learn: basic app structure, views, static text
+data Message:
+  fields:
+    text: text
+  rules:
+    - "message required"
 
 view Welcome:
-  show "Hello, World!"
-  show "Welcome to ShepLang"
-  button "Say Hi" -> SayHello
+  list Message
+  button "Say Hello" -> SayHello
 
 action SayHello:
+  add Message with text="Hello from ShepLang! 🐑"
   show Welcome

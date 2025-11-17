@@ -1,47 +1,37 @@
-app Counter {
-
-  model Count {
+app MyCounter {
+  
+  model Counter {
     id: id
     value: number
+    label: text
   }
-
-  endpoint GET "/count" -> [Count] {
-    return db.Count.findAll()
+  
+  endpoint GET "/counters" {
+    return db.counters.findMany()
   }
-
-  endpoint POST "/count/increment" -> Count {
-    let counts = db.Count.findAll()
-    if (counts.length > 0) {
-      let count = counts[0]
-      let updated = db.Count.update(count.id, { value: count.value + 1 })
-      return updated
-    } else {
-      let newCount = db.Count.create({ value: 1 })
-      return newCount
-    }
+  
+  endpoint POST "/counters" {
+    const { value, label } = request.body
+    const counter = db.counters.create({
+      value: value,
+      label: label
+    })
+    return counter
   }
-
-  endpoint POST "/count/decrement" -> Count {
-    let counts = db.Count.findAll()
-    if (counts.length > 0) {
-      let count = counts[0]
-      let updated = db.Count.update(count.id, { value: count.value - 1 })
-      return updated
-    } else {
-      let newCount = db.Count.create({ value: 0 })
-      return newCount
-    }
+  
+  endpoint PUT "/counters/:id" {
+    const { id } = request.params
+    const { value } = request.body
+    const counter = db.counters.update({
+      where: { id: id },
+      data: { value: value }
+    })
+    return counter
   }
-
-  endpoint POST "/count/reset" -> Count {
-    let counts = db.Count.findAll()
-    if (counts.length > 0) {
-      let count = counts[0]
-      let updated = db.Count.update(count.id, { value: 0 })
-      return updated
-    } else {
-      let newCount = db.Count.create({ value: 0 })
-      return newCount
-    }
+  
+  endpoint DELETE "/counters/:id" {
+    const { id } = request.params
+    db.counters.delete({ where: { id: id } })
+    return { success: true }
   }
 }

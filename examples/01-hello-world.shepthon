@@ -1,0 +1,25 @@
+app HelloWorld {
+  
+  model Message {
+    id: id
+    text: text
+  }
+  
+  endpoint GET "/messages" {
+    return db.messages.findMany()
+  }
+  
+  endpoint POST "/messages" {
+    const { text } = request.body
+    const message = db.messages.create({
+      text: text
+    })
+    return message
+  }
+  
+  endpoint DELETE "/messages/:id" {
+    const { id } = request.params
+    db.messages.delete({ where: { id: id } })
+    return { success: true }
+  }
+}

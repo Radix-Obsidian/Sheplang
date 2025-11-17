@@ -1,28 +1,31 @@
-app Counter
+app MyCounter
 
-# Simple counter with increment/decrement
-# Learn: data models, state, buttons, actions
-
-data Count:
+data Counter:
   fields:
     value: number
+    label: text
   rules:
     - "value must be a number"
 
 view Dashboard:
-  show "Counter App"
-  list Count
+  list Counter
+  button "New Counter" -> CreateCounter
   button "Increment" -> Increment
   button "Decrement" -> Decrement
   button "Reset" -> Reset
 
+action CreateCounter(label):
+  add Counter with label, value=0
+  show Dashboard
+
 action Increment:
-  # In a real app, this would update via backend
-  # For now, demonstrates action structure
+  add Counter with label="Count", value=1
   show Dashboard
 
 action Decrement:
+  add Counter with label="Count", value=-1
   show Dashboard
 
 action Reset:
+  add Counter with label="Reset", value=0
   show Dashboard

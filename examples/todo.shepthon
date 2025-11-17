@@ -1,41 +1,37 @@
 app MyTodos {
   
-  # Backend for Todo app - handles all CRUD operations
-  # The VS Code extension automatically connects this to your frontend
-  # Backend runs in-memory (data resets on restart)
-  
   model Todo {
     id: id
     title: text
     done: yes/no
   }
   
-  # GET endpoint - Returns all todos
-  endpoint GET "/todos" -> [Todo] {
-    return db.Todo.findAll()
+  endpoint GET "/todos" {
+    return db.todos.findMany()
   }
   
-  # POST endpoint - Creates a new todo
-  endpoint POST "/todos" (title: text) -> Todo {
-    let todo = db.Todo.create({ 
-      title: title, 
-      done: false 
+  endpoint POST "/todos" {
+    const { title } = request.body
+    const todo = db.todos.create({
+      title: title,
+      done: false
     })
     return todo
   }
   
-  # PUT endpoint - Updates a todo (toggle done or edit title)
-  endpoint PUT "/todos/:id" (title: text, done: yes/no) -> Todo {
-    let todo = db.Todo.update(:id, { 
-      title: title, 
-      done: done 
+  endpoint PUT "/todos/:id" {
+    const { id } = request.params
+    const { done } = request.body
+    const todo = db.todos.update({
+      where: { id: id },
+      data: { done: done }
     })
     return todo
   }
   
-  # DELETE endpoint - Deletes a todo
   endpoint DELETE "/todos/:id" {
-    db.Todo.delete(:id)
+    const { id } = request.params
+    db.todos.delete({ where: { id: id } })
     return { success: true }
   }
 }

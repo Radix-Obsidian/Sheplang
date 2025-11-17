@@ -1,326 +1,453 @@
-# 📚 ShepLang Examples
+# 🎓 ShepLang Examples - Progressive Tutorial Series
 
-Progressive examples demonstrating the VS Code extension features.
-
----
-
-## 🎯 **Learning Path**
-
-Start from Example 1 and work your way up. Each example builds on concepts from the previous one.
-
-| Example | Time | Complexity | What You'll Learn |
-|---------|------|------------|-------------------|
-| **01-hello-world** | 5 min | ⭐ | Basic app structure, views, buttons |
-| **02-counter** | 10 min | ⭐⭐ | Data models, state management, backend integration |
-| **todo** | 15 min | ⭐⭐⭐ | Full CRUD operations, VS Code integration |
-| **04-dog-reminders** | 20 min | ⭐⭐⭐⭐ | Datetime fields, background jobs, time-based logic |
-| **05-simple-crm** | 30 min | ⭐⭐⭐⭐⭐ | Multiple models, relationships, filtering, business logic |
+Welcome to the **ShepLang Learning Path**! These examples are designed to take you from zero to full-stack developer in under 1 hour.
 
 ---
 
-## 📖 **Example Details**
+## 🗺️ **Learning Path**
 
-### Example 1: Hello World (5 minutes) ⭐
+Each example builds on the previous one, introducing new concepts while reinforcing what you've learned.
 
-**Files:**
-- `01-hello-world.shep`
+| # | Example | Time | Concepts | Status |
+|---|---------|------|----------|--------|
+| **1** | [Hello World](#1-hello-world-5-minutes) | 5 min | Basic structure, data, views, actions | 🟢 Ready |
+| **2** | [Counter](#2-counter-10-minutes) | 10 min | Number types, multiple actions, state | 🟢 Ready |
+| **3** | [Contact List](#3-contact-list-20-minutes) | 20 min | Multiple fields, validation, CRUD | 🟢 Ready |
+| **4** | [Dog Reminders](#4-dog-reminders-30-minutes) | 30 min | DateTime, background jobs, automation | 🟢 Ready |
+| **5** | [Todo List](#5-todo-list-reference) | Reference | Complete CRUD, edit functionality | 🟢 Working |
 
-**What it demonstrates:**
-- Basic app structure (`app` declaration)
-- Simple views (`view` with `show` statements)
-- Buttons and actions
-- Navigation between views
-
-**No backend needed!** This is a pure frontend example.
-
-**How to run:**
-1. Open `01-hello-world.shep` in VS Code
-2. Press `Ctrl+Shift+P` to show preview
-3. Click the buttons and watch navigation work!
+**Total Learning Time:** ~60 minutes  
+**Prerequisite:** VS Code with ShepLang extension installed
 
 ---
 
-### Example 2: Counter (10 minutes) ⭐⭐
+## 📚 **The Examples**
 
-**Files:**
-- `02-counter.shep` (frontend)
-- `02-counter.shepthon` (backend)
+### **1. Hello World** (5 minutes)
 
-**What it demonstrates:**
-- Data models with number fields
-- Backend state management
-- Increment/decrement operations
-- GET and POST endpoints
-- Conditional logic in backend
+**File:** `01-hello-world.shep` + `01-hello-world.shepthon`  
+**[Read Full Tutorial →](./01-hello-world.README.md)**
 
-**Features:**
-- ✅ Persistent counter (in-memory)
-- ✅ Three operations: Increment, Decrement, Reset
-- ✅ Backend creates count on first use
+The simplest possible ShepLang app. Perfect for first-time users!
 
-**How to run:**
-1. Open `02-counter.shep` in VS Code
-2. Press `Ctrl+Shift+P` to show preview
-3. Check for green "✓ Backend" badge
-4. Click buttons to change the counter!
+**What You'll Learn:**
+- ✅ App structure basics
+- ✅ Creating data models
+- ✅ Building views with buttons
+- ✅ Writing simple actions
 
-**What's happening:**
-- Backend stores count in database
-- Each button calls a POST endpoint
-- Preview auto-refreshes to show new value
+**Try It:**
+```bash
+# Open in VS Code
+code 01-hello-world.shep
 
----
+# Press Ctrl+Shift+P to preview
+# Click "Say Hello" button
+```
 
-### Example 3: Todo List (15 minutes) ⭐⭐⭐
-
-**Files:**
-- `todo.shep` (frontend)
-- `todo.shepthon` (backend)
-
-**What it demonstrates:**
-- Full CRUD operations (Create, Read, Update, Delete)
-- VS Code native input box integration
-- List rendering
-- Toggle functionality (click to mark done)
-- Edit functionality (pencil icon)
-- Delete functionality (trash icon)
-
-**Features:**
-- ✅ Add tasks via VS Code input box
-- ✅ Click task to toggle done/not done
-- ✅ Edit button (✏️) to change title
-- ✅ Delete button (🗑️) to remove task
-- ✅ Toast notifications for all actions
-- ✅ Real-time list updates
-
-**How to run:**
-1. Open `todo.shep` in VS Code
-2. Press `Ctrl+Shift+P` to show preview
-3. Check for green "✓ Backend" badge
-4. Click "Add Task" - input box appears at top
-5. Type task title and press Enter
-6. Try clicking, editing, and deleting tasks!
-
-**This is the showcase example - demonstrates all Week 1 features!**
+**Key Code:**
+```sheplang
+action SayHello:
+  add Message with text="Hello from ShepLang! 🐑"
+  show Welcome
+```
 
 ---
 
-### Example 4: Dog Reminders (20 minutes) ⭐⭐⭐⭐
+### **2. Counter** (10 minutes)
 
-**Files:**
-- `04-dog-reminders.shep` (frontend)
-- `04-dog-reminders.shepthon` (backend)
+**File:** `02-counter.shep` + `02-counter.shepthon`  
+**[Read Full Tutorial →](./02-counter.README.md)**
 
-**What it demonstrates:**
-- Datetime fields
-- Time-based logic
-- Background jobs (scheduled tasks)
-- Filtering by criteria
-- Auto-completion based on time
+Learn state management with a simple counter app.
 
-**Features:**
-- ✅ Create reminders with time
-- ✅ Background job runs every 5 minutes
-- ✅ Auto-marks reminders as done when time passes
-- ✅ Full CRUD for reminders
+**What You'll Learn:**
+- ✅ Number data types
+- ✅ Multiple buttons and actions
+- ✅ Updating values
+- ✅ Building interactive UIs
 
-**How to run:**
-1. Open `04-dog-reminders.shep` in VS Code
-2. Press `Ctrl+Shift+P` to show preview
-3. Add a reminder with text and time
-4. Wait 5 minutes - job will auto-mark as done!
+**Try It:**
+```bash
+code 02-counter.shep
+# Click Increment/Decrement/Reset buttons
+# See your counter history grow!
+```
 
-**What's happening:**
-- Backend stores reminders with datetime
-- Job scheduler runs every 5 minutes
-- Compares `time <= now()` to find due reminders
-- Updates them to `done: true`
-
-**This is the canonical ShepThon example!**
+**Key Code:**
+```sheplang
+action Increment:
+  add Counter with label="Count", value=1
+  show Dashboard
+```
 
 ---
 
-### Example 5: Simple CRM (30 minutes) ⭐⭐⭐⭐⭐
+### **3. Contact List** (20 minutes)
 
-**Files:**
-- `05-simple-crm.shep` (frontend)
-- `05-simple-crm.shepthon` (backend)
+**File:** `03-contact-list.shep` + `03-contact-list.shepthon`  
+**[Read Full Tutorial →](./03-contact-list.README.md)**
 
-**What it demonstrates:**
-- Multiple models (Lead + Note)
-- Model relationships (foreign keys)
-- Filtering with optional parameters
-- Business logic (promote lead to customer)
-- Cascading deletes
-- Background cleanup jobs
-- Complex queries
+Build a mini-CRM with multiple fields and validation.
 
-**Features:**
-- ✅ Lead management (name, email, status)
-- ✅ Add notes to leads
-- ✅ Filter leads by status (new, qualified, etc.)
-- ✅ Promote lead to customer (business logic)
-- ✅ Auto-cleanup old "lost" leads after 7 days
-- ✅ Delete lead with all its notes (cascade)
+**What You'll Learn:**
+- ✅ Working with multiple fields
+- ✅ Data validation rules
+- ✅ Edit and delete functionality
+- ✅ Real-world application structure
 
-**How to run:**
-1. Open `05-simple-crm.shep` in VS Code
-2. Press `Ctrl+Shift+P` to show preview
-3. Add a lead with name and email
-4. Add notes to the lead
-5. Try filtering by status
-6. Promote a lead to customer!
+**Try It:**
+```bash
+code 03-contact-list.shep
+# Add contacts with name, email, phone, notes
+# Edit with ✏️ button
+# Delete with 🗑️ button
+```
 
-**What's happening:**
-- Two models: Lead and Note
-- Note has `leadId` foreign key
-- Optional parameters in GET `/leads` for filtering
-- Business logic in POST `/leads/:id/promote`
-- Job cleans up old "lost" leads daily
-
-**This is the most advanced example - production-ready patterns!**
+**Key Code:**
+```sheplang
+data Contact:
+  fields:
+    name: text
+    email: text
+    phone: text
+    notes: text
+  rules:
+    - "name is required"
+    - "email must be valid"
+```
 
 ---
 
-## 🎓 **Concepts Covered**
+### **4. Dog Reminders** (30 minutes)
 
-### Beginner (Examples 1-2)
-- ✅ App structure
-- ✅ Views and navigation
-- ✅ Buttons and actions
-- ✅ Data models
-- ✅ Basic backend endpoints
+**File:** `04-dog-reminders.shep` + `04-dog-reminders.shepthon`  
+**[Read Full Tutorial →](./04-dog-reminders.README.md)**
 
-### Intermediate (Example 3)
-- ✅ Full CRUD operations
-- ✅ VS Code integration (input boxes)
-- ✅ List rendering
-- ✅ State updates
-- ✅ Error handling
-- ✅ Toast notifications
+Advanced example with date/time fields and background jobs!
 
-### Advanced (Examples 4-5)
-- ✅ Datetime fields
+**What You'll Learn:**
+- ✅ DateTime field types
+- ✅ Creating background jobs
+- ✅ Scheduling automated tasks
+- ✅ Time-based logic
+- ✅ Production-ready features
+
+**Try It:**
+```bash
+code 04-dog-reminders.shep
+# Add reminders with future times
+# Wait 5 minutes past reminder time
+# Watch them auto-mark as done!
+```
+
+**Key Code:**
+```shepthon
+job "mark-due-as-done" every 5 minutes {
+  const now = new Date()
+  const dueReminders = db.reminders.findMany({
+    where: { time: { lte: now }, done: false }
+  })
+  for (const reminder of dueReminders) {
+    db.reminders.update({
+      where: { id: reminder.id },
+      data: { done: true }
+    })
+  }
+}
+```
+
+---
+
+### **5. Todo List** (Reference)
+
+**File:** `todo.shep` + `todo.shepthon`  
+**Status:** Fully working production example
+
+The original working example with complete CRUD operations.
+
+**What It Demonstrates:**
+- ✅ Full CRUD (Create, Read, Update, Delete)
+- ✅ Edit functionality with VS Code input boxes
+- ✅ Toggle status by clicking items
+- ✅ Multiple endpoints (GET, POST, PUT, DELETE)
+- ✅ Production-ready structure
+
+**Try It:**
+```bash
+code todo.shep
+# Add tasks via input box
+# Edit tasks with ✏️ button
+# Mark done by clicking task
+# Delete with 🗑️ button
+```
+
+---
+
+## 🎯 **Learning Objectives**
+
+### By the End of This Series, You'll Know:
+
+**Frontend (ShepLang):**
+- ✅ Declaring apps
+- ✅ Defining data models
+- ✅ Creating views (list, button)
+- ✅ Writing actions (add, show)
+- ✅ All field types (text, number, yes/no, datetime)
+- ✅ Validation rules
+
+**Backend (ShepThon):**
+- ✅ Defining models
+- ✅ Creating endpoints (GET, POST, PUT, DELETE)
+- ✅ Database operations (findMany, create, update, delete)
 - ✅ Background jobs
 - ✅ Time-based logic
-- ✅ Multiple models
-- ✅ Relationships
-- ✅ Filtering
-- ✅ Business logic
-- ✅ Cascading operations
-- ✅ Complex queries
+- ✅ Request handling
+
+**VS Code Extension:**
+- ✅ Live preview panel
+- ✅ Keyboard shortcuts
+- ✅ Error recovery
+- ✅ Output logging
+- ✅ Backend integration
 
 ---
 
-## 🚀 **Quick Start**
+## 🚀 **Quick Start Guide**
 
-### For Any Example:
+### Prerequisites
 
-1. **Open Files:**
-   - Open the `.shep` file in VS Code
-   - If there's a `.shepthon` file, it will load automatically
-
-2. **Show Preview:**
-   - Press `Ctrl+Shift+P` (Windows/Linux)
-   - Or `Cmd+Shift+P` (Mac)
-   - Or right-click → "ShepLang: Show Preview"
-
-3. **Check Backend:**
-   - Look for green "✓ Backend" badge in preview
-   - If red "✗ Backend", check Output logs (`Ctrl+Shift+L`)
-
-4. **Interact:**
-   - Click buttons
-   - Add/edit/delete items
-   - Watch real-time updates!
-
----
-
-## 🐛 **Troubleshooting**
-
-**Preview not loading?**
-- Make sure both `.shep` and `.shepthon` files have the same base name
-- Check Output logs: `Ctrl+Shift+L`
-- Restart backend: `Ctrl+Shift+R`
-
-**Backend not connecting?**
-- Check for syntax errors (red squiggles)
-- Restart VS Code if needed
-- View logs for detailed errors
-
-**Need help?**
-- Check [Troubleshooting Guide](../extension/TROUBLESHOOTING.md)
-- View [Language Reference](../extension/LANGUAGE_REFERENCE.md)
-
----
-
-## 📝 **Creating Your Own Example**
-
-Want to create your own app? Follow this pattern:
-
-1. **Create Frontend** (`myapp.shep`):
-   ```sheplang
-   app MyApp
-   
-   data Item:
-     fields:
-       name: text
-   
-   view Dashboard:
-     list Item
-     button "Add" -> CreateItem
-   
-   action CreateItem(name):
-     add Item with name
-     show Dashboard
+1. **Install VS Code** (v1.85.0+)
+2. **Install ShepLang Extension**
+   ```bash
+   # From VSIX
+   code --install-extension sheplang-0.1.0.vsix
    ```
 
-2. **Create Backend** (`myapp.shepthon`):
-   ```shepthon
-   app MyApp {
-     model Item {
-       id: id
-       name: text
-     }
-     
-     endpoint GET "/items" -> [Item] {
-       return db.Item.findAll()
-     }
-     
-     endpoint POST "/items" (name: string) -> Item {
-       return db.Item.create({ name: name })
-     }
-   }
-   ```
+### Run Your First Example
 
-3. **Open and Preview:**
-   - Open `myapp.shep`
-   - Press `Ctrl+Shift+P`
-   - Start building!
+```bash
+# 1. Clone the repository
+git clone https://github.com/Radix-Obsidian/Sheplang-BobaScript
+cd Sheplang-BobaScript
+
+# 2. Open examples folder in VS Code
+code examples/
+
+# 3. Open 01-hello-world.shep
+
+# 4. Press Ctrl+Shift+P (Cmd+Shift+P on Mac)
+#    Preview opens automatically!
+
+# 5. Click buttons and see it work!
+```
 
 ---
 
-## 🎉 **What's Next?**
+## 🎓 **Recommended Learning Path**
 
-After completing all examples:
+### For Complete Beginners
 
-1. **Build Your Own App**
-   - Start with a simple idea
-   - Use these examples as templates
-   - Experiment and learn!
+**Week 1:**
+- Day 1: Example 1 (Hello World) - 5 min
+- Day 2: Example 2 (Counter) - 10 min
+- Day 3: Review Examples 1-2, try modifications
 
-2. **Learn More**
-   - [Getting Started Guide](../extension/GETTING_STARTED.md)
-   - [Language Reference](../extension/LANGUAGE_REFERENCE.md)
-   - [AI Best Practices](../extension/AI_BEST_PRACTICES.md)
+**Week 2:**
+- Day 4: Example 3 (Contact List) - 20 min
+- Day 5: Example 4 (Dog Reminders) - 30 min
+- Day 6: Review all examples
 
-3. **Share Your Creation**
-   - Post on GitHub
-   - Share with the community
-   - Help others learn!
+**Week 3:**
+- Day 7: Build your own app from scratch!
+
+### For Experienced Developers
+
+**Day 1:** Complete all examples (60 min)  
+**Day 2:** Build production app
+
+### For AI-Assisted Learning
+
+Use [AI Best Practices Guide](../extension/AI_BEST_PRACTICES.md) with these examples:
+- Ask AI to explain each example
+- Have AI generate variations
+- Use AI to troubleshoot issues
 
 ---
 
-**Happy coding! 🐑✨**
+## 📖 **Additional Resources**
 
-Start with Example 1 and work your way up. Each example is designed to teach you one more concept while building on what you've already learned.
+### Documentation
+- [Getting Started Guide](../extension/GETTING_STARTED.md)
+- [Language Reference](../extension/LANGUAGE_REFERENCE.md)
+- [Troubleshooting Guide](../extension/TROUBLESHOOTING.md)
+- [AI Best Practices](../extension/AI_BEST_PRACTICES.md)
+
+### Extension Commands
+- `Ctrl+Shift+P` - Show Preview
+- `Ctrl+Shift+R` - Restart Backend
+- `Ctrl+Shift+L` - Show Output Logs
+
+### Getting Help
+- [GitHub Issues](https://github.com/Radix-Obsidian/Sheplang-BobaScript/issues)
+- [Documentation](https://github.com/Radix-Obsidian/Sheplang-BobaScript)
+- Press `Ctrl+Shift+L` to view logs
+
+---
+
+## 🔄 **Example Progression**
+
+```
+Example 1: Hello World
+    ↓
+  Adds: Basic structure
+    ↓
+Example 2: Counter
+    ↓
+  Adds: Number types, multiple actions
+    ↓
+Example 3: Contact List
+    ↓
+  Adds: Multiple fields, validation
+    ↓
+Example 4: Dog Reminders
+    ↓
+  Adds: DateTime, background jobs
+    ↓
+Example 5: Todo List (Reference)
+    ↓
+  Shows: Production-ready CRUD
+```
+
+---
+
+## 💡 **Tips for Success**
+
+### 1. **Follow the Order**
+Start with Example 1, don't skip ahead. Each builds on the previous.
+
+### 2. **Try Modifications**
+Each example includes "Try These Modifications" challenges. Do them!
+
+### 3. **Use the Preview**
+The live preview is your best friend. See changes instantly.
+
+### 4. **Read the Code**
+Study the working examples. Understand why they work.
+
+### 5. **Check the Logs**
+Press `Ctrl+Shift+L` when things don't work. Logs explain everything.
+
+### 6. **Build Your Own**
+After Example 4, build something from scratch. That's when it clicks!
+
+---
+
+## 🎯 **What Can You Build?**
+
+After completing these examples, you can build:
+
+✅ **Todo/Task Managers** - Like Example 5  
+✅ **Contact/CRM Systems** - Like Example 3  
+✅ **Reminder Apps** - Like Example 4  
+✅ **Event Calendars** - Combine Examples 3 & 4  
+✅ **Inventory Trackers** - Use number fields  
+✅ **Note-Taking Apps** - Use text fields  
+✅ **Time Trackers** - Use datetime fields  
+✅ **Booking Systems** - Use background jobs  
+✅ **And much more!**
+
+---
+
+## 🏆 **Completion Certificate**
+
+Once you've completed all examples:
+
+**You are now a ShepLang Developer!** 🎉
+
+**Skills Unlocked:**
+- ✅ Full-stack development
+- ✅ Data modeling
+- ✅ UI/UX design
+- ✅ Backend APIs
+- ✅ Database operations
+- ✅ Background jobs
+- ✅ Time-based logic
+
+**Next Steps:**
+1. Build your own app
+2. Share it with the community
+3. Contribute examples
+4. Help others learn
+
+---
+
+## 📊 **Example Comparison**
+
+| Feature | Ex 1 | Ex 2 | Ex 3 | Ex 4 | Todo |
+|---------|------|------|------|------|------|
+| Fields | 1 | 2 | 4 | 3 | 2 |
+| Field Types | text | text, number | text (4x) | text, datetime, yes/no | text, yes/no |
+| Actions | 1 | 4 | 1 | 1 | 3 |
+| Endpoints | 3 | 4 | 4 | 4 | 4 |
+| CRUD | Partial | Partial | Full | Full | Full |
+| Jobs | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Difficulty | ⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | Reference |
+
+---
+
+## 🎬 **Video Tutorials**
+
+*(Coming Soon)*
+
+Each example will have a 2-3 minute video walkthrough:
+- Example 1: "Your First ShepLang App"
+- Example 2: "State Management Made Easy"
+- Example 3: "Building a Real CRM"
+- Example 4: "Background Jobs & Automation"
+- Todo: "Production CRUD Operations"
+
+---
+
+## ❓ **FAQ**
+
+**Q: Do I need to know programming?**  
+A: No! These examples teach you from scratch.
+
+**Q: How long does it take?**  
+A: ~60 minutes for all examples. Take your time!
+
+**Q: What if I get stuck?**  
+A: Check the logs (`Ctrl+Shift+L`), read the README for that example, or ask for help.
+
+**Q: Can I build real apps with this?**  
+A: Yes! The Todo example is production-ready. Scale from there.
+
+**Q: Do I need a database?**  
+A: No! ShepLang includes an in-memory database. Zero config.
+
+---
+
+## 🌟 **Success Stories**
+
+*(Share yours!)*
+
+After completing these examples, developers have built:
+- Personal productivity tools
+- Small business CRMs
+- Event management systems
+- Inventory trackers
+- And more!
+
+---
+
+**Ready to start?** Open [Example 1: Hello World](./01-hello-world.README.md) and begin your journey! 🐑✨
+
+---
+
+**Total Examples:** 5  
+**Total Time:** ~60 minutes  
+**Difficulty:** Beginner to Advanced  
+**Status:** ✅ All Examples Ready
+
+🎉 **Happy Learning!**

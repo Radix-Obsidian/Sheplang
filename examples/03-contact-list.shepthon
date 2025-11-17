@@ -1,0 +1,46 @@
+app MyContacts {
+  
+  model Contact {
+    id: id
+    name: text
+    email: text
+    phone: text
+    notes: text
+  }
+  
+  endpoint GET "/contacts" {
+    return db.contacts.findMany()
+  }
+  
+  endpoint POST "/contacts" {
+    const { name, email, phone, notes } = request.body
+    const contact = db.contacts.create({
+      name: name,
+      email: email,
+      phone: phone,
+      notes: notes
+    })
+    return contact
+  }
+  
+  endpoint PUT "/contacts/:id" {
+    const { id } = request.params
+    const { name, email, phone, notes } = request.body
+    const contact = db.contacts.update({
+      where: { id: id },
+      data: { 
+        name: name,
+        email: email,
+        phone: phone,
+        notes: notes
+      }
+    })
+    return contact
+  }
+  
+  endpoint DELETE "/contacts/:id" {
+    const { id } = request.params
+    db.contacts.delete({ where: { id: id } })
+    return { success: true }
+  }
+}

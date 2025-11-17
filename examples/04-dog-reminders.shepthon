@@ -1,54 +1,56 @@
 app DogReminders {
-
-  # Backend with scheduled job to auto-mark reminders as done
-  # This demonstrates background job scheduling
-  # Job runs every 5 minutes to check for due reminders
   
   model Reminder {
     id: id
-    text: string
+    text: text
     time: datetime
-    done: bool = false
+    done: yes/no
   }
-
-  # GET endpoint - Returns all reminders
-  endpoint GET "/reminders" -> [Reminder] {
-    return db.Reminder.findAll()
+  
+  endpoint GET "/reminders" {
+    return db.reminders.findMany()
   }
-
-  # POST endpoint - Creates a new reminder
-  endpoint POST "/reminders" (text: string, time: datetime) -> Reminder {
-    let reminder = db.Reminder.create({ 
-      text: text, 
+  
+  endpoint POST "/reminders" {
+    const { text, time } = request.body
+    const reminder = db.reminders.create({
+      text: text,
       time: time,
       done: false
     })
     return reminder
   }
-
-  # PUT endpoint - Updates a reminder
-  endpoint PUT "/reminders/:id" (text: string, time: datetime, done: bool) -> Reminder {
-    let reminder = db.Reminder.update(:id, { 
-      text: text,
-      time: time,
-      done: done 
+  
+  endpoint PUT "/reminders/:id" {
+    const { id } = request.params
+    const { done } = request.body
+    const reminder = db.reminders.update({
+      where: { id: id },
+      data: { done: done }
     })
     return reminder
   }
-
-  # DELETE endpoint - Deletes a reminder
+  
   endpoint DELETE "/reminders/:id" {
-    db.Reminder.delete(:id)
+    const { id } = request.params
+    db.reminders.delete({ where: { id: id } })
     return { success: true }
   }
-
-  # Background job - Auto-marks reminders as done when time has passed
-  # Runs every 5 minutes
+  
   job "mark-due-as-done" every 5 minutes {
-    let now = now()
-    let due = db.Reminder.find({ time <= now, done: false })
-    for reminder in due {
-      db.Reminder.update(reminder.id, { done: true })
+    const now = new Date()
+    const dueReminders = db.reminders.findMany({
+      where: { 
+        time: { lte: now },
+        done: false
+      }
+    })
+    
+    for (const reminder of dueReminders) {
+      db.reminders.update({
+        where: { id: reminder.id },
+        data: { done: true }
+      })
     }
   }
 }
