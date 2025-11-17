@@ -1145,9 +1145,26 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
       
       try {
         console.log('[Webview] Calling GET', endpoint);
-        const items = await callBackend('GET', endpoint);
-        console.log('[Webview] Loaded items:', items);
+        const response = await callBackend('GET', endpoint);
+        console.log('[Webview] Raw response:', response);
+        console.log('[Webview] Response type:', typeof response);
+        console.log('[Webview] Is array?', Array.isArray(response));
         
+        // Handle different response formats
+        let items;
+        if (Array.isArray(response)) {
+          // Direct array response
+          items = response;
+        } else if (response && typeof response === 'object') {
+          // Object wrapper - try common property names
+          const pluralName = modelName.toLowerCase() + 's';
+          items = response[pluralName] || response.data || response.items || response.results || [];
+          console.log('[Webview] Extracted items from property:', pluralName, '- count:', items.length);
+        } else {
+          items = [];
+        }
+        
+        console.log('[Webview] Final items array:', items);
         renderItems(items, model, modelName);
       } catch (error) {
         console.error('[Webview] Failed to load data:', error);
