@@ -6,6 +6,14 @@
 
 export type { Type, Diagnostic, VerificationResult, TypeEnvironment } from './types.js';
 export { isCompatible, isNullable, removeNull, makeNullable, formatType } from './utils/typeUtils.js';
+export { 
+  parseTypeString, 
+  inferFieldValueType, 
+  buildTypeEnvironment, 
+  getModelFieldType,
+  inferLoadReturnType,
+  inferListReturnType 
+} from './solvers/typeInference.js';
 
 /**
  * Main verification function (MVP - Pass 1 only).
