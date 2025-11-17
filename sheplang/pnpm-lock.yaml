@@ -32,13 +32,13 @@ importers:
     dependencies:
       '@sheplang/language':
         specifier: file:../sheplang/packages/language
-        version: link:../sheplang/packages/language
+        version: link:../verifier/packages/language
       '@sheplang/runtime':
         specifier: file:../sheplang/packages/runtime
-        version: link:../sheplang/packages/runtime
+        version: link:../verifier/packages/runtime
       '@sheplang/shepthon':
         specifier: file:../sheplang/packages/shepthon
-        version: link:../sheplang/packages/shepthon
+        version: link:../verifier/packages/shepthon
       vscode-languageclient:
         specifier: ^9.0.1
         version: 9.0.1
@@ -353,6 +353,25 @@ importers:
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.24)(jsdom@27.2.0)
+
+  packages/verifier:
+    dependencies:
+      '@sheplang/language':
+        specifier: workspace:*
+        version: link:../language
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.24
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.10
       typescript:
         specifier: ^5.6.3
         version: 5.9.3
