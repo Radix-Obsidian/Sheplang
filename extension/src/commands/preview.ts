@@ -538,6 +538,63 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
       vscode.postMessage({ type: 'webviewLog', level: 'error', args: args.map(String) });
     };
     
+    // ========================================
+    // Helper Functions for Dynamic Rendering
+    // ========================================
+    
+    /**
+     * Get the model name that a view displays
+     * @param {string} viewName - Name of the view
+     * @returns {string|null} Model name or null
+     */
+    function getModelFromView(viewName) {
+      if (!currentAST || !currentAST.views) return null;
+      const view = currentAST.views.find(v => v.name === viewName);
+      return view?.list || null;
+    }
+    
+    /**
+     * Get model definition from AST
+     * @param {string} modelName - Name of the model
+     * @returns {object|null} Model definition or null
+     */
+    function getModelByName(modelName) {
+      if (!currentAST || !currentAST.datas) return null;
+      return currentAST.datas.find(d => d.name === modelName);
+    }
+    
+    /**
+     * Construct endpoint path from model name
+     * Pattern: Message → /messages
+     * @param {string} modelName - Name of the model
+     * @returns {string} Endpoint path
+     */
+    function getEndpointPath(modelName) {
+      return '/' + modelName.toLowerCase() + 's';
+    }
+    
+    /**
+     * Format field value based on type
+     * @param {any} value - Field value
+     * @param {string} type - Field type (text, number, yes/no, datetime)
+     * @returns {string} Formatted value
+     */
+    function formatFieldValue(value, type) {
+      if (value === null || value === undefined) return '';
+      
+      switch(type) {
+        case 'yes/no':
+          return value ? '✓' : '○';
+        case 'datetime':
+          return new Date(value).toLocaleString();
+        case 'number':
+          return String(value);
+        case 'text':
+        default:
+          return String(value);
+      }
+    }
+    
     // Listen for messages from extension
     window.addEventListener('message', event => {
       const message = event.data;
@@ -555,9 +612,9 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
         
         case 'backendStatus':
           updateBackendStatus(message.status, message.message);
-          // Load todos when backend connects
+          // Load data when backend connects
           if (message.status === 'connected') {
-            setTimeout(() => loadTodos(), 100);
+            setTimeout(() => loadData(), 100);
           }
           break;
         
@@ -727,9 +784,12 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
         if (view.list) {
           const listDiv = document.createElement('div');
           listDiv.className = 'list';
-          listDiv.innerHTML = \`
-            <div class="list-empty">No tasks yet. Click "Add Task" to create one!</div>
-          \`;
+          
+          // Dynamic empty message based on model
+          const modelName = view.list;
+          const pluralName = modelName ? modelName.toLowerCase() + 's' : 'items';
+          
+          listDiv.innerHTML = '<div class="list-empty">No ' + pluralName + ' yet. Click the button above to create one!</div>';
           viewDiv.appendChild(listDiv);
         }
         
@@ -836,7 +896,7 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
             console.log('[Webview] ✅ Todo created:', result);
             
             showToast('✅ Task added!', 'success');
-            await loadTodos();
+            await loadData();
           } catch (error) {
             console.error('[Webview] ❌ Add failed:', error);
             showToast('❌ Error: ' + error.message, 'error');
@@ -867,119 +927,172 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
         
         console.log('[Webview] ✅ Task updated:', updated);
         showToast('✏️ Task updated!', 'success');
-        await loadTodos();
+        await loadData();
       } catch (error) {
         console.error('[Webview] ❌ Edit failed:', error);
         showToast('❌ Error: ' + error.message, 'error');
       }
     }
     
-    async function loadTodos() {
-      console.log('[Webview] Loading todos from backend...');
-      try {
-        const todos = await callBackend('GET', '/todos');
-        console.log('[Webview] Loaded todos:', todos);
-        
-        // Update the list display
-        const listDiv = document.querySelector('.list');
-        if (listDiv) {
-          listDiv.innerHTML = '';
-          if (todos && todos.length > 0) {
-            todos.forEach(todo => {
-              const item = document.createElement('div');
-              item.className = 'list-item';
-              item.style.display = 'flex';
-              item.style.alignItems = 'center';
-              item.style.gap = '8px';
-              
-              // Title span (clickable to toggle)
-              const titleSpan = document.createElement('span');
-              titleSpan.style.flex = '1';
-              titleSpan.style.cursor = 'pointer';
-              titleSpan.style.textDecoration = todo.done ? 'line-through' : 'none';
-              titleSpan.textContent = todo.title;
-              titleSpan.onclick = async () => {
-                try {
-                  console.log('[Webview] Toggling todo:', todo.id);
-                  const updated = await callBackend('PUT', '/todos/' + todo.id, {
-                    title: todo.title,
-                    done: !todo.done
-                  });
-                  console.log('[Webview] ✅ Todo updated:', updated);
-                  showToast(updated.done ? '✅ Marked as done!' : '○ Marked as not done', 'success');
-                  await loadTodos();
-                } catch (error) {
-                  console.error('[Webview] ❌ Toggle failed:', error);
-                  showToast('❌ Error: ' + error.message, 'error');
-                }
-              };
-              
-              // Status icon
-              const statusSpan = document.createElement('span');
-              statusSpan.style.color = 'var(--vscode-descriptionForeground)';
-              statusSpan.style.fontSize = '0.9em';
-              statusSpan.textContent = todo.done ? '✓' : '○';
-              
-              // Edit button
-              const editBtn = document.createElement('button');
-              editBtn.textContent = '✏️';
-              editBtn.style.background = 'transparent';
-              editBtn.style.border = 'none';
-              editBtn.style.cursor = 'pointer';
-              editBtn.style.padding = '4px 8px';
-              editBtn.style.fontSize = '14px';
-              editBtn.style.opacity = '0.6';
-              editBtn.style.transition = 'opacity 0.2s';
-              editBtn.onmouseenter = () => { editBtn.style.opacity = '1'; };
-              editBtn.onmouseleave = () => { editBtn.style.opacity = '0.6'; };
-              editBtn.onclick = (e) => {
-                e.stopPropagation();
-                vscode.postMessage({
-                  type: 'promptForEdit',
-                  todoId: todo.id,
-                  currentTitle: todo.title
-                });
-              };
-              
-              // Delete button
-              const deleteBtn = document.createElement('button');
-              deleteBtn.textContent = '🗑️';
-              deleteBtn.style.background = 'transparent';
-              deleteBtn.style.border = 'none';
-              deleteBtn.style.cursor = 'pointer';
-              deleteBtn.style.padding = '4px 8px';
-              deleteBtn.style.fontSize = '14px';
-              deleteBtn.style.opacity = '0.6';
-              deleteBtn.style.transition = 'opacity 0.2s';
-              deleteBtn.onmouseenter = () => { deleteBtn.style.opacity = '1'; };
-              deleteBtn.onmouseleave = () => { deleteBtn.style.opacity = '0.6'; };
-              deleteBtn.onclick = async (e) => {
-                e.stopPropagation();
-                try {
-                  console.log('[Webview] Deleting todo:', todo.id);
-                  await callBackend('DELETE', '/todos/' + todo.id);
-                  console.log('[Webview] ✅ Todo deleted');
-                  showToast('🗑️ Task deleted', 'success');
-                  await loadTodos();
-                } catch (error) {
-                  console.error('[Webview] ❌ Delete failed:', error);
-                  showToast('❌ Error: ' + error.message, 'error');
-                }
-              };
-              
-              item.appendChild(titleSpan);
-              item.appendChild(statusSpan);
-              item.appendChild(editBtn);
-              item.appendChild(deleteBtn);
-              listDiv.appendChild(item);
-            });
-          } else {
-            listDiv.innerHTML = '<div class="list-item" style="color: var(--vscode-descriptionForeground); font-style: italic;">No tasks yet. Click "Add Task" to create one!</div>';
-          }
-        }
-      } catch (error) {
-        console.error('[Webview] Failed to load todos:', error);
+    /**
+     * Load data from backend dynamically based on AST
+     */
+    async function loadData() {
+      console.log('[Webview] Loading data from backend...');
+      
+      // Get the first view (active view)
+      if (!currentAST || !currentAST.views || currentAST.views.length === 0) {
+        console.error('[Webview] No views in AST');
+        return;
       }
+      
+      const view = currentAST.views[0];
+      const modelName = view.list;
+      
+      if (!modelName) {
+        console.log('[Webview] View has no list property, skipping data load');
+        return;
+      }
+      
+      const model = getModelByName(modelName);
+      if (!model) {
+        console.error('[Webview] Model not found:', modelName);
+        return;
+      }
+      
+      const endpoint = getEndpointPath(modelName);
+      
+      try {
+        console.log('[Webview] Calling GET', endpoint);
+        const items = await callBackend('GET', endpoint);
+        console.log('[Webview] Loaded items:', items);
+        
+        renderItems(items, model, modelName);
+      } catch (error) {
+        console.error('[Webview] Failed to load data:', error);
+        // Don't show toast on initial load failure - backend might not be ready
+      }
+    }
+    
+    /**
+     * Render items in the list dynamically
+     * @param {Array} items - Array of items from backend
+     * @param {object} model - Model definition from AST
+     * @param {string} modelName - Name of the model
+     */
+    function renderItems(items, model, modelName) {
+      const listDiv = document.querySelector('.list');
+      if (!listDiv) {
+        console.error('[Webview] List div not found');
+        return;
+      }
+      
+      listDiv.innerHTML = '';
+      
+      // Empty state
+      if (!items || items.length === 0) {
+        const pluralName = modelName.toLowerCase() + 's';
+        listDiv.innerHTML = '<div class="list-item" style="color: var(--vscode-descriptionForeground); font-style: italic;">No ' + pluralName + ' yet. Click the button above to create one!</div>';
+        return;
+      }
+      
+      // Render each item
+      items.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'list-item';
+        itemDiv.style.display = 'flex';
+        itemDiv.style.alignItems = 'center';
+        itemDiv.style.gap = '8px';
+        
+        // Fields container
+        const fieldsContainer = document.createElement('div');
+        fieldsContainer.style.flex = '1';
+        fieldsContainer.style.display = 'flex';
+        fieldsContainer.style.gap = '12px';
+        fieldsContainer.style.flexWrap = 'wrap';
+        
+        // Render each field (skip id)
+        model.fields.forEach(field => {
+          if (field.name === 'id') return;
+          
+          const fieldContainer = document.createElement('div');
+          fieldContainer.style.display = 'flex';
+          fieldContainer.style.gap = '4px';
+          
+          // Field label
+          const labelSpan = document.createElement('span');
+          labelSpan.style.fontWeight = '500';
+          labelSpan.style.color = 'var(--vscode-descriptionForeground)';
+          labelSpan.textContent = field.name + ':';
+          
+          // Field value
+          const valueSpan = document.createElement('span');
+          const formattedValue = formatFieldValue(item[field.name], field.type);
+          valueSpan.textContent = formattedValue;
+          
+          // Special styling for yes/no
+          if (field.type === 'yes/no') {
+            valueSpan.style.fontSize = '1.2em';
+            valueSpan.style.color = item[field.name] ? 
+              'var(--vscode-testing-iconPassed)' : 
+              'var(--vscode-descriptionForeground)';
+          }
+          
+          fieldContainer.appendChild(labelSpan);
+          fieldContainer.appendChild(valueSpan);
+          fieldsContainer.appendChild(fieldContainer);
+        });
+        
+        // Edit button (placeholder for now)
+        const editBtn = document.createElement('button');
+        editBtn.textContent = '✏️';
+        editBtn.style.background = 'transparent';
+        editBtn.style.border = 'none';
+        editBtn.style.cursor = 'pointer';
+        editBtn.style.padding = '4px 8px';
+        editBtn.style.fontSize = '14px';
+        editBtn.style.opacity = '0.6';
+        editBtn.style.transition = 'opacity 0.2s';
+        editBtn.onmouseenter = () => { editBtn.style.opacity = '1'; };
+        editBtn.onmouseleave = () => { editBtn.style.opacity = '0.6'; };
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          console.log('[Webview] Edit not yet implemented for:', modelName);
+          showToast('✏️ Edit coming soon!', 'info');
+        };
+        
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.style.background = 'transparent';
+        deleteBtn.style.border = 'none';
+        deleteBtn.style.cursor = 'pointer';
+        deleteBtn.style.padding = '4px 8px';
+        deleteBtn.style.fontSize = '14px';
+        deleteBtn.style.opacity = '0.6';
+        deleteBtn.style.transition = 'opacity 0.2s';
+        deleteBtn.onmouseenter = () => { deleteBtn.style.opacity = '1'; };
+        deleteBtn.onmouseleave = () => { deleteBtn.style.opacity = '0.6'; };
+        deleteBtn.onclick = async (e) => {
+          e.stopPropagation();
+          try {
+            const endpoint = getEndpointPath(modelName);
+            console.log('[Webview] Deleting:', endpoint + '/' + item.id);
+            await callBackend('DELETE', endpoint + '/' + item.id);
+            console.log('[Webview] ✅ Deleted');
+            showToast('🗑️ Deleted!', 'success');
+            await loadData();
+          } catch (error) {
+            console.error('[Webview] ❌ Delete failed:', error);
+            showToast('❌ Error: ' + error.message, 'error');
+          }
+        };
+        
+        itemDiv.appendChild(fieldsContainer);
+        itemDiv.appendChild(editBtn);
+        itemDiv.appendChild(deleteBtn);
+        listDiv.appendChild(itemDiv);
+      });
     }
     
     function showToast(message, type = 'info') {
