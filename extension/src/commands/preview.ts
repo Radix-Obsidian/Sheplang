@@ -106,6 +106,24 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
         return;
       }
       
+      // Handle request to edit task (Edit button)
+      if (message.type === 'promptForEdit') {
+        const title = await vscode.window.showInputBox({
+          prompt: 'Edit task title',
+          value: message.currentTitle,
+          placeHolder: 'e.g., Buy groceries'
+        });
+        
+        if (title && title !== message.currentTitle) {
+          panel.webview.postMessage({
+            type: 'editTaskWithTitle',
+            title,
+            todoId: message.todoId
+          });
+        }
+        return;
+      }
+      
       if (message.type === 'callEndpoint') {
         try {
           console.log(`[Preview] Calling ${message.method} ${message.path}`);
@@ -540,6 +558,11 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
           // Execute the action with the title from VS Code input box
           executeActionWithTitle(message.actionName, message.viewName, message.title);
           break;
+        
+        case 'editTaskWithTitle':
+          // Update task with new title
+          editTaskWithTitle(message.todoId, message.title);
+          break;
       }
     });
     
@@ -807,6 +830,35 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
       }
     }
     
+    // Edit task with new title (from VS Code input box)
+    async function editTaskWithTitle(todoId, newTitle) {
+      console.log('[Webview] Editing task:', todoId, 'with new title:', newTitle);
+      
+      try {
+        // Get the current todo to preserve the done status
+        const todos = await callBackend('GET', '/todos');
+        const currentTodo = todos.find(t => t.id === todoId);
+        
+        if (!currentTodo) {
+          showToast('❌ Task not found', 'error');
+          return;
+        }
+        
+        // Update with new title, preserve done status
+        const updated = await callBackend('PUT', '/todos/' + todoId, {
+          title: newTitle,
+          done: currentTodo.done
+        });
+        
+        console.log('[Webview] ✅ Task updated:', updated);
+        showToast('✏️ Task updated!', 'success');
+        await loadTodos();
+      } catch (error) {
+        console.error('[Webview] ❌ Edit failed:', error);
+        showToast('❌ Error: ' + error.message, 'error');
+      }
+    }
+    
     async function loadTodos() {
       console.log('[Webview] Loading todos from backend...');
       try {
@@ -821,19 +873,19 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
             todos.forEach(todo => {
               const item = document.createElement('div');
               item.className = 'list-item';
-              item.style.cursor = 'pointer';
-              item.innerHTML = 
-                '<span style="' + (todo.done ? 'text-decoration: line-through;' : '') + '">' +
-                  todo.title +
-                '</span>' +
-                '<span style="color: var(--vscode-descriptionForeground); font-size: 0.9em;">' +
-                  (todo.done ? '✓' : '○') +
-                '</span>';
+              item.style.display = 'flex';
+              item.style.alignItems = 'center';
+              item.style.gap = '8px';
               
-              // Add click handler to toggle done status
-              item.onclick = async () => {
+              // Title span (clickable to toggle)
+              const titleSpan = document.createElement('span');
+              titleSpan.style.flex = '1';
+              titleSpan.style.cursor = 'pointer';
+              titleSpan.style.textDecoration = todo.done ? 'line-through' : 'none';
+              titleSpan.textContent = todo.title;
+              titleSpan.onclick = async () => {
                 try {
-                  console.log('[Webview] Toggling todo:', todo.id, 'from', todo.done, 'to', !todo.done);
+                  console.log('[Webview] Toggling todo:', todo.id);
                   const updated = await callBackend('PUT', '/todos/' + todo.id, {
                     title: todo.title,
                     done: !todo.done
@@ -847,6 +899,63 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
                 }
               };
               
+              // Status icon
+              const statusSpan = document.createElement('span');
+              statusSpan.style.color = 'var(--vscode-descriptionForeground)';
+              statusSpan.style.fontSize = '0.9em';
+              statusSpan.textContent = todo.done ? '✓' : '○';
+              
+              // Edit button
+              const editBtn = document.createElement('button');
+              editBtn.textContent = '✏️';
+              editBtn.style.background = 'transparent';
+              editBtn.style.border = 'none';
+              editBtn.style.cursor = 'pointer';
+              editBtn.style.padding = '4px 8px';
+              editBtn.style.fontSize = '14px';
+              editBtn.style.opacity = '0.6';
+              editBtn.style.transition = 'opacity 0.2s';
+              editBtn.onmouseenter = () => { editBtn.style.opacity = '1'; };
+              editBtn.onmouseleave = () => { editBtn.style.opacity = '0.6'; };
+              editBtn.onclick = (e) => {
+                e.stopPropagation();
+                vscode.postMessage({
+                  type: 'promptForEdit',
+                  todoId: todo.id,
+                  currentTitle: todo.title
+                });
+              };
+              
+              // Delete button
+              const deleteBtn = document.createElement('button');
+              deleteBtn.textContent = '🗑️';
+              deleteBtn.style.background = 'transparent';
+              deleteBtn.style.border = 'none';
+              deleteBtn.style.cursor = 'pointer';
+              deleteBtn.style.padding = '4px 8px';
+              deleteBtn.style.fontSize = '14px';
+              deleteBtn.style.opacity = '0.6';
+              deleteBtn.style.transition = 'opacity 0.2s';
+              deleteBtn.onmouseenter = () => { deleteBtn.style.opacity = '1'; };
+              deleteBtn.onmouseleave = () => { deleteBtn.style.opacity = '0.6'; };
+              deleteBtn.onclick = async (e) => {
+                e.stopPropagation();
+                try {
+                  console.log('[Webview] Deleting todo:', todo.id);
+                  await callBackend('DELETE', '/todos/' + todo.id);
+                  console.log('[Webview] ✅ Todo deleted');
+                  showToast('🗑️ Task deleted', 'success');
+                  await loadTodos();
+                } catch (error) {
+                  console.error('[Webview] ❌ Delete failed:', error);
+                  showToast('❌ Error: ' + error.message, 'error');
+                }
+              };
+              
+              item.appendChild(titleSpan);
+              item.appendChild(statusSpan);
+              item.appendChild(editBtn);
+              item.appendChild(deleteBtn);
               listDiv.appendChild(item);
             });
           } else {
