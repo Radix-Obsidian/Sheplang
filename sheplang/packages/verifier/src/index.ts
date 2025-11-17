@@ -5,6 +5,7 @@
  */
 
 export type { Type, Diagnostic, VerificationResult, TypeEnvironment } from './types.js';
+export { isCompatible, isNullable, removeNull, makeNullable, formatType } from './utils/typeUtils.js';
 
 /**
  * Main verification function (MVP - Pass 1 only).
