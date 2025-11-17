@@ -1,85 +1,78 @@
-# 🐑 ShepLang + ShepThon + BobaScript
+# 🐑 ShepLang VS Code Extension
 
 [![Build Status](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions/workflows/verify.yml/badge.svg)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions)
 [![Version](https://img.shields.io/badge/version-v0.2.0--alpha-blue)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/releases)
 [![Tests](https://img.shields.io/badge/tests-315%2F316%20passing-brightgreen)](https://github.com/Radix-Obsidian/Sheplang-BobaScript)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Full-stack app development in plain language — no coding required.**  
-> ShepLang for frontends. ShepThon for backends. BobaScript makes it real.
+> **AI‑native full‑stack DSL inside VS Code.**  
+> ShepLang for UI, ShepThon for backend, BobaScript under the hood.
 
 ---
 
 ## 🧠 What It Is
 
-**The Problem:** 92% of founders can't code. They need technical co-founders or expensive agencies to build MVPs.
+**The Problem:** Most non‑technical founders live in VS Code with Cursor/Copilot, but the code AI generates is hard to understand and maintain.
 
-**The Solution:** Write apps in plain language. No syntax, no frameworks, no infrastructure.
+**The Solution:** A language and extension that are designed to be written by AI and understood by humans.
 
-- **ShepLang** → Describe your UI ("show a list of tasks")
-- **ShepThon** → Describe your backend ("save reminders to database")
-- **BobaScript** → The engine that makes it work
-- **ShepYard IDE** → Visual development environment (browser-based)
+- **ShepLang** → Describe your UI and flows in `.shep` (data, views, actions)
+- **ShepThon** → Describe your backend in `.shepthon` (models, endpoints, jobs)
+- **VS Code Extension** → LSP + preview + backend runner
+- **BobaScript** → Internal TypeScript runtime that executes your app
 
-## 💡 Why It Matters
-
-**Before:** Founders with ideas → Months finding technical co-founder → Expensive agency → 6 months to MVP
-
-**Now:** Describe what you want → Working app in minutes → Iterate instantly → Deploy when ready
-
-### The Full Stack:
-- **ShepLang** → Frontend (UI, actions, state)  
-- **ShepThon** → Backend (models, endpoints, jobs)  
-- **ShepYard** → IDE (edit, preview, debug)  
-- **BobaScript** → Runtime (TypeScript output)
-
-It's like Figma, but for entire applications.
+Today, the primary way to use ShepLang is through the **ShepLang VS Code extension**.  
+The CLI and ShepYard browser IDE are experimental and secondary.
 
 ---
 
-## 🚀 Quick Start
+## 💡 Why It Matters
 
-### Option 1: CLI (ShepLang only)
+**Before:**
+- AI dumps React/Node/Prisma boilerplate you can't safely edit
+- You ship a prototype once, then get stuck when requirements change
+
+**With ShepLang:**
+- AI generates **high‑level DSL** instead of low‑level framework code
+- The extension gives you **LSP feedback + preview + backend** in one place
+- You can actually read, modify, and maintain what AI wrote
+
+### The Stack
+- **ShepLang** → Frontend (data, views, actions)
+- **ShepThon** → Backend (models, endpoints, jobs)
+- **VS Code Extension** → Editor experience (LSP, outline, go‑to‑def, preview)
+- **BobaScript** → Execution engine (TypeScript output, in‑memory DB)
+
+---
+
+## 🚀 Quick Start (VS Code Extension)
+
+### 1. Clone & Install
+
 ```bash
-# Install
-npm install -g sheplang
-
-# Create a simple app
-echo 'app MyApp
-data Todo:
-  fields:
-    title: text
-view Dashboard:
-  list Todo' > app.shep
-
-# Preview
-sheplang dev app.shep
-```
-
-### Option 2: ShepYard IDE (Full Stack)
-```bash
-# Clone repo
 git clone https://github.com/Radix-Obsidian/Sheplang-BobaScript
-cd Sheplang-BobaScript
+cd Sheplang-BobaScript/extension
 
-# Install & build
 pnpm install
-pnpm run verify
-
-# Start ShepYard
-cd shepyard
-pnpm run dev
+pnpm run compile
 ```
 
-Open `http://localhost:3000` → Build full-stack apps visually!
+### 2. Launch Extension Development Host
 
-## 📦 What You Get
+1. Open the `extension/` folder in VS Code
+2. Press `F5` to start an **Extension Development Host**
 
-- **3 Languages**: ShepLang (frontend), ShepThon (backend), BobaScript (runtime)
-- **Visual IDE**: ShepYard with Monaco editor, live preview, debugging
-- **In-Memory Database**: Test backends without setup
-- **Job Scheduler**: Background tasks and cron jobs
-- **CLI Tools**: Build, explain, analyze, deploy
+### 3. Open the Todo Example
+
+1. In the dev host, open `examples/todo.shep`
+2. Run command: **“ShepLang: Show Preview”**
+3. You should see:
+   - A **Dashboard** view in the preview panel
+   - **Outline** entries: `Todo` (data), `Dashboard` (view), `CreateTodo` (action)
+   - **Hover docs** when you hover `app`, `data`, `view`, `action`
+   - **Context‑aware completions** when you type inside fields/view/action blocks
+
+> For now, treat this as the **canonical happy‑path demo**.
 
 ## ⚡ Usage
 

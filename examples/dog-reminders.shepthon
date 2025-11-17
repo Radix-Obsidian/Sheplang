@@ -1,0 +1,26 @@
+// Dog Reminders Backend (ShepThon)
+// Connects to dog-reminders.shep frontend
+
+app DogReminders {
+  model Reminder {
+    id: id
+    text: string
+    time: datetime
+    done: bool = false
+  }
+
+  endpoint GET "/reminders" -> [Reminder] {
+    return db.Reminder.findAll()
+  }
+
+  endpoint POST "/reminders" (text: string, time: datetime) -> Reminder {
+    let reminder = db.Reminder.create({ text, time, done: false })
+    return reminder
+  }
+
+  endpoint PUT "/reminders/:id" (done: bool) -> Reminder {
+    let reminder = db.Reminder.find(id)
+    reminder.done = done
+    return reminder
+  }
+}

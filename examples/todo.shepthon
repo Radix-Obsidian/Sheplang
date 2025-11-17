@@ -1,0 +1,37 @@
+app MyTodos {
+  
+  model Todo {
+    id: id
+    title: text
+    done: yes/no
+  }
+  
+  endpoint GET "/todos" {
+    return db.todos.findMany()
+  }
+  
+  endpoint POST "/todos" {
+    const { title } = request.body
+    const todo = db.todos.create({
+      title: title,
+      done: false
+    })
+    return todo
+  }
+  
+  endpoint PUT "/todos/:id" {
+    const { id } = request.params
+    const { done } = request.body
+    const todo = db.todos.update({
+      where: { id: id },
+      data: { done: done }
+    })
+    return todo
+  }
+  
+  endpoint DELETE "/todos/:id" {
+    const { id } = request.params
+    db.todos.delete({ where: { id: id } })
+    return { success: true }
+  }
+}

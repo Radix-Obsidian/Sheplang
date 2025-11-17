@@ -1,0 +1,200 @@
+{
+  "name": "sheplang",
+  "displayName": "ShepLang - AI-Native Full-Stack Language",
+  "description": "Language support for ShepLang (frontend) and ShepThon (backend) - AI-native full-stack development",
+  "version": "0.1.0",
+  "publisher": "goldensheep",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
+  "keywords": [
+    "sheplang",
+    "shepthon",
+    "ai-native",
+    "full-stack",
+    "dsl"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript.git"
+  },
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:sheplang",
+    "onLanguage:shepthon",
+    "onCommand:sheplang.showPreview",
+    "onCommand:sheplang.newProject",
+    "onCommand:sheplang.restartBackend"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sheplang",
+        "aliases": ["ShepLang", "sheplang"],
+        "extensions": [".shep"],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./media/icon.png",
+          "dark": "./media/icon.png"
+        }
+      },
+      {
+        "id": "shepthon",
+        "aliases": ["ShepThon", "shepthon"],
+        "extensions": [".shepthon"],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./media/icon.png",
+          "dark": "./media/icon.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sheplang",
+        "scopeName": "source.sheplang",
+        "path": "./syntaxes/sheplang.tmLanguage.json"
+      },
+      {
+        "language": "shepthon",
+        "scopeName": "source.shepthon",
+        "path": "./syntaxes/shepthon.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "sheplang.showPreview",
+        "title": "ShepLang: Show Preview",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "sheplang.newProject",
+        "title": "ShepLang: New Project from Template",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "sheplang.restartBackend",
+        "title": "ShepLang: Restart ShepThon Backend",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "sheplang.showOutput",
+        "title": "ShepLang: Show Output Logs",
+        "icon": "$(output)"
+      },
+      {
+        "command": "sheplang.createBackendFile",
+        "title": "ShepLang: Create Backend (.shepthon) File",
+        "icon": "$(file-add)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceLangId == sheplang",
+          "command": "sheplang.showPreview",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "sheplang.showPreview",
+          "when": "resourceLangId == sheplang"
+        },
+        {
+          "command": "sheplang.restartBackend",
+          "when": "resourceLangId == shepthon"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "sheplang",
+        "path": "./snippets/sheplang.json"
+      },
+      {
+        "language": "shepthon",
+        "path": "./snippets/shepthon.json"
+      }
+    ],
+    "configuration": {
+      "title": "ShepLang",
+      "properties": {
+        "sheplang.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        },
+        "sheplang.autoPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically show preview when opening .shep files"
+        },
+        "sheplang.shepthon.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start ShepThon backend when opening .shepthon files"
+        },
+        "sheplang.verboseLogging": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable verbose debug logging in output channel"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "sheplang.showPreview",
+        "key": "ctrl+shift+p",
+        "mac": "cmd+shift+p",
+        "when": "editorLangId == sheplang"
+      },
+      {
+        "command": "sheplang.restartBackend",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorLangId == shepthon"
+      },
+      {
+        "command": "sheplang.showOutput",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "pnpm run compile",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "@sheplang/language": "file:../sheplang/packages/language",
+    "@sheplang/shepthon": "file:../sheplang/packages/shepthon",
+    "@sheplang/runtime": "file:../sheplang/packages/runtime"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^2.24.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.6.3"
+  }
+}

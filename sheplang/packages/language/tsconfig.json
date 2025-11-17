@@ -8,7 +8,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["src", "test", "generated"],
   "exclude": ["dist", "node_modules"]

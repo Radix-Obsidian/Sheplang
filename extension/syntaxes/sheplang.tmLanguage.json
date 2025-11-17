@@ -1,0 +1,102 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ShepLang",
+  "scopeName": "source.sheplang",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#types" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.sheplang",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.sheplang",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.sheplang",
+          "match": "\\b(if|else|for|in|when|return)\\b"
+        },
+        {
+          "name": "keyword.declaration.sheplang",
+          "match": "\\b(app|model|view|action|button|list)\\b"
+        },
+        {
+          "name": "keyword.action.sheplang",
+          "match": "\\b(show|add|set|call|load|remove)\\b"
+        },
+        {
+          "name": "constant.language.sheplang",
+          "match": "\\b(true|false|null|now)\\b"
+        },
+        {
+          "name": "keyword.operator.sheplang",
+          "match": "\\b(and|or|not)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.sheplang",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sheplang",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.sheplang",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sheplang",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.sheplang",
+          "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.sheplang",
+          "match": "\\b(string|number|bool|id|datetime)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.sheplang",
+          "match": "(=|\\+|\\-|\\*|/|<|>|<=|>=|==|!=|->|:)"
+        }
+      ]
+    }
+  }
+}

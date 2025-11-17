@@ -2,19 +2,34 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { bridgeService } from '../services/bridgeService';
 import { RuntimeManager } from '../services/runtimeManager';
+import { outputChannel } from '../services/outputChannel';
+import { errorRecovery } from '../services/errorRecovery';
 
 export async function showPreviewCommand(context: vscode.ExtensionContext, runtimeManager: RuntimeManager): Promise<void> {
+  outputChannel.section('Show Preview Command');
+  outputChannel.info('Opening preview...');
+
   const editor = vscode.window.activeTextEditor;
-  
+
   if (!editor) {
-    vscode.window.showErrorMessage('No active editor found');
+    await errorRecovery.handleError(
+      new Error('No active editor found'),
+      'Show Preview',
+      [{ message: 'Open a .shep file first, then try the preview command again.' }]
+    );
     return;
   }
 
   if (editor.document.languageId !== 'sheplang') {
-    vscode.window.showErrorMessage('Preview is only available for .shep files');
+    await errorRecovery.handleError(
+      new Error('Preview is only available for .shep files'),
+      'Show Preview',
+      [{ message: 'This command only works with .shep files. Open a .shep file and try again.' }]
+    );
     return;
   }
+
+  outputChannel.info('Active file:', editor.document.fileName);
 
   try {
     // Dynamic import for ESM package
