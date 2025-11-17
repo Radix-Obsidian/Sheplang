@@ -41,19 +41,19 @@
 data Contact:
   fields:
     name: text
-    email: text
+    emailAddress: text
     phone: text
     notes: text
   rules:
     - "name is required"
-    - "email must be valid"
+    - "emailAddress must be valid"
 ```
 
 **New concept:** Multiple fields in one model.
 
 Each field stores different information:
 - `name` - Contact's full name
-- `email` - Email address
+- `emailAddress` - Email address
 - `phone` - Phone number
 - `notes` - Additional information
 
@@ -62,8 +62,8 @@ Each field stores different information:
 - Email must be in valid format
 
 ```sheplang
-action AddContact(name, email, phone, notes):
-  add Contact with name, email, phone, notes
+action AddContact(name, emailAddress, phone, notes):
+  add Contact with name, emailAddress, phone, notes
   show ContactList
 ```
 
@@ -75,7 +75,7 @@ action AddContact(name, email, phone, notes):
 model Contact {
   id: id
   name: text
-  email: text
+  emailAddress: text
   phone: text
   notes: text
 }
@@ -85,10 +85,10 @@ Backend model matches frontend exactly.
 
 ```shepthon
 endpoint POST "/contacts" {
-  const { name, email, phone, notes } = request.body
+  const { name, emailAddress, phone, notes } = request.body
   const contact = db.contacts.create({
     name: name,
-    email: email,
+    emailAddress: emailAddress,
     phone: phone,
     notes: notes
   })
@@ -130,7 +130,7 @@ This is a **mini-CRM** (Customer Relationship Management) system!
 ```sheplang
 fields:
   name: text
-  email: text
+  emailAddress: text
   phone: text
 ```
 
@@ -142,7 +142,7 @@ fields:
 ### Action Parameters
 
 ```sheplang
-action AddContact(name, email, phone, notes):
+action AddContact(name, emailAddress, phone, notes):
 ```
 
 - Actions can accept multiple parameters
@@ -155,7 +155,7 @@ action AddContact(name, email, phone, notes):
 ```sheplang
 rules:
   - "name is required"
-  - "email must be valid"
+  - "emailAddress must be valid"
 ```
 
 - Validates data before saving
@@ -176,7 +176,7 @@ Add company information:
 data Contact:
   fields:
     name: text
-    email: text
+    emailAddress: text
     phone: text
     company: text  # ← Add this
     notes: text
@@ -187,7 +187,7 @@ data Contact:
 model Contact {
   id: id
   name: text
-  email: text
+  emailAddress: text
   phone: text
   company: text  # ← Add this
   notes: text
@@ -196,8 +196,8 @@ model Contact {
 
 **Action:**
 ```sheplang
-action AddContact(name, email, phone, company, notes):
-  add Contact with name, email, phone, company, notes
+action AddContact(name, emailAddress, phone, company, notes):
+  add Contact with name, emailAddress, phone, company, notes
   show ContactList
 ```
 
@@ -224,7 +224,7 @@ createdDate: date
 // Frontend state
 const [contacts, setContacts] = useState([]);
 const [name, setName] = useState('');
-const [email, setEmail] = useState('');
+const [emailAddress, setEmail] = useState('');
 // ... more useState hooks
 
 // Form submission
@@ -234,7 +234,7 @@ const handleSubmit = async (e) => {
     const response = await fetch('/api/contacts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, notes })
+      body: JSON.stringify({ name, emailAddress, phone, notes })
     });
     const newContact = await response.json();
     setContacts([...contacts, newContact]);
@@ -245,7 +245,7 @@ const handleSubmit = async (e) => {
 
 // Backend (Express)
 app.post('/api/contacts', async (req, res) => {
-  const { name, email, phone, notes } = req.body;
+  const { name, emailAddress, phone, notes } = req.body;
   // Validation logic
   // Database query
   // Error handling
@@ -254,8 +254,8 @@ app.post('/api/contacts', async (req, res) => {
 
 **ShepLang Way:**
 ```sheplang
-action AddContact(name, email, phone, notes):
-  add Contact with name, email, phone, notes
+action AddContact(name, emailAddress, phone, notes):
+  add Contact with name, emailAddress, phone, notes
   show ContactList
 ```
 
@@ -280,7 +280,7 @@ A: Validation is defined in the `rules` section. The extension shows these as do
 Contact
 ├── id: "c1"
 ├── name: "John Doe"
-├── email: "john@example.com"
+├── emailAddress: "john@example.com"
 ├── phone: "555-0123"
 └── notes: "Met at conference"
 ```

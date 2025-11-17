@@ -3,17 +3,17 @@ app MyContacts
 data Contact:
   fields:
     name: text
-    email: text
+    emailAddress: text
     phone: text
     notes: text
   rules:
     - "name is required"
-    - "email must be valid"
+    - "emailAddress must be valid"
 
 view ContactList:
   list Contact
   button "Add Contact" -> AddContact
 
-action AddContact(name, email, phone, notes):
-  add Contact with name, email, phone, notes
+action AddContact(name, emailAddress, phone, notes):
+  add Contact with name, emailAddress, phone, notes
   show ContactList

@@ -3,7 +3,7 @@ app MyContacts {
   model Contact {
     id: id
     name: text
-    email: text
+    emailAddress: text
     phone: text
     notes: text
   }
@@ -13,10 +13,10 @@ app MyContacts {
   }
   
   endpoint POST "/contacts" {
-    const { name, email, phone, notes } = request.body
+    const { name, emailAddress, phone, notes } = request.body
     const contact = db.contacts.create({
       name: name,
-      email: email,
+      emailAddress: emailAddress,
       phone: phone,
       notes: notes
     })
@@ -25,12 +25,12 @@ app MyContacts {
   
   endpoint PUT "/contacts/:id" {
     const { id } = request.params
-    const { name, email, phone, notes } = request.body
+    const { name, emailAddress, phone, notes } = request.body
     const contact = db.contacts.update({
       where: { id: id },
       data: { 
         name: name,
-        email: email,
+        emailAddress: emailAddress,
         phone: phone,
         notes: notes
       }
