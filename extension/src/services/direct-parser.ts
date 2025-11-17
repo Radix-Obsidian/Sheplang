@@ -192,47 +192,75 @@ export class ShepThonRuntime {
       throw new Error(`Endpoint not found: ${method} ${path}`);
     }
     
-    // Mock responses based on endpoint
-    if (path.includes('/todos')) {
-      if (method === 'GET') {
-        return this.db.Todo || [];
-      } else if (method === 'POST' && body) {
-        const newId = (this.db.Todo?.length || 0) + 1;
-        const newTodo = { id: newId, ...body };
-        if (!this.db.Todo) this.db.Todo = [];
-        this.db.Todo.push(newTodo);
-        return newTodo;
-      } else if (method === 'PUT') {
-        // Extract ID from path like /todos/1
-        const pathParts = path.split('/').filter(p => p);
-        const idStr = pathParts[pathParts.length - 1];
-        const id = parseInt(idStr || '0', 10);
-        
-        if (!isNaN(id) && this.db.Todo) {
-          const todoIndex = this.db.Todo.findIndex((t: any) => t.id === id);
-          if (todoIndex >= 0) {
-            this.db.Todo[todoIndex] = { ...this.db.Todo[todoIndex], ...body };
-            console.log('[DirectRuntime] Updated todo:', this.db.Todo[todoIndex]);
-            return this.db.Todo[todoIndex];
-          } else {
-            throw new Error(`Todo with id ${id} not found`);
-          }
-        }
-      } else if (method === 'DELETE') {
-        // Extract ID from path like /todos/1
-        const pathParts = path.split('/').filter(p => p);
-        const idStr = pathParts[pathParts.length - 1];
-        const id = parseInt(idStr || '0', 10);
-        
-        if (!isNaN(id) && this.db.Todo) {
-          this.db.Todo = this.db.Todo.filter((t: any) => t.id !== id);
-          console.log('[DirectRuntime] Deleted todo:', id);
-          return { success: true };
+    // Dynamic model handling based on path
+    // Extract model name from path (e.g., /messages -> Message, /todos -> Todo)
+    const pathParts = path.split('/').filter(p => p && !p.includes(':'));
+    const resourceName = pathParts[0]; // e.g., "messages", "todos", "contacts"
+    
+    // Find the model by matching the plural resource name
+    const model = this.app.models.find(m => {
+      const pluralName = m.name.toLowerCase() + 's';
+      return pluralName === resourceName;
+    });
+    
+    if (!model) {
+      console.warn('[DirectRuntime] No model found for resource:', resourceName);
+      return { message: 'Endpoint called' };
+    }
+    
+    const tableName = model.name;
+    console.log('[DirectRuntime] Using table:', tableName, 'for resource:', resourceName);
+    
+    // GET - return all items
+    if (method === 'GET' && pathParts.length === 1) {
+      const items = this.db[tableName] || [];
+      console.log(`[DirectRuntime] GET ${path} returning ${items.length} items`);
+      return items;
+    }
+    
+    // POST - create new item
+    if (method === 'POST' && body) {
+      const newId = (this.db[tableName]?.length || 0) + 1;
+      const newItem = { id: newId, ...body };
+      if (!this.db[tableName]) this.db[tableName] = [];
+      this.db[tableName].push(newItem);
+      console.log(`[DirectRuntime] POST ${path} created:`, newItem);
+      return newItem;
+    }
+    
+    // PUT - update item by ID
+    if (method === 'PUT') {
+      const idStr = pathParts[pathParts.length - 1];
+      const id = parseInt(idStr || '0', 10);
+      
+      if (!isNaN(id) && this.db[tableName]) {
+        const itemIndex = this.db[tableName].findIndex((item: any) => item.id === id);
+        if (itemIndex >= 0) {
+          this.db[tableName][itemIndex] = { ...this.db[tableName][itemIndex], ...body };
+          console.log(`[DirectRuntime] PUT ${path} updated:`, this.db[tableName][itemIndex]);
+          return this.db[tableName][itemIndex];
+        } else {
+          throw new Error(`${tableName} with id ${id} not found`);
         }
       }
     }
     
-    // Default response for unhandled endpoints
+    // DELETE - delete item by ID
+    if (method === 'DELETE') {
+      const idStr = pathParts[pathParts.length - 1];
+      const id = parseInt(idStr || '0', 10);
+      
+      if (!isNaN(id) && this.db[tableName]) {
+        const beforeLength = this.db[tableName].length;
+        this.db[tableName] = this.db[tableName].filter((item: any) => item.id !== id);
+        const afterLength = this.db[tableName].length;
+        console.log(`[DirectRuntime] DELETE ${path} removed item ${id}. Count: ${beforeLength} -> ${afterLength}`);
+        return { success: true };
+      }
+    }
+    
+    // Default response
+    console.warn('[DirectRuntime] Unhandled endpoint:', method, path);
     return { message: 'Endpoint called' };
   }
   
