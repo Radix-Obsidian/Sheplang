@@ -1,0 +1,54 @@
+app DogReminders {
+
+  # Backend with scheduled job to auto-mark reminders as done
+  # This demonstrates background job scheduling
+  # Job runs every 5 minutes to check for due reminders
+  
+  model Reminder {
+    id: id
+    text: string
+    time: datetime
+    done: bool = false
+  }
+
+  # GET endpoint - Returns all reminders
+  endpoint GET "/reminders" -> [Reminder] {
+    return db.Reminder.findAll()
+  }
+
+  # POST endpoint - Creates a new reminder
+  endpoint POST "/reminders" (text: string, time: datetime) -> Reminder {
+    let reminder = db.Reminder.create({ 
+      text: text, 
+      time: time,
+      done: false
+    })
+    return reminder
+  }
+
+  # PUT endpoint - Updates a reminder
+  endpoint PUT "/reminders/:id" (text: string, time: datetime, done: bool) -> Reminder {
+    let reminder = db.Reminder.update(:id, { 
+      text: text,
+      time: time,
+      done: done 
+    })
+    return reminder
+  }
+
+  # DELETE endpoint - Deletes a reminder
+  endpoint DELETE "/reminders/:id" {
+    db.Reminder.delete(:id)
+    return { success: true }
+  }
+
+  # Background job - Auto-marks reminders as done when time has passed
+  # Runs every 5 minutes
+  job "mark-due-as-done" every 5 minutes {
+    let now = now()
+    let due = db.Reminder.find({ time <= now, done: false })
+    for reminder in due {
+      db.Reminder.update(reminder.id, { done: true })
+    }
+  }
+}

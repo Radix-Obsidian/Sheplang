@@ -1,0 +1,30 @@
+app DogReminders
+
+# Dog reminder app with time-based tracking
+# Learn: datetime fields, filtering, background jobs
+# This is the canonical full-stack example from ShepThon use cases
+
+data Reminder:
+  fields:
+    text: text
+    time: datetime
+    done: yes/no
+  rules:
+    - "text must be at least 5 characters"
+    - "time must be in the future"
+
+view Home:
+  show "Dog Reminder App"
+  show "Never forget to walk your dog!"
+  list Reminder
+  button "Add Reminder" -> CreateReminder
+  button "Refresh" -> RefreshList
+
+# Note: Uses VS Code input box for text and time
+# Extension will prompt for both parameters
+action CreateReminder(text, time):
+  add Reminder with text, time, done=false
+  show Home
+
+action RefreshList:
+  show Home

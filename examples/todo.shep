@@ -1,16 +1,24 @@
 app MyTodos
 
+# Full CRUD todo list with backend
+# Learn: data models, views, actions, backend integration, full CRUD operations
+# This example demonstrates all the features from Week 1!
+
 data Todo:
   fields:
     title: text
     done: yes/no
   rules:
     - "user can update own items"
+    - "title must be at least 3 characters"
 
 view Dashboard:
+  show "My Todo List"
   list Todo
   button "Add Task" -> CreateTodo
 
+# Note: CreateTodo action uses VS Code input box (Ctrl+Shift+P opens preview)
+# The extension automatically prompts for the title parameter
 action CreateTodo(title):
   add Todo with title, done=false
   show Dashboard

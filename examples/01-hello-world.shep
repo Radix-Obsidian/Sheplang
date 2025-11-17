@@ -1,0 +1,12 @@
+app HelloWorld
+
+# Simple welcome screen - no backend needed
+# Learn: basic app structure, views, static text
+
+view Welcome:
+  show "Hello, World!"
+  show "Welcome to ShepLang"
+  button "Say Hi" -> SayHello
+
+action SayHello:
+  show Welcome

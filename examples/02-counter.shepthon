@@ -1,0 +1,47 @@
+app Counter {
+
+  model Count {
+    id: id
+    value: number
+  }
+
+  endpoint GET "/count" -> [Count] {
+    return db.Count.findAll()
+  }
+
+  endpoint POST "/count/increment" -> Count {
+    let counts = db.Count.findAll()
+    if (counts.length > 0) {
+      let count = counts[0]
+      let updated = db.Count.update(count.id, { value: count.value + 1 })
+      return updated
+    } else {
+      let newCount = db.Count.create({ value: 1 })
+      return newCount
+    }
+  }
+
+  endpoint POST "/count/decrement" -> Count {
+    let counts = db.Count.findAll()
+    if (counts.length > 0) {
+      let count = counts[0]
+      let updated = db.Count.update(count.id, { value: count.value - 1 })
+      return updated
+    } else {
+      let newCount = db.Count.create({ value: 0 })
+      return newCount
+    }
+  }
+
+  endpoint POST "/count/reset" -> Count {
+    let counts = db.Count.findAll()
+    if (counts.length > 0) {
+      let count = counts[0]
+      let updated = db.Count.update(count.id, { value: 0 })
+      return updated
+    } else {
+      let newCount = db.Count.create({ value: 0 })
+      return newCount
+    }
+  }
+}
