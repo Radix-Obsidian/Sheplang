@@ -1,0 +1,152 @@
+app ECommerceStore {
+  
+  model Product {
+    id: id
+    name: text
+    description: text
+    price: number
+    category: text
+    inStock: boolean
+    imageUrl: text
+  }
+  
+  model Customer {
+    id: id
+    firstName: text
+    lastName: text
+    emailAddress: text
+    phoneNumber: text
+    shippingAddress: text
+  }
+  
+  model Order {
+    id: id
+    customerName: text
+    productName: text
+    quantity: number
+    totalPrice: number
+    status: text
+    orderDate: datetime
+  }
+  
+  // Product Management Endpoints
+  endpoint GET "/products" {
+    return db.products.findMany()
+  }
+  
+  endpoint POST "/products" {
+    const { name, description, price, category, inStock, imageUrl } = request.body
+    const product = db.products.create({
+      name: name,
+      description: description,
+      price: price,
+      category: category,
+      inStock: inStock,
+      imageUrl: imageUrl
+    })
+    return product
+  }
+  
+  endpoint PUT "/products/:id" {
+    const { id } = request.params
+    const { name, description, price, category, inStock, imageUrl } = request.body
+    const product = db.products.update({
+      where: { id: id },
+      data: { 
+        name: name,
+        description: description,
+        price: price,
+        category: category,
+        inStock: inStock,
+        imageUrl: imageUrl
+      }
+    })
+    return product
+  }
+  
+  endpoint DELETE "/products/:id" {
+    const { id } = request.params
+    db.products.delete({ where: { id: id } })
+    return { success: true }
+  }
+  
+  // Customer Management Endpoints
+  endpoint GET "/customers" {
+    return db.customers.findMany()
+  }
+  
+  endpoint POST "/customers" {
+    const { firstName, lastName, emailAddress, phoneNumber, shippingAddress } = request.body
+    const customer = db.customers.create({
+      firstName: firstName,
+      lastName: lastName,
+      emailAddress: emailAddress,
+      phoneNumber: phoneNumber,
+      shippingAddress: shippingAddress
+    })
+    return customer
+  }
+  
+  endpoint PUT "/customers/:id" {
+    const { id } = request.params
+    const { firstName, lastName, emailAddress, phoneNumber, shippingAddress } = request.body
+    const customer = db.customers.update({
+      where: { id: id },
+      data: { 
+        firstName: firstName,
+        lastName: lastName,
+        emailAddress: emailAddress,
+        phoneNumber: phoneNumber,
+        shippingAddress: shippingAddress
+      }
+    })
+    return customer
+  }
+  
+  endpoint DELETE "/customers/:id" {
+    const { id } = request.params
+    db.customers.delete({ where: { id: id } })
+    return { success: true }
+  }
+  
+  // Order Management Endpoints
+  endpoint GET "/orders" {
+    return db.orders.findMany()
+  }
+  
+  endpoint POST "/orders" {
+    const { customerName, productName, quantity, totalPrice, status, orderDate } = request.body
+    const order = db.orders.create({
+      customerName: customerName,
+      productName: productName,
+      quantity: quantity,
+      totalPrice: totalPrice,
+      status: status,
+      orderDate: orderDate
+    })
+    return order
+  }
+  
+  endpoint PUT "/orders/:id" {
+    const { id } = request.params
+    const { customerName, productName, quantity, totalPrice, status, orderDate } = request.body
+    const order = db.orders.update({
+      where: { id: id },
+      data: { 
+        customerName: customerName,
+        productName: productName,
+        quantity: quantity,
+        totalPrice: totalPrice,
+        status: status,
+        orderDate: orderDate
+      }
+    })
+    return order
+  }
+  
+  endpoint DELETE "/orders/:id" {
+    const { id } = request.params
+    db.orders.delete({ where: { id: id } })
+    return { success: true }
+  }
+}
