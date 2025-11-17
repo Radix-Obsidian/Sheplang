@@ -11,5 +11,5 @@ view Welcome:
   button "Say Hello" -> SayHello
 
 action SayHello(content):
-  add Message with content="Hello from ShepLang! 🐑"
+  add Message with content
   show Welcome

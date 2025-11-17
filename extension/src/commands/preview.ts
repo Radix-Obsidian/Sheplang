@@ -778,9 +778,9 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
                     paramName: paramName  // Pass the actual parameter name
                   });
                 } else {
-                  // Multi-parameter actions need a form (Phase 2)
-                  console.log('[Webview] Multi-parameter action not yet supported:', action.params);
-                  showToast('⚠️ Multi-field forms coming soon! (Phase 2)', 'info');
+                  // Multi-parameter actions - show inline form
+                  console.log('[Webview] Multi-parameter action:', action.params);
+                  showMultiFieldForm(btn.action, view.name, action.params);
                 }
               } else {
                 // Execute action directly (no parameters)
@@ -895,20 +895,20 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
             const modelName = op.data;
             const endpoint = getEndpointPath(modelName);
             
-            // Build request body - use the actual parameter name
+            // Build request body
             const body = {};
             
-            // Set the user input to the parameter name
+            // First, add any default fields from op.fields
+            if (op.fields && typeof op.fields === 'object') {
+              Object.assign(body, op.fields);
+            }
+            
+            // Then override with user input (this ensures user input takes precedence)
             if (paramName) {
               body[paramName] = userInput;
             } else {
               // Fallback to 'title' for backward compatibility
               body['title'] = userInput;
-            }
-            
-            // Add any other fields from op.fields
-            if (op.fields && typeof op.fields === 'object') {
-              Object.assign(body, op.fields);
             }
             
             console.log('[Webview] Creating ' + modelName + ' via POST ' + endpoint, body);
@@ -921,6 +921,145 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
             console.error('[Webview] ❌ Add failed:', error);
             showToast('❌ Error: ' + error.message, 'error');
           }
+        }
+      }
+    }
+    
+    // Show multi-field form for actions with multiple parameters
+    function showMultiFieldForm(actionName, viewName, params) {
+      console.log('[Webview] Showing multi-field form for:', actionName, params);
+      
+      // Create modal overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+      
+      // Create form dialog
+      const dialog = document.createElement('div');
+      dialog.style.cssText = 'background: var(--vscode-editor-background); border: 1px solid var(--vscode-widget-border); border-radius: 8px; padding: 20px; min-width: 400px; max-width: 500px;';
+      
+      // Form title
+      const title = document.createElement('h3');
+      title.style.marginTop = '0';
+      title.textContent = actionName.replace(/([A-Z])/g, ' $1').trim(); // Add spaces before capitals
+      dialog.appendChild(title);
+      
+      // Create form
+      const form = document.createElement('form');
+      const inputs = {};
+      
+      params.forEach(param => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.style.marginBottom = '15px';
+        
+        const label = document.createElement('label');
+        label.style.display = 'block';
+        label.style.marginBottom = '5px';
+        label.style.color = 'var(--vscode-descriptionForeground)';
+        label.textContent = param.name.charAt(0).toUpperCase() + param.name.slice(1) + ':';
+        
+        const input = document.createElement('input');
+        input.type = param.type === 'datetime' ? 'datetime-local' : 'text';
+        input.name = param.name;
+        input.style.cssText = 'width: 100%; padding: 6px 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;';
+        input.placeholder = 'Enter ' + param.name;
+        
+        inputs[param.name] = input;
+        
+        fieldDiv.appendChild(label);
+        fieldDiv.appendChild(input);
+        form.appendChild(fieldDiv);
+      });
+      
+      // Buttons
+      const buttonDiv = document.createElement('div');
+      buttonDiv.style.cssText = 'margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;';
+      
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.style.cssText = 'padding: 6px 12px; background: transparent; color: var(--vscode-button-secondaryForeground); border: 1px solid var(--vscode-button-border); border-radius: 2px; cursor: pointer;';
+      cancelBtn.onclick = () => overlay.remove();
+      
+      const submitBtn = document.createElement('button');
+      submitBtn.type = 'submit';
+      submitBtn.textContent = 'Create';
+      submitBtn.style.cssText = 'padding: 6px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 2px; cursor: pointer;';
+      
+      buttonDiv.appendChild(cancelBtn);
+      buttonDiv.appendChild(submitBtn);
+      form.appendChild(buttonDiv);
+      
+      // Form submit handler
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        
+        // Collect values
+        const values = {};
+        for (const [name, input] of Object.entries(inputs)) {
+          values[name] = input.value;
+        }
+        
+        console.log('[Webview] Form submitted with values:', values);
+        
+        // Execute action with all parameters
+        executeActionWithMultipleInputs(actionName, viewName, values);
+        
+        // Close dialog
+        overlay.remove();
+      };
+      
+      dialog.appendChild(form);
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+      
+      // Focus first input
+      const firstInput = Object.values(inputs)[0];
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }
+    
+    // Execute action with multiple parameters
+    async function executeActionWithMultipleInputs(actionName, viewName, inputs) {
+      console.log('[Webview] Executing action with multiple inputs:', actionName, inputs);
+      
+      const action = currentAST.actions.find(a => a.name === actionName);
+      if (!action) {
+        console.error('[Webview] Action not found:', actionName);
+        return;
+      }
+      
+      // Execute each operation
+      for (const op of action.ops) {
+        if (op.kind === 'add') {
+          try {
+            const modelName = op.data;
+            const endpoint = getEndpointPath(modelName);
+            
+            // Build request body
+            const body = {};
+            
+            // First, add any default fields from op.fields
+            if (op.fields && typeof op.fields === 'object') {
+              Object.assign(body, op.fields);
+            }
+            
+            // Then override with all user inputs
+            Object.assign(body, inputs);
+            
+            console.log('[Webview] Creating ' + modelName + ' via POST ' + endpoint, body);
+            const result = await callBackend('POST', endpoint, body);
+            console.log('[Webview] ✅ ' + modelName + ' created:', result);
+            
+            showToast('✅ Created!', 'success');
+            await loadData();
+          } catch (error) {
+            console.error('[Webview] ❌ Add failed:', error);
+            showToast('❌ Error: ' + error.message, 'error');
+          }
+        } else if (op.kind === 'show') {
+          console.log('[Webview] Show view:', op.view);
         }
       }
     }
