@@ -17,7 +17,8 @@ export type AppModel = {
   }[];
   views: { 
     name: string; 
-    list?: string; 
+    list?: string; // Single list (backward compatibility)
+    lists?: string[]; // Multiple lists support
     buttons: { label: string; action: string; __location?: SourceLocation }[];
     __location?: SourceLocation;
   }[];

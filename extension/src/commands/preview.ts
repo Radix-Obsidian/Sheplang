@@ -419,17 +419,20 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
     
     .view {
       margin-bottom: 24px;
-      padding: 20px;
-      background: var(--vscode-editor-background);
+      padding: 24px;
+      background: linear-gradient(135deg, var(--vscode-editor-background) 0%, rgba(100, 100, 255, 0.03) 100%);
       border: 1px solid var(--vscode-panel-border);
-      border-radius: 6px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
     .view-title {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 16px;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 20px;
       color: var(--vscode-editor-foreground);
+      text-transform: capitalize;
+      letter-spacing: -0.5px;
     }
     
     .buttons {
@@ -440,34 +443,109 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
     }
     
     button {
-      background: var(--vscode-button-background);
-      color: var(--vscode-button-foreground);
+      background: linear-gradient(135deg, #4a9eff 0%, #0078d4 100%);
+      color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
+      padding: 10px 20px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
       font-family: inherit;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
     }
     
     button:hover {
-      background: var(--vscode-button-hoverBackground);
+      background: linear-gradient(135deg, #5aa9ff 0%, #1088e4 100%);
+      box-shadow: 0 4px 12px rgba(74, 158, 255, 0.4);
+      transform: translateY(-1px);
     }
     
     button:active {
-      transform: translateY(1px);
+      transform: translateY(0px);
+      box-shadow: 0 2px 6px rgba(74, 158, 255, 0.3);
+    }
+    
+    .list-section {
+      margin-top: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .list-section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--vscode-descriptionForeground);
+      text-transform: capitalize;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .list-section-title::before {
+      content: '';
+      width: 3px;
+      height: 18px;
+      background: linear-gradient(180deg, #4a9eff 0%, #0078d4 100%);
+      border-radius: 2px;
     }
     
     .list {
-      margin-top: 16px;
+      margin-top: 12px;
     }
     
     .list-item {
-      padding: 12px;
+      padding: 16px;
       background: var(--vscode-input-background);
       border: 1px solid var(--vscode-input-border);
-      border-radius: 4px;
-      margin-bottom: 8px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .list-item:hover {
+      border-color: var(--vscode-focusBorder);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    .field-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--vscode-descriptionForeground);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .field-value {
+      font-size: 14px;
+      color: var(--vscode-editor-foreground);
+      font-weight: 500;
+    }
+    
+    .field-value.price {
+      color: #4ec9b0;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .field-value.status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(100, 200, 255, 0.15);
+      color: #4a9eff;
+    }
+    
+    .field-value.email {
+      color: #ce9178;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
     }
     
     .list-empty {
@@ -793,17 +871,40 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
           viewDiv.appendChild(buttonsDiv);
         }
         
-        // List
+        // Support multiple lists (either view.list or view.lists)
+        const listModels = [];
         if (view.list) {
-          const listDiv = document.createElement('div');
-          listDiv.className = 'list';
-          
-          // Dynamic empty message based on model
-          const modelName = view.list;
-          const pluralName = modelName ? modelName.toLowerCase() + 's' : 'items';
-          
-          listDiv.innerHTML = '<div class="list-empty">No ' + pluralName + ' yet. Click the button above to create one!</div>';
-          viewDiv.appendChild(listDiv);
+          listModels.push(view.list);
+        }
+        if (view.lists && Array.isArray(view.lists)) {
+          listModels.push(...view.lists);
+        }
+        
+        // Render each list
+        if (listModels.length > 0) {
+          listModels.forEach(modelName => {
+            const listSection = document.createElement('div');
+            listSection.className = 'list-section';
+            listSection.setAttribute('data-model', modelName);
+            
+            // List section title
+            const listTitle = document.createElement('div');
+            listTitle.className = 'list-section-title';
+            listTitle.textContent = modelName + 's';
+            listSection.appendChild(listTitle);
+            
+            // List container
+            const listDiv = document.createElement('div');
+            listDiv.className = 'list';
+            listDiv.setAttribute('data-model', modelName);
+            
+            // Dynamic empty message
+            const pluralName = modelName.toLowerCase() + 's';
+            listDiv.innerHTML = '<div class="list-empty">No ' + pluralName + ' yet. Click the button above to create one!</div>';
+            
+            listSection.appendChild(listDiv);
+            viewDiv.appendChild(listSection);
+          });
         }
         
         appDiv.appendChild(viewDiv);
@@ -1121,54 +1222,62 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
     async function loadData() {
       console.log('[Webview] Loading data from backend...');
       
-      // Get the first view (active view)
       if (!currentAST || !currentAST.views || currentAST.views.length === 0) {
         console.error('[Webview] No views in AST');
         return;
       }
       
-      const view = currentAST.views[0];
-      const modelName = view.list;
-      
-      if (!modelName) {
-        console.log('[Webview] View has no list property, skipping data load');
-        return;
-      }
-      
-      const model = getModelByName(modelName);
-      if (!model) {
-        console.error('[Webview] Model not found:', modelName);
-        return;
-      }
-      
-      const endpoint = getEndpointPath(modelName);
-      
-      try {
-        console.log('[Webview] Calling GET', endpoint);
-        const response = await callBackend('GET', endpoint);
-        console.log('[Webview] Raw response:', response);
-        console.log('[Webview] Response type:', typeof response);
-        console.log('[Webview] Is array?', Array.isArray(response));
-        
-        // Handle different response formats
-        let items;
-        if (Array.isArray(response)) {
-          // Direct array response
-          items = response;
-        } else if (response && typeof response === 'object') {
-          // Object wrapper - try common property names
-          const pluralName = modelName.toLowerCase() + 's';
-          items = response[pluralName] || response.data || response.items || response.results || [];
-          console.log('[Webview] Extracted items from property:', pluralName, '- count:', items.length);
-        } else {
-          items = [];
+      // Load data for all views
+      for (const view of currentAST.views) {
+        // Collect all list models for this view
+        const listModels = [];
+        if (view.list) {
+          listModels.push(view.list);
+        }
+        if (view.lists && Array.isArray(view.lists)) {
+          listModels.push(...view.lists);
         }
         
-        console.log('[Webview] Final items array:', items);
-        renderItems(items, model, modelName);
-      } catch (error) {
-        console.error('[Webview] Failed to load data:', error);
-        // Don't show toast on initial load failure - backend might not be ready
+        // Load data for each list model
+        for (const modelName of listModels) {
+          const model = getModelByName(modelName);
+          if (!model) {
+            console.error('[Webview] Model not found:', modelName);
+            continue;
+          }
+          
+          const endpoint = getEndpointPath(modelName);
+          
+          try {
+            console.log('[Webview] Calling GET', endpoint);
+            const response = await callBackend('GET', endpoint);
+            console.log('[Webview] Raw response for', modelName, ':', response);
+            
+            // Handle different response formats
+            let items;
+            if (Array.isArray(response)) {
+              items = response;
+            } else if (response && typeof response === 'object') {
+              const pluralName = modelName.toLowerCase() + 's';
+              items = response[pluralName] || response.data || response.items || response.results || [];
+              console.log('[Webview] Extracted items from property:', pluralName, '- count:', items.length);
+            } else {
+              items = [];
+            }
+            
+            console.log('[Webview] Final items for', modelName, ':', items.length, 'items');
+            
+            // Find the specific list div for this model
+            const listDiv = document.querySelector('.list[data-model="' + modelName + '"]');
+            if (listDiv) {
+              renderItems(items, model, modelName, listDiv);
+            } else {
+              console.error('[Webview] List div not found for model:', modelName);
+            }
+          } catch (error) {
+            console.error('[Webview] Failed to load data for', modelName, ':', error);
+          }
+        }
       }
     }
     
@@ -1177,11 +1286,11 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
      * @param {Array} items - Array of items from backend
      * @param {object} model - Model definition from AST
      * @param {string} modelName - Name of the model
+     * @param {HTMLElement} listDiv - The list container element
      */
-    function renderItems(items, model, modelName) {
-      const listDiv = document.querySelector('.list');
+    function renderItems(items, model, modelName, listDiv) {
       if (!listDiv) {
-        console.error('[Webview] List div not found');
+        console.error('[Webview] List div not provided');
         return;
       }
       
@@ -1215,24 +1324,37 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
           
           const fieldContainer = document.createElement('div');
           fieldContainer.style.display = 'flex';
-          fieldContainer.style.gap = '4px';
+          fieldContainer.style.flexDirection = 'column';
+          fieldContainer.style.gap = '2px';
           
           // Field label
           const labelSpan = document.createElement('span');
-          labelSpan.style.fontWeight = '500';
-          labelSpan.style.color = 'var(--vscode-descriptionForeground)';
-          labelSpan.textContent = field.name + ':';
+          labelSpan.className = 'field-label';
+          labelSpan.textContent = field.name;
           
           // Field value
           const valueSpan = document.createElement('span');
+          valueSpan.className = 'field-value';
           const formattedValue = formatFieldValue(item[field.name], field.type);
           valueSpan.textContent = formattedValue;
           
-          // Special styling for yes/no
-          if (field.type === 'yes/no') {
-            valueSpan.style.fontSize = '1.2em';
+          // Smart styling based on field name or type
+          const fieldNameLower = field.name.toLowerCase();
+          if (fieldNameLower.includes('price') || fieldNameLower.includes('total')) {
+            valueSpan.classList.add('price');
+            // Format as currency
+            if (typeof item[field.name] === 'number') {
+              valueSpan.textContent = '$' + item[field.name].toFixed(2);
+            }
+          } else if (fieldNameLower === 'status') {
+            valueSpan.classList.add('status');
+          } else if (fieldNameLower.includes('email')) {
+            valueSpan.classList.add('email');
+          } else if (field.type === 'yes/no') {
+            valueSpan.style.fontSize = '1.4em';
+            valueSpan.textContent = item[field.name] ? '✓ Yes' : '○ No';
             valueSpan.style.color = item[field.name] ? 
-              'var(--vscode-testing-iconPassed)' : 
+              '#4ec9b0' : 
               'var(--vscode-descriptionForeground)';
           }
           

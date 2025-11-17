@@ -69,7 +69,7 @@ function mapDataDecl(decl: DataDecl): AppModel['datas'][0] {
 
 function mapViewDecl(decl: ViewDecl): AppModel['views'][0] {
   const buttons: { label: string; action: string; __location?: SourceLocation }[] = [];
-  let list: string | undefined;
+  const lists: string[] = [];
 
   for (const widget of decl.widgets) {
     if (widget.$type === 'ListDecl') {
@@ -77,7 +77,7 @@ function mapViewDecl(decl: ViewDecl): AppModel['views'][0] {
       if (!ref) {
         throw new Error(`Unresolved list reference in view "${decl.name}"`);
       }
-      list = ref.name;
+      lists.push(ref.name);
     } else if (widget.$type === 'ButtonDecl') {
       const target = widget.target.ref;
       if (!target) {
@@ -93,7 +93,8 @@ function mapViewDecl(decl: ViewDecl): AppModel['views'][0] {
 
   return { 
     name: decl.name, 
-    list, 
+    list: lists.length === 1 ? lists[0] : undefined, // Backward compatibility
+    lists: lists.length > 0 ? lists : undefined,
     buttons,
     __location: extractLocation(decl)
   };
