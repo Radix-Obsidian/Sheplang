@@ -44,4 +44,13 @@ export type {
 export { parseShepThon } from './parser.js';
 export { checkShepThon, type CheckResult } from './checker.js';
 export type * from './types.js';
+
+// Export lexer for token inspection
+export { Lexer, TokenType } from './lexer.js';
+export type { Token } from './lexer.js';
+
+// Export smart error recovery
+export { SmartErrorRecovery, createEnhancedDiagnostic } from './SmartErrorRecovery.js';
+export type { ParseError, ErrorSuggestion } from './SmartErrorRecovery.js';
+
 export { ShepThonRuntime } from './runtime/index.js';

@@ -58,22 +58,25 @@ export function useTranspile() {
           // For now, we'll use the canonicalAst directly as the App structure
           // In a production system, you might want to evaluate the bobaCode safely
           
-          // Create a mock App object from canonical AST
-          const bobaApp = createBobaAppFromAst(result.canonicalAst);
+          // Create a mock App object from canonical AST with location metadata
+          const bobaApp = createBobaAppFromAst(result.canonicalAst, result.appModel);
           
           // Generate explain data (Phase 3)
           const explainData = explainShepLangApp(result.canonicalAst);
           
-          setTranspileResult(result.bobaCode, bobaApp, explainData);
+          setTranspileResult(result.bobaCode, bobaApp, explainData, result.appModel);
           logService.success('sheplang', `✓ Successfully transpiled ${example.name}`);
         } else {
-          setTranspileError(result.error || 'Transpilation failed');
+          setTranspileError(result.error || 'Transpilation failed', result.errorDetails);
         }
       } catch (error) {
         const errorMessage = error instanceof Error 
           ? error.message 
           : 'Unknown error during transpilation';
-        setTranspileError(errorMessage);
+        setTranspileError(errorMessage, {
+          message: errorMessage,
+          source: example.source
+        });
       }
     };
 
@@ -82,26 +85,38 @@ export function useTranspile() {
 }
 
 /**
- * Creates a BobaScript App object from canonical AST
- * This converts the AST structure into the runtime App format
+ * Creates a BobaScript App object from canonical AST with location metadata
+ * This converts the AST structure into the runtime App format with click-to-navigate support
  */
-function createBobaAppFromAst(canonicalAst: any): any {
+function createBobaAppFromAst(canonicalAst: any, appModel?: any): any {
   const app: any = {
-    name: canonicalAst.name || 'App',
+    name: canonicalAst.name || 'UnknownApp',
     components: {},
     routes: [],
     state: {},
+    actions: appModel?.actions || [], // Include actions so they can be executed
   };
 
   // Process AST body
   if (canonicalAst.body && Array.isArray(canonicalAst.body)) {
     for (const node of canonicalAst.body) {
       if (node.type === 'ComponentDecl') {
-        // Add component with simple render function
+        // Find matching view in appModel to get location
+        const viewData = appModel?.views?.find((v: any) => v.name === node.name);
+        const location = viewData?.__location;
+        
+        // Add component with simple render function and location metadata
         app.components[node.name] = {
           render: () => ({
             type: 'div',
-            props: { className: `component-${node.name.toLowerCase()}` },
+            props: { 
+              className: `component-${node.name.toLowerCase()}`,
+              ...(location && {
+                'data-shep-line': location.startLine,
+                'data-shep-end-line': location.endLine,
+                'data-shep-type': 'view'
+              })
+            },
             children: [
               {
                 type: 'h1',
@@ -112,7 +127,30 @@ function createBobaAppFromAst(canonicalAst: any): any {
                 type: 'p',
                 props: { className: 'text-gray-600' },
                 children: [`This is the ${node.name} view`]
-              }
+              },
+              // Add buttons with location metadata AND ACTION EXECUTION
+              ...(viewData?.buttons?.map((button: any) => ({
+                type: 'button',
+                props: {
+                  className: 'mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer',
+                  onClick: () => {
+                    // 🔥 THE CRITICAL CONNECTION - Execute action when button clicked
+                    const actionName = button.action;
+                    if ((window as any).bobaActionHandler) {
+                      console.log(`[Button] Clicked "${button.label}" → Executing action: ${actionName}`);
+                      (window as any).bobaActionHandler(actionName, {});
+                    } else {
+                      console.warn('[Button] bobaActionHandler not available');
+                    }
+                  },
+                  ...(button.__location && {
+                    'data-shep-line': button.__location.startLine,
+                    'data-shep-end-line': button.__location.endLine,
+                    'data-shep-type': 'button'
+                  })
+                },
+                children: [button.label]
+              })) || [])
             ]
           })
         };

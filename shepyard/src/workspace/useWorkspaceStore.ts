@@ -16,8 +16,13 @@ interface TranspileState {
   isTranspiling: boolean;
   bobaCode: string | null;
   bobaApp: any | null;
+  appModel: any | null; // AppModel with source locations for click-to-navigate
   explainData: ExplainResult | null;
   error: string | null;
+  errorDetails?: {
+    message: string;
+    source: string;
+  };
 }
 
 interface ShepThonState {
@@ -39,10 +44,11 @@ interface WorkspaceState {
   transpile: TranspileState;
   shepthon: ShepThonState;
   localFile: LocalFileState;
+  editorInstance: any | null; // Monaco editor instance for navigation
   setActiveExample: (id: string) => void;
   clearActiveExample: () => void;
-  setTranspileResult: (bobaCode: string, bobaApp: any, explainData: ExplainResult) => void;
-  setTranspileError: (error: string) => void;
+  setTranspileResult: (bobaCode: string, bobaApp: any, explainData: ExplainResult, appModel?: any) => void;
+  setTranspileError: (error: string, errorDetails?: { message: string; source: string }) => void;
   setTranspiling: (isTranspiling: boolean) => void;
   clearTranspile: () => void;
   setShepThonMetadata: (metadata: AppMetadata) => void;
@@ -54,12 +60,16 @@ interface WorkspaceState {
   updateLocalFileContent: (content: string) => void;
   saveLocalFile: () => Promise<boolean>;
   clearLocalFile: () => void;
+  setEditorInstance: (editor: any) => void;
+  navigateToLine: (line: number) => void;
+  applyAutoFix: (suggestion: any) => void;
 }
 
 const initialTranspileState: TranspileState = {
   isTranspiling: false,
   bobaCode: null,
   bobaApp: null,
+  appModel: null,
   explainData: null,
   error: null,
 };
@@ -83,6 +93,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   transpile: initialTranspileState,
   shepthon: initialShepThonState,
   localFile: initialLocalFileState,
+  editorInstance: null,
   
   setActiveExample: (id: string) => set({ 
     activeExampleId: id,
@@ -94,22 +105,24 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     transpile: initialTranspileState 
   }),
   
-  setTranspileResult: (bobaCode: string, bobaApp: any, explainData: ExplainResult) => set((state) => ({
+  setTranspileResult: (bobaCode: string, bobaApp: any, explainData: ExplainResult, appModel?: any) => set((state) => ({
     transpile: {
       ...state.transpile,
       isTranspiling: false,
       bobaCode,
       bobaApp,
+      appModel,
       explainData,
       error: null,
     }
   })),
   
-  setTranspileError: (error: string) => set((state) => ({
+  setTranspileError: (error: string, errorDetails?: { message: string; source: string }) => set((state) => ({
     transpile: {
       ...state.transpile,
       isTranspiling: false,
       error,
+      errorDetails,
     }
   })),
   
@@ -200,4 +213,90 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   },
   
   clearLocalFile: () => set({ localFile: initialLocalFileState }),
+  
+  // Click-to-navigate support
+  setEditorInstance: (editor: any) => set({ editorInstance: editor }),
+  
+  navigateToLine: (line: number) => {
+    const { editorInstance } = get();
+    if (!editorInstance) return;
+    
+    // Reveal line in center of viewport
+    editorInstance.revealLineInCenter(line);
+    
+    // Set selection to highlight the line
+    editorInstance.setSelection({
+      startLineNumber: line,
+      startColumn: 1,
+      endLineNumber: line,
+      endColumn: Number.MAX_VALUE,
+    });
+    
+    // Focus the editor
+    editorInstance.focus();
+  },
+  
+  /**
+   * Apply an auto-fix suggestion to the editor
+   * Modifies the code and triggers re-transpilation
+   */
+  applyAutoFix: (suggestion: any) => {
+    const { editorInstance } = get();
+    if (!editorInstance || !suggestion.autoFix) return;
+    
+    const model = editorInstance.getModel();
+    if (!model) return;
+    
+    // Get the fix changes
+    const { autoFix } = suggestion;
+    
+    // If there are explicit changes, apply them
+    if (autoFix.changes && autoFix.changes.length > 0) {
+      const edits = autoFix.changes.map((change: any) => ({
+        range: {
+          startLineNumber: change.range.startLine,
+          startColumn: change.range.startColumn,
+          endLineNumber: change.range.endLine,
+          endColumn: change.range.endColumn,
+        },
+        text: change.newText,
+      }));
+      
+      // Apply all edits
+      model.pushEditOperations([], edits, () => null);
+    } 
+    // If there's a simple replacement, apply it at the error location
+    else if (autoFix.replacement && suggestion.line && suggestion.column) {
+      const line = suggestion.line;
+      const column = suggestion.column;
+      const endColumn = suggestion.endColumn || column + 10; // Default length
+      
+      const edit = {
+        range: {
+          startLineNumber: line,
+          startColumn: column,
+          endLineNumber: line,
+          endColumn: endColumn,
+        },
+        text: autoFix.replacement,
+      };
+      
+      model.pushEditOperations([], [edit], () => null);
+    }
+    
+    // Clear the error since we applied a fix
+    set((state) => ({
+      transpile: {
+        ...state.transpile,
+        error: null,
+        errorDetails: undefined,
+      }
+    }));
+    
+    // Focus editor
+    editorInstance.focus();
+    
+    // Note: Re-transpilation will happen automatically via useTranspile hook
+    // watching the editor content changes
+  },
 }));

@@ -46,7 +46,7 @@ CallStmt:
 LoadStmt:
   'load' method=HttpMethod path=STRING 'into' target=ID;
 
-HttpMethod: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+HttpMethod returns string: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 FieldValue: name=ID ('=' value=Expr)?;
 

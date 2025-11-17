@@ -8,7 +8,7 @@
  * Reference: vite-plugin-comlink official examples
  */
 
-import { parseShepThon, ShepThonRuntime } from '@sheplang/shepthon';
+import { parseShepThon } from '@sheplang/shepthon';
 import type { ParseResult } from '@sheplang/shepthon';
 import type { AppMetadata } from './types';
 
@@ -50,7 +50,8 @@ export function parseShepThonWorker(source: string): ParseResult {
 
 /**
  * Load ShepThon and extract metadata in Web Worker
- * This is the main function called from the main thread
+ * LIGHTWEIGHT - Only parses, does NOT create runtime to avoid memory issues
+ * Runtime is created lazily in main thread when actually needed for endpoint calls
  */
 export function loadShepThonWorker(source: string): {
   success: boolean;
@@ -73,12 +74,10 @@ export function loadShepThonWorker(source: string): {
   }
 
   try {
-    console.log('[Worker] Creating runtime...');
-    // Create runtime (in worker thread)
-    const runtime = new ShepThonRuntime(parseResult.app);
-    console.log('[Worker] Runtime created successfully');
-
-    // Extract metadata
+    console.log('[Worker] Extracting metadata (no runtime creation)...');
+    
+    // Extract metadata directly from AST - NO RUNTIME CREATION
+    // This avoids memory issues from database/router/scheduler instantiation
     const metadata: AppMetadata = {
       name: parseResult.app.name,
       models: parseResult.app.models.map(m => ({
@@ -110,16 +109,16 @@ export function loadShepThonWorker(source: string): {
       }))
     };
 
-    console.log('[Worker] Metadata extracted:', metadata.name);
+    console.log('[Worker] Metadata extracted successfully:', metadata.name);
     return {
       success: true,
       metadata
     };
   } catch (error) {
-    console.error('[Worker] Runtime creation failed:', error);
+    console.error('[Worker] Metadata extraction failed:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create runtime'
+      error: error instanceof Error ? error.message : 'Failed to extract metadata'
     };
   }
 }

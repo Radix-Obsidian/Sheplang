@@ -57,3 +57,56 @@ select:focus {
   outline: 1px solid #007ACC;
   outline-offset: -1px;
 }
+
+/* Click-to-Navigate Feature */
+.shep-preview-content [data-shep-line] {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.shep-preview-content [data-shep-line]:hover {
+  outline: 2px solid rgba(59, 130, 246, 0.4);
+  outline-offset: 2px;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.shep-preview-content [data-shep-line]:active {
+  outline-color: rgba(59, 130, 246, 0.8);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Tooltip on hover */
+.shep-preview-content [data-shep-line]::before {
+  content: attr(data-shep-type) " (line " attr(data-shep-line) ")";
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(31, 41, 55, 0.95);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Monaco', 'Menlo', monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 1000;
+  text-transform: capitalize;
+}
+
+.shep-preview-content [data-shep-line]:hover::before {
+  opacity: 1;
+}
+
+/* Nested elements styling */
+.shep-preview-content [data-shep-line] [data-shep-line] {
+  outline-offset: 4px;
+}
+
+.shep-preview-content [data-shep-line] [data-shep-line]:hover {
+  outline-color: rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.05);
+}

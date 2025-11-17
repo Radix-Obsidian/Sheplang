@@ -16,13 +16,19 @@ import { transpileShepToBoba } from '../../../adapters/sheplang-to-boba/dist/ind
 interface BobaOutput {
   code: string;
   canonicalAst: any;
+  appModel?: any; // AppModel with source locations (optional)
 }
 
 export interface TranspileResult {
   success: boolean;
   bobaCode?: string;
   canonicalAst?: any;
+  appModel?: any; // Include appModel for click-to-navigate
   error?: string;
+  errorDetails?: {
+    message: string;
+    source: string;
+  };
 }
 
 /**
@@ -45,7 +51,8 @@ export async function transpileShepLang(source: string): Promise<TranspileResult
     return {
       success: true,
       bobaCode: result.code,
-      canonicalAst: result.canonicalAst
+      canonicalAst: result.canonicalAst,
+      appModel: result.appModel // Include appModel for source maps
     };
   } catch (error) {
     // Extract user-friendly error message
@@ -55,7 +62,11 @@ export async function transpileShepLang(source: string): Promise<TranspileResult
     
     return {
       success: false,
-      error: errorMessage
+      error: errorMessage,
+      errorDetails: {
+        message: errorMessage,
+        source
+      }
     };
   }
 }

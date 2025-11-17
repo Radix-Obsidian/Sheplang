@@ -34,6 +34,7 @@ import type {
   Diagnostic,
   HttpMethod
 } from './types.js';
+import { SmartErrorRecovery, createEnhancedDiagnostic, type ParseError } from './SmartErrorRecovery.js';
 
 /**
  * ShepThon Parser
@@ -42,9 +43,11 @@ class Parser {
   private tokens: Token[];
   private current: number = 0;
   private diagnostics: Diagnostic[] = [];
+  private errorRecovery: SmartErrorRecovery;
   
   constructor(tokens: Token[]) {
     this.tokens = tokens;
+    this.errorRecovery = new SmartErrorRecovery('shepthon');
   }
   
   /**
@@ -90,7 +93,7 @@ class Parser {
     const jobs: JobDefinition[] = [];
     
     // Safety check to prevent infinite loops
-    let maxIterations = 1000;
+    const maxIterations = 1000;
     let iterations = 0;
     
     while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
@@ -793,16 +796,42 @@ class Parser {
   }
   
   /**
-   * Report an error
+   * Report an error with smart recovery
    */
   private error(message: string): void {
     const token = this.peek();
-    this.diagnostics.push({
+    
+    // Create parse error with context
+    const parseError: ParseError = {
       severity: 'error',
       message,
       line: token.line,
-      column: token.column
-    });
+      column: token.column,
+      token,
+      context: this.getLineAt(token.line)
+    };
+    
+    // Analyze error for suggestions
+    const suggestion = this.errorRecovery.analyze(parseError);
+    
+    // Create enhanced diagnostic with did-you-mean hints
+    const diagnostic = createEnhancedDiagnostic(parseError, suggestion);
+    
+    this.diagnostics.push(diagnostic);
+  }
+  
+  /**
+   * Get the source line at a specific line number (for error context)
+   */
+  private getLineAt(line: number | undefined): string {
+    if (!line) return '';
+    
+    // Find all tokens on this line
+    const lineTokens = this.tokens.filter(t => t.line === line);
+    if (lineTokens.length === 0) return '';
+    
+    // Reconstruct line from tokens (simplified)
+    return lineTokens.map(t => t.value).join(' ');
   }
   
   /**

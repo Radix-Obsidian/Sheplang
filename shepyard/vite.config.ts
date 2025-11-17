@@ -21,7 +21,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@sheplang/shepthon': path.resolve(__dirname, '../sheplang/packages/shepthon/src/index.ts')
+      // Point to built dist, not source - workers need compiled JS
+      '@sheplang/shepthon': path.resolve(__dirname, '../sheplang/packages/shepthon/dist/src/index.js')
     }
   }
 })

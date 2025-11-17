@@ -1,9 +1,11 @@
 // Use the real parser from the language package (no mocks)
 import { parseShep } from "@sheplang/language";
+import type { AppModel } from "@sheplang/language";
 
 export interface BobaOutput {
   code: string;
   canonicalAst: any;
+  appModel: AppModel; // Include AppModel with source locations
 }
 
 /**
@@ -12,11 +14,12 @@ export interface BobaOutput {
 export async function transpileShepToBoba(source: string): Promise<BobaOutput> {
   const result = await parseShep(source);
   const canonicalAst = normalizeAst(result.appModel);
-  const bobaCode = generateBobaCode(canonicalAst);
+  const bobaCode = generateBobaCode(canonicalAst, result.appModel);
   
   return {
     code: bobaCode,
-    canonicalAst
+    canonicalAst,
+    appModel: result.appModel // Preserve AppModel with __location metadata
   };
 }
 
@@ -69,9 +72,9 @@ function normalizeAst(appModel: any): any {
 }
 
 /**
- * Generate BobaScript code from canonical AST
+ * Generate BobaScript code from canonical AST with source location metadata
  */
-function generateBobaCode(canonicalAst: any): string {
+function generateBobaCode(canonicalAst: any, appModel: AppModel): string {
   // Simple code generation - in production this would be more sophisticated
   const lines: string[] = [];
   
@@ -85,16 +88,35 @@ function generateBobaCode(canonicalAst: any): string {
   lines.push(`export const App = {`);
   lines.push(`  name: "${appName}",`);
   
-  // Process components
+  // Process components with location metadata
   const components = canonicalAst.body.filter((n: any) => n.type === "ComponentDecl");
   if (components.length > 0) {
     lines.push(`  components: {`);
     components.forEach((comp: any, i: number) => {
       const isLast = i === components.length - 1;
+      // Find matching view in appModel to get location
+      const viewData = appModel.views?.find(v => v.name === comp.name);
+      const location = viewData?.__location;
+      
       lines.push(`    ${comp.name}: {`);
       lines.push(`      render: () => {`);
-      lines.push(`        return { type: "div", props: { className: "${comp.name}" }, children: [`);
+      const locationMeta = location 
+        ? `"data-shep-line": ${location.startLine}, "data-shep-end-line": ${location.endLine}, "data-shep-type": "view", ` 
+        : '';
+      lines.push(`        return { type: "div", props: { ${locationMeta}className: "${comp.name}" }, children: [`);
       lines.push(`          { type: "h1", props: {}, children: ["${comp.name}"] }`);
+      
+      // Add buttons with location metadata
+      if (viewData?.buttons) {
+        viewData.buttons.forEach((button) => {
+          const btnLocation = button.__location;
+          const btnLocationMeta = btnLocation
+            ? `"data-shep-line": ${btnLocation.startLine}, "data-shep-end-line": ${btnLocation.endLine}, "data-shep-type": "button", `
+            : '';
+          lines.push(`          , { type: "button", props: { ${btnLocationMeta}className: "btn" }, children: ["${button.label}"] }`);
+        });
+      }
+      
       lines.push(`        ]};`);
       lines.push(`      }`);
       lines.push(`    }${isLast ? '' : ','}`);

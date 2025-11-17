@@ -8,10 +8,12 @@ import { TitleBar } from './navigation/TitleBar'
 import { StatusBar } from './navigation/StatusBar'
 import { BottomPanel } from './panel/BottomPanel'
 import { WelcomeCard } from './ui/WelcomeCard'
+import { WelcomeDialog } from './ui/WelcomeDialog'
 import { ShepCodeViewer } from './editor/ShepCodeViewer'
 import { BobaRenderer } from './preview/BobaRenderer'
 import { ExplainPanel } from './ui/ExplainPanel'
 import { CollapsiblePanel } from './ui/CollapsiblePanel'
+import { LiveFeedback } from './preview/LiveFeedback'
 import { useWorkspaceStore } from './workspace/useWorkspaceStore'
 import { useTranspile } from './hooks/useTranspile'
 import { useLoadShepThon } from './hooks/useLoadShepThon'
@@ -21,6 +23,8 @@ import {
   EditorErrorFallback, 
   RendererErrorFallback 
 } from './errors/ErrorFallback'
+import { ErrorPanel, type ErrorSuggestion } from './errors/SmartErrorRecovery'
+import { analyzeTranspilerErrors } from './services/errorAnalysisService'
 
 function App() {
   // Auto-transpile when example changes
@@ -30,7 +34,34 @@ function App() {
   useLoadShepThon();
 
   const activeExampleId = useWorkspaceStore((state) => state.activeExampleId);
+  const setActiveExample = useWorkspaceStore((state) => state.setActiveExample);
   const transpile = useWorkspaceStore((state) => state.transpile);
+  const shepthonMetadata = useWorkspaceStore((state) => state.shepthon.metadata);
+  
+  // Welcome Dialog state
+  const [showWelcomeDialog, setShowWelcomeDialog] = React.useState(false);
+  
+  // Show welcome dialog on first load if no example is active
+  React.useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('shepyard-seen-welcome');
+    if (!hasSeenWelcome && !activeExampleId) {
+      setShowWelcomeDialog(true);
+      // ❌ DON'T set localStorage here - wait for user interaction
+    }
+  }, []); // Empty deps - only run once on mount
+  
+  const handleSelectTemplate = (exampleId: string) => {
+    setActiveExample(exampleId);
+    setShowWelcomeDialog(false);
+    // ✅ Set localStorage when user actually selects a template
+    localStorage.setItem('shepyard-seen-welcome', 'true');
+  };
+  
+  const handleCloseWelcome = () => {
+    setShowWelcomeDialog(false);
+    // ✅ Set localStorage when user closes the dialog
+    localStorage.setItem('shepyard-seen-welcome', 'true');
+  };
   
   // Find active example (ShepLang or ShepThon)
   const activeExample = SHEP_EXAMPLES.find((ex) => ex.id === activeExampleId);
@@ -104,19 +135,53 @@ function App() {
       </div>
     </div>
   ) : transpile.error ? (
-    <div className="flex items-center justify-center h-full bg-red-50">
-      <div className="text-center max-w-md mx-auto p-6">
-        <div className="text-red-600 text-5xl mb-4">⚠️</div>
-        <h3 className="text-lg font-semibold text-red-900 mb-2">
-          Transpilation Error
-        </h3>
-        <p className="text-sm text-red-700 bg-white rounded-lg p-4 border border-red-200">
-          {transpile.error}
-        </p>
+    <div className="h-full bg-gray-50 overflow-auto">
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Transpilation Error
+          </h3>
+          <p className="text-sm text-gray-600">
+            We found some issues with your code. Check the details below:
+          </p>
+        </div>
+        <ErrorPanel
+          suggestions={
+            transpile.errorDetails
+              ? analyzeTranspilerErrors(
+                  transpile.errorDetails.message,
+                  transpile.errorDetails.source,
+                  activeShepThonExample !== undefined
+                )
+              : [{
+                  severity: 'error' as const,
+                  message: transpile.error,
+                  line: 1,
+                  column: 1,
+                  errorType: 'unknown',
+                  confidence: 0.5
+                }]
+          }
+          onApplyFix={(suggestion: ErrorSuggestion) => {
+            useWorkspaceStore.getState().applyAutoFix(suggestion);
+          }}
+          onJumpToLine={(line: number) => {
+            useWorkspaceStore.getState().navigateToLine(line);
+          }}
+        />
       </div>
     </div>
   ) : transpile.bobaApp ? (
     <div className="flex flex-col h-full overflow-hidden">
+      {/* Live Feedback Indicators */}
+      <LiveFeedback
+        lastUpdate={new Date()}
+        modelCount={shepthonMetadata?.models.length || 0}
+        endpointCount={shepthonMetadata?.endpoints.length || 0}
+        jobCount={shepthonMetadata?.jobs.length || 0}
+        backendConnected={!!shepthonMetadata}
+      />
+      
       {/* Collapsible Live Preview with Error Boundary */}
       <div className="overflow-auto">
         <CollapsiblePanel 
@@ -146,7 +211,6 @@ function App() {
     </div>
   );
 
-  const shepthonMetadata = useWorkspaceStore((state) => state.shepthon.metadata);
   const localFile = useWorkspaceStore((state) => state.localFile);
   const updateLocalFileContent = useWorkspaceStore((state) => state.updateLocalFileContent);
   const [showBottomPanel, setShowBottomPanel] = React.useState(true);
@@ -200,7 +264,10 @@ function App() {
                 className="h-1 bg-vscode-border hover:bg-vscode-statusBar cursor-ns-resize transition-colors"
               />
               <div style={{ height: bottomPanelHeight }} className="border-t border-vscode-border">
-                <BottomPanel onClose={() => setShowBottomPanel(false)} />
+                <BottomPanel 
+                  defaultTab={transpile.error ? 'problems' : 'output'}
+                  onClose={() => setShowBottomPanel(false)} 
+                />
               </div>
             </>
           )}
@@ -218,10 +285,18 @@ function App() {
         
         <StatusBar 
           shepthonReady={!!shepthonMetadata}
-          problemCount={0}
           currentExample={(activeExample || activeShepThonExample)?.name}
+          onProblemsClick={() => setShowBottomPanel(true)}
         />
       </div>
+      
+      {/* Welcome Dialog */}
+      {showWelcomeDialog && (
+        <WelcomeDialog
+          onSelectTemplate={handleSelectTemplate}
+          onClose={handleCloseWelcome}
+        />
+      )}
     </ErrorBoundary>
   )
 }

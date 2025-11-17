@@ -8,10 +8,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noEmit": false,
-    "declaration": false,
-    "composite": true,
-    "outDir": "./dist"
+    "noEmit": true
   },
   "include": ["src", "test", "generated"],
   "exclude": ["dist", "node_modules"]
