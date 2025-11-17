@@ -29,9 +29,11 @@ Quick scaffolding for common patterns:
 - Go to Definition
 
 ### 🚀 Commands
-- **Show Preview** - Preview your ShepLang app (Coming Soon)
-- **New Project** - Create from templates
-- **Restart Backend** - Reload ShepThon runtime (Coming Soon)
+- **Show Preview** (`Ctrl+Shift+P`) - Live preview with full CRUD operations ✅
+- **New Project** - Create from templates ✅
+- **Restart Backend** (`Ctrl+Shift+R`) - Reload ShepThon runtime ✅
+- **Show Output Logs** (`Ctrl+Shift+L`) - View extension logs ✅
+- **Create Backend File** - Generate .shepthon template from .shep file ✅
 
 ## Quick Start
 
@@ -97,39 +99,81 @@ app MyAPI {
 }
 ```
 
-## Roadmap
+## What's New in Week 1! 🎉
 
-### Phase 1: Foundation (Current)
-- ✅ Syntax highlighting
-- ✅ Basic completion
+### ✅ Phase 1: Foundation (COMPLETE)
+- ✅ Syntax highlighting for .shep and .shepthon
+- ✅ Context-aware IntelliSense
 - ✅ Hover documentation
-- ✅ Snippets
+- ✅ 29 code snippets
 - ✅ Project templates
+- ✅ Language Server Protocol (LSP)
 
-### Phase 2: Intelligence
-- 🔜 Live preview webview
-- 🔜 ShepThon runtime integration
-- 🔜 Cross-file type checking
-- 🔜 ShepVerify engine
-- 🔜 Refactoring support
+### ✅ Phase 2: Live Preview & Backend (COMPLETE)
+- ✅ **Live Preview** - See your app as you type!
+- ✅ **ShepThon Runtime** - In-memory backend with CRUD
+- ✅ **Full CRUD Operations** - Add, edit, delete, toggle tasks
+- ✅ **Bridge Service** - Frontend ↔ Backend communication
+- ✅ **Toast Notifications** - Visual feedback for all actions
+- ✅ **Live Reload** - File changes update preview automatically
 
-### Phase 3: Collaboration
-- 🔜 Git integration
-- 🔜 Team templates
-- 🔜 Shared components
+### ✅ Phase 3: Developer Experience (COMPLETE)
+- ✅ **Smart Error Recovery** - Context-aware suggestions
+- ✅ **Output Channel** - Timestamped logs with levels
+- ✅ **Keyboard Shortcuts** - Fast access to common commands
+- ✅ **Backend Templates** - One-command file generation
+- ✅ **Error Pattern Detection** - 15+ common errors handled
+
+### 🔜 Phase 4: Templates & Docs (Coming This Week)
+- 📝 5 progressive tutorial templates
+- 📝 Comprehensive documentation
+- 📝 Video walkthroughs
+- 📝 AI best practices guide
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
 * `sheplang.trace.server`: Enable/disable tracing the language server
-* `sheplang.autoPreview`: Automatically show preview when opening .shep files
-* `sheplang.shepthon.autoStart`: Automatically start ShepThon backend when opening .shepthon files
+* `sheplang.autoPreview`: Automatically show preview when opening .shep files (default: true)
+* `sheplang.shepthon.autoStart`: Automatically start ShepThon backend when opening .shepthon files (default: true)
+* `sheplang.verboseLogging`: Enable detailed debug logging in output channel (default: false)
 
-## Known Issues
+## Features in Action
 
-- Preview feature is under development (Phase 2)
-- Backend runtime is under development (Phase 2)
+### Live Preview with Full CRUD
+![Preview Demo](https://via.placeholder.com/800x450?text=ShepLang+Preview+Demo)
+
+### Smart Error Recovery
+![Error Recovery](https://via.placeholder.com/800x450?text=Smart+Error+Suggestions)
+
+### IntelliSense & Hover Docs
+![IntelliSense](https://via.placeholder.com/800x450?text=Context-Aware+Completions)
+
+## Keyboard Shortcuts
+
+| Command | Windows/Linux | macOS |
+|---------|---------------|-------|
+| Show Preview | `Ctrl+Shift+P` | `Cmd+Shift+P` |
+| Restart Backend | `Ctrl+Shift+R` | `Cmd+Shift+R` |
+| Show Output Logs | `Ctrl+Shift+L` | `Cmd+Shift+L` |
+
+## Troubleshooting
+
+**Preview not loading?**
+1. Check that you have a matching `.shepthon` backend file
+2. View logs: Press `Ctrl+Shift+L`
+3. Restart backend: Press `Ctrl+Shift+R`
+
+**Backend connection failed?**
+- The backend starts automatically when you open a `.shepthon` file
+- Check the green "✓ Backend" badge in the preview panel
+- View detailed logs in the Output channel
+
+**Need help?**
+- Press `Ctrl+Shift+L` to view logs
+- Check [Troubleshooting Guide](./TROUBLESHOOTING.md)
+- [Report an Issue](https://github.com/Radix-Obsidian/Sheplang-BobaScript/issues)
 
 ## Contributing
 
