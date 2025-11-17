@@ -2,7 +2,7 @@ app DogReminders {
   
   model Reminder {
     id: id
-    text: text
+    message: text
     time: datetime
     done: yes/no
   }
@@ -12,9 +12,9 @@ app DogReminders {
   }
   
   endpoint POST "/reminders" {
-    const { text, time } = request.body
+    const { message, time } = request.body
     const reminder = db.reminders.create({
-      text: text,
+      message: message,
       time: time,
       done: false
     })

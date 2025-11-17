@@ -2,17 +2,17 @@ app DogReminders
 
 data Reminder:
   fields:
-    text: text
+    message: text
     time: datetime
     done: yes/no
   rules:
-    - "text is required"
+    - "message is required"
     - "time must be in the future"
 
 view ReminderList:
   list Reminder
   button "Add Reminder" -> AddReminder
 
-action AddReminder(text, time):
-  add Reminder with text, time, done=false
+action AddReminder(message, time):
+  add Reminder with message, time, done=false
   show ReminderList

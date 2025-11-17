@@ -9,23 +9,8 @@ data Counter:
 
 view Dashboard:
   list Counter
-  button "New Counter" -> CreateCounter
-  button "Increment" -> Increment
-  button "Decrement" -> Decrement
-  button "Reset" -> Reset
+  button "Add Counter" -> AddCounter
 
-action CreateCounter(label):
-  add Counter with label, value=0
-  show Dashboard
-
-action Increment:
-  add Counter with label="Count", value=1
-  show Dashboard
-
-action Decrement:
-  add Counter with label="Count", value=-1
-  show Dashboard
-
-action Reset:
-  add Counter with label="Reset", value=0
+action AddCounter(label):
+  add Counter with label, value=1
   show Dashboard

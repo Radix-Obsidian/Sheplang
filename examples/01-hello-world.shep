@@ -2,14 +2,14 @@ app HelloWorld
 
 data Message:
   fields:
-    text: text
+    content: text
   rules:
-    - "message required"
+    - "content required"
 
 view Welcome:
   list Message
   button "Say Hello" -> SayHello
 
-action SayHello:
-  add Message with text="Hello from ShepLang! 🐑"
+action SayHello(content):
+  add Message with content="Hello from ShepLang! 🐑"
   show Welcome

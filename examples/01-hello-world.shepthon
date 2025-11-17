@@ -2,7 +2,7 @@ app HelloWorld {
   
   model Message {
     id: id
-    text: text
+    content: text
   }
   
   endpoint GET "/messages" {
@@ -10,9 +10,9 @@ app HelloWorld {
   }
   
   endpoint POST "/messages" {
-    const { text } = request.body
+    const { content } = request.body
     const message = db.messages.create({
-      text: text
+      content: content
     })
     return message
   }
