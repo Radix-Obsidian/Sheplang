@@ -182,15 +182,22 @@ export class ShepThonRuntime {
     body?: any
   ): Promise<any> {
     console.log(`[DirectRuntime] Calling ${method} ${path}`, body);
+    console.log(`[DirectRuntime] Available endpoints:`, this.app.endpoints.map(e => `${e.method} ${e.path}`));
     
     // Find matching endpoint
-    const endpoint = this.app.endpoints.find(e => 
-      e.method === method && this.matchPath(e.path, path)
-    );
+    const endpoint = this.app.endpoints.find(e => {
+      const matches = e.method === method && this.matchPath(e.path, path);
+      console.log(`[DirectRuntime] Checking ${e.method} ${e.path} against ${method} ${path}: ${matches}`);
+      return matches;
+    });
     
     if (!endpoint) {
+      console.error(`[DirectRuntime] ❌ No endpoint found for ${method} ${path}`);
+      console.error(`[DirectRuntime] Available: ${this.app.endpoints.map(e => `${e.method} ${e.path}`).join(', ')}`);
       throw new Error(`Endpoint not found: ${method} ${path}`);
     }
+    
+    console.log(`[DirectRuntime] ✅ Found endpoint: ${endpoint.method} ${endpoint.path}`);
     
     // Dynamic model handling based on path
     // Extract model name from path (e.g., /messages -> Message, /todos -> Todo)
