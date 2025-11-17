@@ -911,12 +911,23 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
               body['title'] = userInput;
             }
             
-            console.log('[Webview] Creating ' + modelName + ' via POST ' + endpoint, body);
+            console.log('[Webview] [SINGLE-PARAM] Creating ' + modelName + ' via POST ' + endpoint, body);
             const result = await callBackend('POST', endpoint, body);
-            console.log('[Webview] ✅ ' + modelName + ' created:', result);
+            console.log('[Webview] [SINGLE-PARAM] ✅ ' + modelName + ' created:', result);
             
             showToast('✅ Created!', 'success');
-            await loadData();
+            
+            // Wait for backend to process, then reload
+            console.log('[Webview] [SINGLE-PARAM] Waiting 300ms before reloading...');
+            setTimeout(async () => {
+              console.log('[Webview] [SINGLE-PARAM] Calling loadData()...');
+              try {
+                await loadData();
+                console.log('[Webview] [SINGLE-PARAM] ✅ loadData() completed');
+              } catch (err) {
+                console.error('[Webview] [SINGLE-PARAM] ❌ loadData() failed:', err);
+              }
+            }, 300);
           } catch (error) {
             console.error('[Webview] ❌ Add failed:', error);
             showToast('❌ Error: ' + error.message, 'error');
@@ -1048,12 +1059,23 @@ function getWebviewContent(webview: vscode.Webview, context: vscode.ExtensionCon
             // Then override with all user inputs
             Object.assign(body, inputs);
             
-            console.log('[Webview] Creating ' + modelName + ' via POST ' + endpoint, body);
+            console.log('[Webview] [MULTI-FIELD] Creating ' + modelName + ' via POST ' + endpoint, body);
             const result = await callBackend('POST', endpoint, body);
-            console.log('[Webview] ✅ ' + modelName + ' created:', result);
+            console.log('[Webview] [MULTI-FIELD] ✅ ' + modelName + ' created:', result);
             
             showToast('✅ Created!', 'success');
-            await loadData();
+            
+            // Wait for backend to process, then reload
+            console.log('[Webview] [MULTI-FIELD] Waiting 300ms before reloading...');
+            setTimeout(async () => {
+              console.log('[Webview] [MULTI-FIELD] Calling loadData()...');
+              try {
+                await loadData();
+                console.log('[Webview] [MULTI-FIELD] ✅ loadData() completed');
+              } catch (err) {
+                console.error('[Webview] [MULTI-FIELD] ❌ loadData() failed:', err);
+              }
+            }, 300);
           } catch (error) {
             console.error('[Webview] ❌ Add failed:', error);
             showToast('❌ Error: ' + error.message, 'error');
