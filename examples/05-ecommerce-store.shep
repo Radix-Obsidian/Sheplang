@@ -37,30 +37,22 @@ data Order:
     - "quantity must be positive"
     - "status is required"
 
-view ProductCatalog:
+view Dashboard:
   list Product
-  button "Add Product" -> AddProduct
-  button "View Orders" -> OrderManagement
-  button "View Customers" -> CustomerList
-
-view OrderManagement:
-  list Order
-  button "Create Order" -> CreateOrder
-  button "Back to Products" -> ProductCatalog
-
-view CustomerList:
   list Customer
+  list Order
+  button "Add Product" -> AddProduct
   button "Add Customer" -> AddCustomer
-  button "Back to Products" -> ProductCatalog
+  button "Create Order" -> CreateOrder
 
 action AddProduct(name, description, price, category, inStock, imageUrl):
   add Product with name, description, price, category, inStock, imageUrl
-  show ProductCatalog
+  show Dashboard
 
 action AddCustomer(firstName, lastName, emailAddress, phoneNumber, shippingAddress):
   add Customer with firstName, lastName, emailAddress, phoneNumber, shippingAddress
-  show CustomerList
+  show Dashboard
 
 action CreateOrder(customerName, productName, quantity, totalPrice, status, orderDate):
   add Order with customerName, productName, quantity, totalPrice, status, orderDate
-  show OrderManagement
+  show Dashboard
