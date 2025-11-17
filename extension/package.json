@@ -25,13 +25,6 @@
     "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript.git"
   },
   "main": "./out/extension.js",
-  "activationEvents": [
-    "onLanguage:sheplang",
-    "onLanguage:shepthon",
-    "onCommand:sheplang.showPreview",
-    "onCommand:sheplang.newProject",
-    "onCommand:sheplang.restartBackend"
-  ],
   "contributes": {
     "languages": [
       {
