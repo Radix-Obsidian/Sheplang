@@ -1,3 +1,4 @@
+import { describe, test, expect } from 'vitest';
 import { generateApp } from '../src';
 import fs from 'fs';
 import path from 'path';
@@ -20,9 +21,11 @@ describe('generateApp', () => {
 
   test('should handle parsing errors', async () => {
     const source = `
-      component Broken {
-        // Missing closing brace
-        state count = 1
+      app Broken
+      
+      data Todo:
+        fields:
+          title text
     `;
     const result = await generateApp(source);
     
