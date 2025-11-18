@@ -5,15 +5,15 @@
   "packageManager": "pnpm@10.21.0",
   "scripts": {
     "verify": "node ./scripts/verify.js",
-    "verify:ci": "pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test",
-    "build": "pnpm -r --filter '!@sheplang/e2e' run build",
-    "test": "pnpm -w -r test --run",
-    "test:unit": "pnpm -w -r run test:unit",
-    "test:integration": "pnpm -w -r run test:integration",
-    "test:e2e": "pnpm -w -r run test:e2e",
+    "verify:ci": "cd sheplang && pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test",
+    "build": "cd sheplang && pnpm -r --filter '!@sheplang/e2e' run build",
+    "test": "cd sheplang && pnpm -w -r test --run",
+    "test:unit": "cd sheplang && pnpm -w -r run test:unit",
+    "test:integration": "cd sheplang && pnpm -w -r run test:integration",
+    "test:e2e": "cd sheplang && pnpm -w -r run test:e2e",
     "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
-    "typecheck": "pnpm -w -r run typecheck",
-    "lint": "pnpm -w -r run lint",
+    "typecheck": "cd sheplang && pnpm -w -r run typecheck",
+    "lint": "cd sheplang && pnpm -w -r run lint",
     "prepare:production": "node scripts/prepare-production.js"
   }
 }
