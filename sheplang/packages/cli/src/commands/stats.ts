@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, join } from "node:path";
-import { transpileShepToBoba } from "@radix-obsidian/sheplang-to-boba";
+import { transpileShepToBoba } from "@goldensheepai/sheplang-to-boba";
 
 export async function cmdStats() {
   const exDir = resolve(process.cwd(), "examples");

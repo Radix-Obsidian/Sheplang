@@ -1,6 +1,6 @@
 {
   "name": "@goldensheepai/sheplang-to-boba",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "type": "module",
   "main": "dist/index.js",
@@ -26,7 +26,7 @@
     "test": "vitest run --dir ."
   },
   "dependencies": {
-    "@goldensheepai/sheplang-language": "workspace:*"
+    "@goldensheepai/sheplang-language": "^0.1.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",
