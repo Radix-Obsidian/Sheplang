@@ -14,7 +14,8 @@ import * as path from 'path';
 export async function safeImportParseShepThon(): Promise<any> {
   try {
     console.log('[ImportWrapper] Importing @sheplang/shepthon...');
-    // Direct dynamic import
+    // Direct dynamic import - this is optional, ShepThon backend may not be available
+    // @ts-expect-error - ShepThon package is optional and may not be installed
     const shepthon = await import('@sheplang/shepthon');
     console.log('[ImportWrapper] Import successful, functions:', Object.keys(shepthon));
     return {
@@ -59,8 +60,8 @@ export async function safeImportParseShepThon(): Promise<any> {
           console.error('[ImportWrapper][DEBUG] Error during diagnostics:', debugError);
         }
         
-        vscode.window.showErrorMessage(
-          `ShepThon backend failed to parse. Error: ${error instanceof Error ? error.message : 'unknown error'}`
+        vscode.window.showInformationMessage(
+          'ShepThon backend is not available. This is optional - ShepLang (.shep) files will work normally.'
         );
         
         return { 

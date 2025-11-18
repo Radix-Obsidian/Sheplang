@@ -33,7 +33,7 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
 
   try {
     // Dynamic import for ESM package
-    const { parseShep } = await import('@sheplang/language');
+    const { parseShep } = await import('@radix-obsidian/sheplang-language');
     
     // Parse ShepLang file
     console.log('[Preview] Parsing .shep file:', editor.document.uri.fsPath);
@@ -43,8 +43,8 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
     // Check for parse errors
     if (parseResult.diagnostics && parseResult.diagnostics.length > 0) {
       const errors = parseResult.diagnostics
-        .filter(d => d.severity === 'error')
-        .map(d => `❌ Line ${d.line}, Col ${d.column} — ${d.message}`)
+        .filter((d: any) => d.severity === 'error')
+        .map((d: any) => `❌ Line ${d.start?.line || d.line}, Col ${d.start?.column || d.column} — ${d.message}`)
         .join('\n');
       
       if (errors) {
@@ -189,13 +189,13 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
           
           // Check for errors
           if (updatedResult.diagnostics && updatedResult.diagnostics.length > 0) {
-            const errors = updatedResult.diagnostics.filter(d => d.severity === 'error');
+            const errors = updatedResult.diagnostics.filter((d: any) => d.severity === 'error');
             if (errors.length > 0) {
               panel.webview.postMessage({
                 type: 'updateStatus',
                 status: 'error',
                 message: 'Syntax errors detected. Fix them to update preview.',
-                errors: errors.map(e => `Line ${e.line}: ${e.message}`)
+                errors: errors.map((e: any) => `Line ${e.start?.line || e.line}: ${e.message}`)
               });
               return;
             }
