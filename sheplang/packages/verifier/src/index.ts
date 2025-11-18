@@ -9,6 +9,7 @@ import type { Diagnostic, VerificationResult } from './types.js';
 import { checkTypeSafety } from './passes/typeSafety.js';
 import { checkNullSafety } from './passes/nullSafety.js';
 import { checkEndpointValidation } from './passes/endpointValidation.js';
+import { checkExhaustiveness } from './passes/exhaustiveness.js';
 import type { ShepThonBackend } from './solvers/shepthonParser.js';
 
 // Export types
@@ -47,6 +48,7 @@ export { parseShepThon, findEndpoint } from './solvers/shepthonParser.js';
 export { checkTypeSafety } from './passes/typeSafety.js';
 export { checkNullSafety } from './passes/nullSafety.js';
 export { checkEndpointValidation } from './passes/endpointValidation.js';
+export { checkExhaustiveness } from './passes/exhaustiveness.js';
 
 /**
  * Main verification function.
@@ -54,6 +56,7 @@ export { checkEndpointValidation } from './passes/endpointValidation.js';
  * - Pass 1: Type Safety (40% of bugs)
  * - Pass 2: Null Safety (30% of bugs)
  * - Pass 3: Endpoint Validation (20% of bugs) - optional
+ * - Pass 4: Exhaustiveness (10% of bugs)
  * 
  * @param appModel - Parsed ShepLang application model
  * @param backend - Optional ShepThon backend for endpoint validation
@@ -107,8 +110,16 @@ export function verify(
     }
   }
   
+  // Pass 4: Exhaustiveness
+  const exhaustivenessDiagnostics = checkExhaustiveness(appModel);
+  for (const d of exhaustivenessDiagnostics) {
+    if (d.severity === 'error') errors.push(d);
+    else if (d.severity === 'warning') warnings.push(d);
+    else info.push(d);
+  }
+  
   // Calculate summary
-  const totalChecks = backend ? 3 : 2;  // Type + Null + (optional) Endpoint
+  const totalChecks = backend ? 4 : 3;  // Type + Null + Exhaustiveness + (optional) Endpoint
   const errorCount = errors.length;
   const warningCount = warnings.length;
   const passed = errorCount === 0;
