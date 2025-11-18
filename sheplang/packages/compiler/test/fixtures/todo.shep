@@ -1,13 +1,16 @@
-component TodoApp {
-  state todos = []
-  state newTodo = ""
-  
-  "My Todo List"
-  
-  action AddTodo(item) {
-    todos.push(item)
-    newTodo = ""
-  }
-}
+app MyTodos
 
-route "/" -> TodoApp
+data Todo:
+  fields:
+    title: text
+    done: yes/no
+  rules:
+    - "user can update own items"
+
+view Dashboard:
+  list Todo
+  button "Add Task" -> CreateTodo
+
+action CreateTodo(title):
+  add Todo with title, done=false
+  show Dashboard

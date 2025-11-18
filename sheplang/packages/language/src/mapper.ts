@@ -92,7 +92,7 @@ function mapStmt(
     const fields: Record<string, string> = {};
     for (const fv of stmt.fields) {
       // If value is present, use it; otherwise use the name as the value (parameter reference)
-      fields[fv.name] = fv.value ? mapExpression(fv.value) : fv.name;
+      fields[fv.name] = fv.value ? mapExpr(fv.value) : fv.name;
     }
     return { kind: 'add', data: ref.name, fields };
   } else if (stmt.$type === 'ShowStmt') {
