@@ -7,7 +7,3 @@ packages:
   - "../adapters/*"
   - "examples"
   - "e2e"
-  # Temporarily excluded (broken builds/imports):
-  # - "shepkit"
-  # - "playground"
-  # - "packages/verifier" (imports @sheplang/language instead of @radix-obsidian/sheplang-language)

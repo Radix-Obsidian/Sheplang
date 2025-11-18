@@ -1,9 +1,0 @@
-HTTP/1.1 500 Internal Server Error
-vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
-content-type: application/json
-Date: Wed, 12 Nov 2025 23:41:29 GMT
-Connection: keep-alive
-Keep-Alive: timeout=5
-Transfer-Encoding: chunked
-
-{"success":false,"error":"Failed to explain code","details":"Expected property name or '}' in JSON at position 1 (line 1 column 2)"}
