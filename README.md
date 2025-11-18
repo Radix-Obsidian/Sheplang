@@ -287,7 +287,7 @@ We welcome contributions! Please see:
 ## 🔗 Links
 
 - **GitHub:** [Radix-Obsidian/Sheplang-BobaScript](https://github.com/Radix-Obsidian/Sheplang-BobaScript)
-- **NPM:** [@sheplang packages](https://www.npmjs.com/search?q=%40sheplang)
+- **NPM:** [@sheplang packages](https://www.npmjs.com/search?q=%40sheplang) [Coming soon)
 - **VSCode Extension:** [Coming soon to Marketplace]
 - **Website:** [Coming soon]
 
