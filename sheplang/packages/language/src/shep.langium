@@ -87,7 +87,7 @@ LogicalAndExpr:
   ComparisonExpr ({infer BinaryExpr.left=current} op='and' right=ComparisonExpr)*;
 
 ComparisonExpr:
-  AdditionExpr ({infer BinaryExpr.left=current} op=('==' | '!=' | '<' | '<=' | '>' | '>=') right=AdditionExpr)?;
+  AdditionExpr ({infer BinaryExpr.left=current} op=('==' | '=' | '!=' | '<' | '<=' | '>' | '>=') right=AdditionExpr)?;
 
 AdditionExpr:
   MultiplicationExpr ({infer BinaryExpr.left=current} op=('+' | '-') right=MultiplicationExpr)*;
@@ -104,15 +104,18 @@ PrimaryExpr:
   '(' Expression ')';
 
 FieldAccess:
-  object=ID '.' field=ID;
+  object=IdentifierName '.' field=IdentifierName;
 
 FunctionCall:
-  func=ID '(' (args+=Expression (',' args+=Expression)*)? ')';
+  func=IdentifierName '(' (args+=Expression (',' args+=Expression)*)? ')';
 
 NumberLiteral: value=NUMBER;
 StringLiteral: value=STRING;
 BooleanLiteral: value=('true'|'false');
-IdentifierRef: ref=ID;
+IdentifierRef: ref=IdentifierName;
+
+// Data type rule to allow type keywords as identifiers (Langium best practice)
+IdentifierName returns string: ID | 'id' | 'text' | 'number' | 'date' | 'email';
 
 RawStmt: '~' text=STRING;
 
