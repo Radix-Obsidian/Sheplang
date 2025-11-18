@@ -199,234 +199,106 @@ sheplang/
 
 ---
 
-## 🚀 Quick Install (NPM)
-
-```bash
-# Install globally
-npm install -g sheplang
-
-# Or run directly
-npx sheplang --help
-```
-
-## 📦 What You Get
-
-- **ShepLang Parser**: Full language validation and AST generation
-- **BobaScript Transpiler**: Deterministic code compilation
-- **Development Server**: Live preview with hot module reloading
-- **CLI Tools**: Build, explain, analyze commands
-
-## ⚡ Usage
-
-```bash
-# Create a simple app
-echo 'component App { "Hello World" }' > hello.shep
-
-# Start development
-sheplang dev hello.shep
-# → http://localhost:8787
-
-# Build for production  
-sheplang build hello.shep
-# → dist/hello.boba
-```
-
-## 🏗️ Repository Structure (Monorepo)
-
-```
-sheplang/
-├── packages/
-│   ├── language/          # Langium parser (@sheplang/language)
-│   └── cli/              # Main CLI package (sheplang)
-├── adapters/
-│   └── sheplang-to-boba/ # Transpiler (@adapters/sheplang-to-boba)
-├── playground/           # Web playground (Vite)
-├── examples/            # Sample .shep files
-└── e2e/                # End-to-end tests
-```
-
-## 📝 Language Examples
-
-### Components & State
-```shep
-component TodoApp {
-  state todos = []
-  "My Todo List"
-}
-
-component Header props { title: "MyApp", count: 0 } {
-  "Welcome Header"
-}
-```
-
-### Actions & Routes
-```shep
-action AddTodo(item) { "Todo added" }
-action DeleteTodo(id) { "Todo removed" }
-
-route "/" -> TodoApp
-route "/about" -> About
-```
-
-### Full Application
-```shep
-component Dashboard {
-  state users = []
-  "User Dashboard"  
-}
-
-action FetchUsers() { "Loading users..." }
-action CreateUser(name, email) { "User created" }
-
-route "/" -> Dashboard
-route "/users" -> UserList
-```
-
-## 🛠️ CLI Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `help` | Show all commands | `sheplang help` |
-| `parse <file>` | Validate & show AST | `sheplang parse app.shep` |
-| `build <file>` | Compile to BobaScript | `sheplang build app.shep --out dist` |
-| `dev <file>` | Development server | `sheplang dev app.shep --port 3000` |
-| `explain <file>` | Human-readable summary | `sheplang explain app.shep` |
-| `stats` | Repository analytics | `sheplang stats` |
-| `--version` | Show version | `sheplang --version` |
-
 ## 🚦 Development Setup
 
 ### Prerequisites
-- Node.js 20+
-- pnpm 9+
-- PowerShell 7+ (Windows)
+- **Node.js 20+**
+- **pnpm 10+**
+- **Git**
 
 ### Build from Source
+
 ```bash
-git clone https://github.com/your-org/sheplang.git
-cd sheplang/sheplang
+git clone https://github.com/Radix-Obsidian/Sheplang-BobaScript.git
+cd Sheplang-BobaScript
 
 # Install dependencies
 pnpm install
 
 # Build all packages
-pnpm -w -r build
+pnpm run build
 
 # Run tests
-pnpm -w -r test
+pnpm run test
 
-# Test CLI locally
-node ./packages/cli/dist/index.js --help
+# Run full verification
+pnpm run verify
 ```
 
 ### Package Development
+
 ```bash
 # Build specific package
 pnpm --filter @sheplang/language build
 
 # Test specific package
-pnpm --filter sheplang test
+pnpm --filter @sheplang/verifier test
 
 # Start playground
-pnpm --filter @sheplang/playground dev
+cd sheplang/playground
+pnpm dev
 ```
 
-## 📦 Publishing
+---
 
-Packages are automatically published to NPM on tag push:
+## 📦 Published Packages
+
+Available on NPM:
+
+- **`sheplang`** - Main CLI
+- **`@sheplang/language`** - Parser & grammar
+- **`@adapters/sheplang-to-boba`** - Transpiler
 
 ```bash
-git tag v0.1.3
-git push --follow-tags
+# Install CLI globally
+npm install -g sheplang
+
+# Or use directly
+npx sheplang --help
 ```
 
-Published packages:
-- `sheplang` - Main CLI (umbrella package)
-- `@sheplang/language` - Language parser
-- `@adapters/sheplang-to-boba` - Transpiler
+---
 
-## ✅ Acceptance Tests
+## 🤝 Contributing
 
-- ✅ `pnpm -w -r build` → green
-- ✅ `pnpm -w -r test` → green  
-- ✅ `node packages/cli/dist/index.js help` → prints commands
-- ✅ `npx sheplang --version` → 0.1.3
-- ✅ `npx sheplang dev examples/todo.shep` → serves at :8787
+We welcome contributions! Please see:
 
-## 📄 License
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) - Community standards
+- [ROADMAP.md](./ROADMAP.md) - Future plans
 
-MIT - Built with ❤️ by Golden Sheep AI---
-
-## 🧩 Architecture Overview
-
-
-/sheplang/
-├── packages/
-│ ├── language/ # ShepLang parser (Langium)
-│ ├── adapter/ # ShepLang → BobaScript transpiler
-│ └── cli/ # sheplang CLI & preview server
-├── adapters/
-│ └── sheplang-to-boba # Deterministic code generator
-├── playground/ # Browser-based live editor
-├── examples/ # Example apps (todo, dashboard, auth)
-└── scripts/verify.ps1 # Build → Test → Serve → Validate → Playground
-
-**Flow:**  
-`ShepLang (.shep)` → **Adapter** → `BobaScript (.boba)` → **Runtime Preview / Deployment**
+**Ways to contribute:**
+- 🐛 Report bugs
+- 💡 Suggest features
+- 📝 Improve documentation
+- 🔧 Submit pull requests
 
 ---
 
-## 🧰 Quick Start
+## 📖 Documentation
 
-```bash
-# Clone
-git clone https://github.com/Radix-Obsidian/Sheplang-BobaScript
-cd Sheplang-BobaScript/sheplang
-
-# Install
-pnpm install
-
-# Run everything
-pnpm run verify     # Builds, tests, previews, and builds Playground
-
-# Or start the Playground (browser-based IDE)
-pnpm --filter @sheplang/playground dev
-```
-Then open: http://localhost:5173
-You’ll see:
-Left: ShepLang editor
-Right: AST (JSON), BobaScript output, and live preview
+- **[Examples](./examples/)** - 5 production-ready examples
+- **[Syntax Guide](./SYNTAX_FREEZE.md)** - Language reference
+- **[Changelog](./CHANGELOG.md)** - Version history
+- **[Roadmap](./ROADMAP.md)** - Future plans
 
 ---
 
-## 🧭 Vision
-Our mission is to make software creation as natural as explaining an idea.
-ShepLang and BobaScript are being built for:
-🧩 Non-technical founders who need MVPs fast
-🎨 Designers who think visually and narratively
-🤖 AI-native tools that teach as they build
-“If TypeScript made JavaScript safer, ShepLang makes it human.”
+## 🔗 Links
 
----
-
-## 🛠 Status
-Current Phase: 2.5 → 3 (Alpha Hardening)
-Edition: 2025 Syntax Freeze
-Latest Tag: v0.1.2-alpha (Playground release, Verify OK)
-
----
-
-## ❤️ Built by
-Golden Sheep AI
-A solo design & development studio building meaningful tools for non-technical founders.
-🐑 ShepLang — human-first DSL
-☕ BobaScript — typed scripting engine
-🧭 Explain Mode — AI-powered code mentor
-🧱 Shepherd Studio (coming soon) — all-in-one design & build environment
+- **GitHub:** [Radix-Obsidian/Sheplang-BobaScript](https://github.com/Radix-Obsidian/Sheplang-BobaScript)
+- **NPM:** [@sheplang packages](https://www.npmjs.com/search?q=%40sheplang)
+- **VSCode Extension:** [Coming soon to Marketplace]
+- **Website:** [Coming soon]
 
 ---
 
 ## 📜 License
-MIT License © 2025 Golden Sheep AI
 
-🌟 “From idea to app — in one language you already speak.”
+**MIT License** © 2025 Golden Sheep AI
+
+Built with ❤️ by [Golden Sheep AI](https://goldensheepai.com)
+
+---
+
+**"Write in English. Ship verified code. Launch without fear."** 🐑✨”
