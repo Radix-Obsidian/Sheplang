@@ -36,8 +36,10 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-    - name: Build workspace
-      run: pnpm -w -r build
+    - name: Build packages for publishing
+      run: |
+        cd sheplang
+        pnpm --filter '@radix-obsidian/sheplang-language' --filter '@radix-obsidian/sheplang-to-boba' --filter 'sheplang' -r build
     
     - name: Run tests
       run: pnpm -w -r test
@@ -69,8 +71,10 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-    - name: Build workspace
-      run: pnpm -w -r build
+    - name: Build packages for publishing
+      run: |
+        cd sheplang
+        pnpm --filter '@radix-obsidian/sheplang-language' --filter '@radix-obsidian/sheplang-to-boba' --filter 'sheplang' -r build
     
     - name: Publish to NPM (ordered dependencies)
       run: |
@@ -107,8 +111,10 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-    - name: Build workspace
-      run: pnpm -w -r build
+    - name: Build packages for publishing
+      run: |
+        cd sheplang
+        pnpm --filter '@radix-obsidian/sheplang-language' --filter '@radix-obsidian/sheplang-to-boba' --filter 'sheplang' -r build
     
     - name: Publish to GitHub Packages (ordered dependencies)
       run: |
@@ -140,8 +146,10 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-    - name: Build workspace
-      run: pnpm -w -r build
+    - name: Build packages for publishing
+      run: |
+        cd sheplang
+        pnpm --filter '@radix-obsidian/sheplang-language' --filter '@radix-obsidian/sheplang-to-boba' --filter 'sheplang' -r build
     
     - name: Pack packages (dry run)
       run: |
