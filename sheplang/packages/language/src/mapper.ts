@@ -111,6 +111,8 @@ function mapExpr(expr: any): string {
     return expr.value;
   } else if (expr.$type === 'StringLiteral') {
     return expr.value;
+  } else if (expr.$type === 'NumberLiteral') {
+    return expr.value;
   } else if (expr.$type === 'IdentifierRef') {
     return expr.ref;
   }
