@@ -92,7 +92,7 @@ function mapStmt(
     const fields: Record<string, string> = {};
     for (const fv of stmt.fields) {
       // If value is present, use it; otherwise use the name as the value (parameter reference)
-      fields[fv.name] = fv.value ? mapExpr(fv.value) : fv.name;
+      fields[fv.name] = fv.value ? mapExpression(fv.value) : fv.name;
     }
     return { kind: 'add', data: ref.name, fields };
   } else if (stmt.$type === 'ShowStmt') {
@@ -115,20 +115,138 @@ function mapStmt(
       path: stmt.path,
       variable: stmt.variable
     };
-  } else {
+  } else if (stmt.$type === 'UpdateStmt') {
+    const model = stmt.model.ref;
+    if (!model) {
+      throw new Error(`Unresolved model reference in update statement`);
+    }
+    const assignments: Record<string, any> = {};
+    for (const assign of stmt.assignments || []) {
+      assignments[assign.field] = mapExpression(assign.value);
+    }
+    return {
+      kind: 'update',
+      model: model.name,
+      condition: mapExpression(stmt.condition),
+      assignments
+    };
+  } else if (stmt.$type === 'DeleteStmt') {
+    const model = stmt.model.ref;
+    if (!model) {
+      throw new Error(`Unresolved model reference in delete statement`);
+    }
+    return {
+      kind: 'delete',
+      model: model.name,
+      condition: mapExpression(stmt.condition)
+    };
+  } else if (stmt.$type === 'IfStmt') {
+    return {
+      kind: 'if',
+      condition: mapExpression(stmt.condition),
+      thenBranch: stmt.thenBranch?.map((s: any) => mapStmt(s, actionName)) || [],
+      elseIfs: stmt.elseIfs?.map((elif: any) => ({
+        condition: mapExpression(elif.condition),
+        body: elif.body?.map((s: any) => mapStmt(s, actionName)) || []
+      })) || [],
+      elseBranch: stmt.elseBranch?.map((s: any) => mapStmt(s, actionName)) || []
+    };
+  } else if (stmt.$type === 'ForStmt') {
+    const loop = stmt.loop;
+    if (loop.$type === 'ForEachClause') {
+      return {
+        kind: 'for',
+        type: 'each',
+        variable: loop.variable,
+        collection: mapExpression(loop.collection),
+        body: stmt.body?.map((s: any) => mapStmt(s, actionName)) || []
+      };
+    } else if (loop.$type === 'ForRangeClause') {
+      return {
+        kind: 'for',
+        type: 'range',
+        variable: loop.variable,
+        start: mapExpression(loop.start),
+        end: mapExpression(loop.end),
+        body: stmt.body?.map((s: any) => mapStmt(s, actionName)) || []
+      };
+    } else {
+      throw new Error(`Unknown for loop type: ${loop.$type}`);
+    }
+  } else if (stmt.$type === 'AssignStmt') {
+    return {
+      kind: 'assign',
+      target: stmt.target,
+      value: mapExpression(stmt.value)
+    };
+  } else if (stmt.$type === 'RawStmt') {
     return { kind: 'raw', text: stmt.text };
+  } else {
+    throw new Error(`Unknown statement type: ${stmt.$type}`);
   }
 }
 
-function mapExpr(expr: any): string {
-  if (expr.$type === 'BooleanLiteral') {
-    return expr.value;
+// Map new Expression AST to a value or expression object
+function mapExpression(expr: any): any {
+  if (!expr) return null;
+  
+  // Literals
+  if (expr.$type === 'NumberLiteral') {
+    return { type: 'number', value: parseFloat(expr.value) };
   } else if (expr.$type === 'StringLiteral') {
-    return expr.value;
-  } else if (expr.$type === 'NumberLiteral') {
-    return expr.value;
+    return { type: 'string', value: expr.value };
+  } else if (expr.$type === 'BooleanLiteral') {
+    return { type: 'boolean', value: expr.value === 'true' };
   } else if (expr.$type === 'IdentifierRef') {
-    return expr.ref;
+    return { type: 'identifier', name: expr.ref };
   }
+  
+  // Field access
+  else if (expr.$type === 'FieldAccess') {
+    return { type: 'field', object: expr.object, field: expr.field };
+  }
+  
+  // Function call
+  else if (expr.$type === 'FunctionCall') {
+    return {
+      type: 'call',
+      func: expr.func,
+      args: expr.args?.map((a: any) => mapExpression(a)) || []
+    };
+  }
+  
+  // Binary expressions (unified)
+  else if (expr.$type === 'BinaryExpr') {
+    return {
+      type: 'binary',
+      op: expr.op,
+      left: mapExpression(expr.left),
+      right: mapExpression(expr.right)
+    };
+  }
+  
+  // Unary expressions
+  else if (expr.$type === 'UnaryExpr') {
+    return {
+      type: 'unary',
+      op: expr.op,
+      operand: mapExpression(expr.operand)
+    };
+  }
+  
+  // Fallback for simple cases (backward compatibility)
   return String(expr);
+}
+
+// Keep old mapExpr for backward compatibility
+function mapExpr(expr: any): string {
+  const mapped = mapExpression(expr);
+  if (typeof mapped === 'string') return mapped;
+  if (typeof mapped === 'object' && mapped !== null) {
+    if (mapped.type === 'number') return String(mapped.value);
+    if (mapped.type === 'string') return mapped.value;
+    if (mapped.type === 'boolean') return String(mapped.value);
+    if (mapped.type === 'identifier') return mapped.name;
+  }
+  return String(mapped);
 }

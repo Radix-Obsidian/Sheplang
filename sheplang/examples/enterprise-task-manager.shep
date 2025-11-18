@@ -1,0 +1,198 @@
+app EnterpriseTaskManager
+
+data Task:
+  fields:
+    title: text
+    description: text
+    completed: yes/no
+    priority: text
+    assignee: text
+    dueDate: date
+    points: number
+  rules:
+    - "title required"
+    - "priority must be low, medium, high, or urgent"
+
+data User:
+  fields:
+    name: text
+    email: email
+    role: text
+    active: yes/no
+    taskCount: number
+
+view Dashboard:
+  list Task
+  button "New Task" -> CreateTask
+  button "Analytics" -> ShowAnalytics
+
+view Analytics:
+  list User
+  button "Back" -> BackToDashboard
+
+action CreateTask(title, description, priority, dueDate, points):
+  # Validate input with expressions
+  if title.length < 3:
+    show Error
+  else if priority != "low" and priority != "medium" and priority != "high" and priority != "urgent":
+    show Error
+  else:
+    # Calculate urgency score
+    score = 0
+    
+    if priority == "urgent":
+      score = points * 3
+    else if priority == "high":
+      score = points * 2
+    else if priority == "medium":
+      score = points * 1.5
+    else:
+      score = points
+    
+    # Create the task
+    add Task with title, description, priority, dueDate, points, completed=false
+    
+    # Send notification for urgent tasks
+    if priority == "urgent" and score > 10:
+      call POST "/notify/urgent" with title
+    
+    # Update task count for assignee
+    currentUser = "current"
+    update User where name=currentUser set taskCount=taskCount + 1
+    
+    # Refresh and show dashboard
+    load GET "/tasks" into tasks
+    show Dashboard
+
+action ProcessBulkTasks(taskIds, newPriority):
+  successCount = 0
+  failureCount = 0
+  
+  # Process each task
+  for taskId in taskIds:
+    update Task where id=taskId set priority=newPriority
+    successCount = successCount + 1
+  
+  # Calculate success rate
+  totalCount = successCount + failureCount
+  successRate = successCount / totalCount * 100
+  
+  # Show appropriate view based on results
+  if successRate >= 90:
+    show SuccessView
+  else if successRate >= 50:
+    show PartialSuccessView
+  else:
+    show FailureView
+
+action CompleteTask(taskId):
+  # Update task status
+  update Task where id=taskId set completed=true
+  
+  # Calculate points earned
+  load GET "/tasks/:id" into task
+  points = 10
+  
+  if task.priority == "urgent":
+    points = points * 2
+  
+  # Update user stats
+  update User where active=true set taskCount=taskCount - 1
+  
+  # Check for milestone
+  load GET "/users/current" into user
+  
+  if user.taskCount % 10 == 0:
+    call POST "/celebrate" with user.name
+  
+  show Dashboard
+
+action DeleteOldTasks(daysOld):
+  # Delete tasks older than specified days
+  cutoffDate = now() - daysOld
+  delete Task where dueDate < cutoffDate
+  
+  # Refresh view
+  load GET "/tasks" into tasks
+  show Dashboard
+
+action GenerateReport():
+  totalTasks = 0
+  completedTasks = 0
+  
+  # Count tasks by status
+  load GET "/tasks" into allTasks
+  
+  for task in allTasks:
+    totalTasks = totalTasks + 1
+    
+    if task.completed == true:
+      completedTasks = completedTasks + 1
+  
+  # Calculate completion rate
+  if totalTasks > 0:
+    completionRate = completedTasks / totalTasks * 100
+  else:
+    completionRate = 0
+  
+  # Generate report based on rate
+  if completionRate >= 80:
+    call POST "/reports/excellent" with completionRate
+  else if completionRate >= 60:
+    call POST "/reports/good" with completionRate
+  else if completionRate >= 40:
+    call POST "/reports/needs-improvement" with completionRate
+  else:
+    call POST "/reports/critical" with completionRate
+  
+  show Analytics
+
+action FilterTasks(minPoints, maxPoints):
+  filteredCount = 0
+  
+  # Load all tasks
+  load GET "/tasks" into allTasks
+  
+  # Filter by points range
+  for task in allTasks:
+    if task.points >= minPoints and task.points <= maxPoints:
+      filteredCount = filteredCount + 1
+  
+  # Show results
+  if filteredCount > 0:
+    show FilteredView
+  else:
+    show EmptyResultsView
+
+action BackToDashboard():
+  load GET "/tasks" into tasks
+  show Dashboard
+
+action ShowAnalytics():
+  # Calculate various metrics
+  load GET "/users" into users
+  load GET "/tasks" into tasks
+  
+  activeUsers = 0
+  totalPoints = 0
+  
+  # Count active users
+  for user in users:
+    if user.active == true:
+      activeUsers = activeUsers + 1
+  
+  # Sum total points
+  for task in tasks:
+    if task.completed == false:
+      totalPoints = totalPoints + task.points
+  
+  # Calculate average
+  if activeUsers > 0:
+    avgPointsPerUser = totalPoints / activeUsers
+  else:
+    avgPointsPerUser = 0
+  
+  # Store metrics
+  call POST "/metrics" with activeUsers, totalPoints, avgPointsPerUser
+  
+  show Analytics

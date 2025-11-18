@@ -32,10 +32,39 @@ ActionDecl:
   '}';
 
 ParamDecl: name=ID (':' type=TypeRef)?;
-Stmt: AddStmt | ShowStmt | CallStmt | LoadStmt | RawStmt;
+Stmt: AddStmt | ShowStmt | CallStmt | LoadStmt | UpdateStmt | DeleteStmt | IfStmt | ForStmt | AssignStmt | RawStmt;
 
 AddStmt:
   'add' ref=[DataDecl] 'with' fields+=FieldValue (',' fields+=FieldValue)*;
+
+UpdateStmt:
+  'update' model=[DataDecl] 'where' condition=Expression 'set' assignments+=Assignment (',' assignments+=Assignment)*;
+
+DeleteStmt:
+  'delete' model=[DataDecl] 'where' condition=Expression;
+
+IfStmt:
+  'if' condition=Expression ':' '{' thenBranch+=Stmt* '}'
+  (elseIfs+=ElseIfClause)*
+  ('else' ':' '{' elseBranch+=Stmt* '}')?;
+
+ElseIfClause:
+  'else' 'if' condition=Expression ':' '{' body+=Stmt* '}';
+
+ForStmt:
+  'for' loop=(ForEachClause | ForRangeClause) ':' '{' body+=Stmt* '}';
+
+ForEachClause:
+  variable=ID 'in' collection=Expression;
+
+ForRangeClause:
+  variable=ID 'from' start=Expression 'to' end=Expression;
+
+AssignStmt:
+  target=ID '=' value=Expression;
+
+Assignment:
+  field=ID '=' value=Expression;
 
 ShowStmt:
   'show' view=[ViewDecl];
@@ -46,9 +75,40 @@ CallStmt:
 LoadStmt:
   'load' method=('GET'|'POST'|'PUT'|'PATCH'|'DELETE') path=STRING 'into' variable=ID;
 
-FieldValue: name=ID ('=' value=Expr)?;
+FieldValue: name=ID ('=' value=Expression)?;
 
-Expr: StringLiteral | BooleanLiteral | IdentifierRef | NumberLiteral;
+// Expression hierarchy with proper precedence (research-backed from Go spec)
+Expression: LogicalOrExpr;
+
+LogicalOrExpr:
+  LogicalAndExpr ({infer BinaryExpr.left=current} op='or' right=LogicalAndExpr)*;
+
+LogicalAndExpr:
+  ComparisonExpr ({infer BinaryExpr.left=current} op='and' right=ComparisonExpr)*;
+
+ComparisonExpr:
+  AdditionExpr ({infer BinaryExpr.left=current} op=('==' | '!=' | '<' | '<=' | '>' | '>=') right=AdditionExpr)?;
+
+AdditionExpr:
+  MultiplicationExpr ({infer BinaryExpr.left=current} op=('+' | '-') right=MultiplicationExpr)*;
+
+MultiplicationExpr:
+  UnaryExpr ({infer BinaryExpr.left=current} op=('*' | '/' | '%') right=UnaryExpr)*;
+
+UnaryExpr:
+  {infer UnaryExpr} op=('not' | '-') operand=PrimaryExpr | PrimaryExpr;
+
+PrimaryExpr:
+  NumberLiteral | StringLiteral | BooleanLiteral | 
+  IdentifierRef | FieldAccess | FunctionCall | 
+  '(' Expression ')';
+
+FieldAccess:
+  object=ID '.' field=ID;
+
+FunctionCall:
+  func=ID '(' (args+=Expression (',' args+=Expression)*)? ')';
+
 NumberLiteral: value=NUMBER;
 StringLiteral: value=STRING;
 BooleanLiteral: value=('true'|'false');

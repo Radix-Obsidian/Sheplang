@@ -1,5 +1,5 @@
 // Indentation → braces without comments. No extra top-level braces.
-type HeaderKind = 'app' | 'data' | 'view' | 'action' | 'fields' | 'rules';
+type HeaderKind = 'app' | 'data' | 'view' | 'action' | 'fields' | 'rules' | 'if' | 'else' | 'elseif' | 'for';
 
 const headerRegex: Record<HeaderKind, RegExp> = {
   app: /^(app)\b\s+[A-Za-z_]\w*\s*:?\s*$/,
@@ -7,7 +7,11 @@ const headerRegex: Record<HeaderKind, RegExp> = {
   view: /^(view)\b\s+[A-Za-z_]\w*\s*:?\s*$/,
   action: /^(action)\b\s+[A-Za-z_]\w*\s*\(.*\)\s*:?\s*$/,
   fields: /^(fields)\s*:\s*$/,
-  rules: /^(rules)\s*:\s*$/
+  rules: /^(rules)\s*:\s*$/,
+  if: /^(if)\b\s+.*:\s*$/,
+  elseif: /^(else\s+if)\b\s+.*:\s*$/,
+  else: /^(else)\s*:\s*$/,
+  for: /^(for)\b\s+.*:\s*$/
 };
 
 function isHeader(line: string): HeaderKind | undefined {
@@ -45,20 +49,23 @@ export function preprocessIndentToBraces(input: string): string {
 
     if (!trimmed) { out.push(''); continue; }
 
-    const kind = isHeader(raw);
+    const kind = isHeader(trimmed);  // Check trimmed line, not raw
     if (kind) {
-      // strip optional trailing colon before adding brace for non fields/rules
-      let line = trimmed.replace(/:\s*$/, '');
       if (kind === 'fields' || kind === 'rules') {
-        const [kw] = line.split(/\s*:/);
-        line = `${kw} : {`;
+        const [kw] = trimmed.split(/\s*:/);
+        const line = `${kw} : {`;
         out.push(line);
         stack.push(indent + indentSize);
+      } else if (kind === 'if' || kind === 'elseif' || kind === 'else' || kind === 'for') {
+        // Control flow: preserve the full line with colon and add brace
+        out.push(`${trimmed} {`);
+        stack.push(indent + indentSize);
       } else if (kind === 'app') {
+        const line = trimmed.replace(/:\s*$/, '');
         out.push(`${line} {`);
         inApp = true;
-        // do not push to stack; app closes at EOF
       } else {
+        const line = trimmed.replace(/:\s*$/, '');
         out.push(`${line} {`);
         stack.push(indent + indentSize);
       }
@@ -107,20 +114,26 @@ export function preprocessWithMap(input: string): { text: string; map: number[] 
 
     if (!trimmed) { out.push(''); map.push(i + 1); continue; }
 
-    const kind = isHeader(raw);
+    const kind = isHeader(trimmed);  // Check trimmed line, not raw
     if (kind) {
-      let line = trimmed.replace(/:\s*$/, '');
       if (kind === 'fields' || kind === 'rules') {
-        const [kw] = line.split(/\s*:/);
-        line = `${kw} : {`;
+        const [kw] = trimmed.split(/\s*:/);
+        const line = `${kw} : {`;
         out.push(line);
         map.push(i + 1);
         stack.push(indent + indentSize);
+      } else if (kind === 'if' || kind === 'elseif' || kind === 'else' || kind === 'for') {
+        // Control flow: preserve the full line with colon and add brace
+        out.push(`${trimmed} {`);
+        map.push(i + 1);
+        stack.push(indent + indentSize);
       } else if (kind === 'app') {
+        const line = trimmed.replace(/:\s*$/, '');
         out.push(`${line} {`);
         map.push(i + 1);
         inApp = true;
       } else {
+        const line = trimmed.replace(/:\s*$/, '');
         out.push(`${line} {`);
         map.push(i + 1);
         stack.push(indent + indentSize);
