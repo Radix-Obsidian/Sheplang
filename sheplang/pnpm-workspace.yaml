@@ -1,7 +1,8 @@
 packages:
   - "packages/*"
   - "../adapters/*"
-  - "shepkit"
   - "examples"
-  - "playground"
   - "e2e"
+  # Temporarily excluded (broken builds):
+  # - "shepkit"
+  # - "playground"

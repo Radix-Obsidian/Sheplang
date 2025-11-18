@@ -6,7 +6,7 @@
   "scripts": {
     "verify": "node ./scripts/verify.js",
     "verify:ci": "pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test",
-    "build": "pnpm -r --filter '!@sheplang/e2e' --filter '!@sheplang/playground' --filter '!@sheplang/shepkit' run build",
+    "build": "pnpm -r --filter '!@sheplang/e2e' run build",
     "test": "pnpm -w -r test --run",
     "test:unit": "pnpm -w -r run test:unit",
     "test:integration": "pnpm -w -r run test:integration",
