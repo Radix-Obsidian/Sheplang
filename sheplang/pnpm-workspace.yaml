@@ -1,8 +1,13 @@
 packages:
-  - "packages/*"
+  - "packages/language"
+  - "packages/cli"
+  - "packages/compiler"
+  - "packages/runtime"
+  - "packages/transpiler"
   - "../adapters/*"
   - "examples"
   - "e2e"
-  # Temporarily excluded (broken builds):
+  # Temporarily excluded (broken builds/imports):
   # - "shepkit"
   # - "playground"
+  # - "packages/verifier" (imports @sheplang/language instead of @radix-obsidian/sheplang-language)
