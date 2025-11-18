@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
+    "test": "pnpm -w -r test --run",
+    "typecheck": "pnpm -w -r run typecheck",
+    "lint": "pnpm -w -r run lint",
     "shep": "node ./packages/cli/dist/index.js",
     "setup": "node ../scripts/setup-pnpm.mjs",
     "check-env": "node ../scripts/check-env.mjs",
