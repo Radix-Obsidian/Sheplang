@@ -35,8 +35,8 @@
     "stats": "node --enable-source-maps dist/commands/stats.js"
   },
   "dependencies": {
-    "@adapters/sheplang-to-boba": "workspace:*",
-    "@sheplang/language": "workspace:*",
+    "@radix-obsidian/sheplang-to-boba": "workspace:*",
+    "@radix-obsidian/sheplang-language": "workspace:*",
     "@sheplang/compiler": "workspace:*",
     "chokidar": "^3.6.0",
     "express": "^4.19.2",
