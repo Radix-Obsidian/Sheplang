@@ -13,6 +13,14 @@
   },
   "files": ["dist"],
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript.git",
+    "directory": "sheplang/packages/language"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "generate": "langium generate",
     "prebuild": "langium generate",

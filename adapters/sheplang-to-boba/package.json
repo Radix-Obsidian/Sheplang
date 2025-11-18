@@ -13,6 +13,14 @@
   },
   "files": ["dist"],
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript.git",
+    "directory": "adapters/sheplang-to-boba"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "test": "vitest run --dir ."

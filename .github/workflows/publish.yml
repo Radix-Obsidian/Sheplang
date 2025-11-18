@@ -50,6 +50,9 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     
     steps:
     - uses: actions/checkout@v4
@@ -64,7 +67,8 @@ jobs:
       with:
         node-version: 20
         cache: 'pnpm'
-        registry-url: 'https://registry.npmjs.org'
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@radix-obsidian'
     
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -72,17 +76,19 @@ jobs:
     - name: Build workspace
       run: pnpm -w -r build
     
-    - name: Configure npm authentication
-      run: npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
+    - name: Configure GitHub Packages authentication
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+        echo "@radix-obsidian:registry=https://npm.pkg.github.com" >> ~/.npmrc
     
-    - name: Publish packages (ordered dependencies)
+    - name: Publish packages to GitHub Packages (ordered dependencies)
       run: |
         # Publish in dependency order: language -> adapter -> cli
-        pnpm publish --no-git-checks --filter '@sheplang/language' --provenance
-        pnpm publish --no-git-checks --filter '@adapters/sheplang-to-boba' --provenance  
-        pnpm publish --no-git-checks --filter 'sheplang' --provenance
+        pnpm publish --no-git-checks --filter '@sheplang/language'
+        pnpm publish --no-git-checks --filter '@adapters/sheplang-to-boba'
+        pnpm publish --no-git-checks --filter 'sheplang'
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   dry-run:
     if: github.event_name == 'pull_request'
