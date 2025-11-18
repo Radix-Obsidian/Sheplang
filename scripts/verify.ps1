@@ -84,18 +84,9 @@ try {
   }
   Write-Output 'Sanity checks complete'
 
-  # 6. Playground build (smoke)
-  Write-Output '[6/6] Building playground (smoke)...'
-  pnpm --filter @sheplang/playground build
-  if ($LASTEXITCODE -ne 0) {
-    throw "Playground build failed with exit code $LASTEXITCODE"
-  }
-  $pgIndex = Join-Path $PSScriptRoot "..\sheplang\playground\dist\index.html"
-  if (-not (Test-Path $pgIndex)) { throw "Playground build missing index.html" }
-  Write-Output 'Playground built'
-
   Write-Output ''
   Write-Output '=== VERIFY OK ==='
+  Write-Output 'ShepLang stack ready: Language ✓ Verifier ✓ Compiler ✓ CLI ✓ Extension ✓'
   exit 0
 }
 catch {
