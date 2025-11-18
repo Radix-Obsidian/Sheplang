@@ -7,11 +7,26 @@ export async function validateDocument(document: TextDocument): Promise<Diagnost
 
   try {
     if (document.languageId === 'sheplang') {
-      const { parseShep } = await import('@sheplang/language');
+      const { parseShep } = await import('@radix-obsidian/sheplang-language');
       return validateShepLang(document, text, parseShep);
     } else if (document.languageId === 'shepthon') {
-      const { parseShepThon } = await import('@sheplang/shepthon');
-      return validateShepThon(document, text, parseShepThon);
+      // ShepThon support is optional - return empty diagnostics if not available
+      try {
+        // @ts-expect-error - ShepThon package is optional and may not be installed
+        const { parseShepThon } = await import('@sheplang/shepthon');
+        return validateShepThon(document, text, parseShepThon);
+      } catch (importError) {
+        // ShepThon package not available - return informational message
+        return [{
+          severity: DiagnosticSeverity.Information,
+          range: {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 1 }
+          },
+          message: 'ShepThon backend validation not available. Install @sheplang/shepthon package to enable.',
+          source: 'shepthon'
+        }];
+      }
     }
   } catch (error) {
     // Parser threw an error
