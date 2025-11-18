@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import chokidar from "chokidar";
-import { transpileShepToBoba } from "@adapters/sheplang-to-boba";
+import { transpileShepToBoba } from "@radix-obsidian/sheplang-to-boba";
 import { createPreviewServer, broadcastReload } from "../server/preview.js";
 
 function debounce<T extends (...a: any[]) => void>(fn: T, ms: number) {

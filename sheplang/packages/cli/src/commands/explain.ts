@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { transpileShepToBoba } from "@adapters/sheplang-to-boba";
+import { transpileShepToBoba } from "@radix-obsidian/sheplang-to-boba";
 
 export async function cmdExplain(args: string[]) {
   const file = args[0];

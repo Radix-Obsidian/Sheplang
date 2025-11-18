@@ -323,7 +323,7 @@ Why: Reduces visual context overload for AI
 - ⚠️ More initial development effort
 - ⚠️ Two distribution channels to maintain
 
-**Recommended Approach:** ⭐ This is what Builder.io and v0 do
+**Sheplang's Approach:** ⭐ This is what Builder.io and v0 do
 
 ---
 

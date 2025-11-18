@@ -7,10 +7,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.bridgeService = exports.BridgeService = void 0;
 const events_1 = require("events");
 class BridgeService extends events_1.EventEmitter {
+    runtime = null;
+    isReady = false;
     constructor() {
         super();
-        this.runtime = null;
-        this.isReady = false;
     }
     /**
      * Set the active ShepThon runtime

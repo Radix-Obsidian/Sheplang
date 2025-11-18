@@ -54,7 +54,7 @@ async function showPreviewCommand(context, runtimeManager) {
     outputChannel_1.outputChannel.info('Active file:', editor.document.fileName);
     try {
         // Dynamic import for ESM package
-        const { parseShep } = await Promise.resolve().then(() => __importStar(require('@sheplang/language')));
+        const { parseShep } = await import('@radix-obsidian/sheplang-language');
         // Parse ShepLang file
         console.log('[Preview] Parsing .shep file:', editor.document.uri.fsPath);
         const source = editor.document.getText();
@@ -62,8 +62,8 @@ async function showPreviewCommand(context, runtimeManager) {
         // Check for parse errors
         if (parseResult.diagnostics && parseResult.diagnostics.length > 0) {
             const errors = parseResult.diagnostics
-                .filter(d => d.severity === 'error')
-                .map(d => `❌ Line ${d.line}, Col ${d.column} — ${d.message}`)
+                .filter((d) => d.severity === 'error')
+                .map((d) => `❌ Line ${d.start?.line || d.line}, Col ${d.start?.column || d.column} — ${d.message}`)
                 .join('\n');
             if (errors) {
                 vscode.window.showErrorMessage(`Failed to open preview: ${errors}`);
@@ -106,21 +106,18 @@ async function showPreviewCommand(context, runtimeManager) {
                 return;
             }
             console.log('[Preview] Received message from webview:', message.type);
-            // Handle request for user input (dynamic parameter)
+            // Handle request for user input (Add Task button)
             if (message.type === 'promptForTitle') {
-                const paramName = message.paramName || 'title';
-                const capitalizedParam = paramName.charAt(0).toUpperCase() + paramName.slice(1);
-                const userInput = await vscode.window.showInputBox({
-                    prompt: `Enter ${paramName}`,
-                    placeHolder: `e.g., My ${capitalizedParam}`
+                const title = await vscode.window.showInputBox({
+                    prompt: 'Enter task title',
+                    placeHolder: 'e.g., Buy groceries'
                 });
-                if (userInput) {
+                if (title) {
                     panel.webview.postMessage({
                         type: 'addTaskWithTitle',
-                        title: userInput,
+                        title,
                         viewName: message.viewName,
-                        actionName: message.actionName,
-                        paramName: paramName
+                        actionName: message.actionName
                     });
                 }
                 return;
@@ -180,13 +177,13 @@ async function showPreviewCommand(context, runtimeManager) {
                     const updatedResult = await parseShep(updatedSource, editor.document.uri.fsPath);
                     // Check for errors
                     if (updatedResult.diagnostics && updatedResult.diagnostics.length > 0) {
-                        const errors = updatedResult.diagnostics.filter(d => d.severity === 'error');
+                        const errors = updatedResult.diagnostics.filter((d) => d.severity === 'error');
                         if (errors.length > 0) {
                             panel.webview.postMessage({
                                 type: 'updateStatus',
                                 status: 'error',
                                 message: 'Syntax errors detected. Fix them to update preview.',
-                                errors: errors.map(e => `Line ${e.line}: ${e.message}`)
+                                errors: errors.map((e) => `Line ${e.start?.line || e.line}: ${e.message}`)
                             });
                             return;
                         }
@@ -393,20 +390,17 @@ function getWebviewContent(webview, context) {
     
     .view {
       margin-bottom: 24px;
-      padding: 24px;
-      background: linear-gradient(135deg, var(--vscode-editor-background) 0%, rgba(100, 100, 255, 0.03) 100%);
+      padding: 20px;
+      background: var(--vscode-editor-background);
       border: 1px solid var(--vscode-panel-border);
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
     }
     
     .view-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 20px;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
       color: var(--vscode-editor-foreground);
-      text-transform: capitalize;
-      letter-spacing: -0.5px;
     }
     
     .buttons {
@@ -417,109 +411,34 @@ function getWebviewContent(webview, context) {
     }
     
     button {
-      background: linear-gradient(135deg, #4a9eff 0%, #0078d4 100%);
-      color: white;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
       border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
+      padding: 8px 16px;
+      border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
       font-family: inherit;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(74, 158, 255, 0.3);
     }
     
     button:hover {
-      background: linear-gradient(135deg, #5aa9ff 0%, #1088e4 100%);
-      box-shadow: 0 4px 12px rgba(74, 158, 255, 0.4);
-      transform: translateY(-1px);
+      background: var(--vscode-button-hoverBackground);
     }
     
     button:active {
-      transform: translateY(0px);
-      box-shadow: 0 2px 6px rgba(74, 158, 255, 0.3);
-    }
-    
-    .list-section {
-      margin-top: 24px;
-      margin-bottom: 24px;
-    }
-    
-    .list-section-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: var(--vscode-descriptionForeground);
-      text-transform: capitalize;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .list-section-title::before {
-      content: '';
-      width: 3px;
-      height: 18px;
-      background: linear-gradient(180deg, #4a9eff 0%, #0078d4 100%);
-      border-radius: 2px;
+      transform: translateY(1px);
     }
     
     .list {
-      margin-top: 12px;
+      margin-top: 16px;
     }
     
     .list-item {
-      padding: 16px;
+      padding: 12px;
       background: var(--vscode-input-background);
       border: 1px solid var(--vscode-input-border);
-      border-radius: 8px;
-      margin-bottom: 12px;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-    
-    .list-item:hover {
-      border-color: var(--vscode-focusBorder);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
-    
-    .field-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--vscode-descriptionForeground);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    
-    .field-value {
-      font-size: 14px;
-      color: var(--vscode-editor-foreground);
-      font-weight: 500;
-    }
-    
-    .field-value.price {
-      color: #4ec9b0;
-      font-weight: 700;
-      font-size: 16px;
-    }
-    
-    .field-value.status {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      background: rgba(100, 200, 255, 0.15);
-      color: #4a9eff;
-    }
-    
-    .field-value.email {
-      color: #ce9178;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 13px;
+      border-radius: 4px;
+      margin-bottom: 8px;
     }
     
     .list-empty {
@@ -594,63 +513,6 @@ function getWebviewContent(webview, context) {
       vscode.postMessage({ type: 'webviewLog', level: 'error', args: args.map(String) });
     };
     
-    // ========================================
-    // Helper Functions for Dynamic Rendering
-    // ========================================
-    
-    /**
-     * Get the model name that a view displays
-     * @param {string} viewName - Name of the view
-     * @returns {string|null} Model name or null
-     */
-    function getModelFromView(viewName) {
-      if (!currentAST || !currentAST.views) return null;
-      const view = currentAST.views.find(v => v.name === viewName);
-      return view?.list || null;
-    }
-    
-    /**
-     * Get model definition from AST
-     * @param {string} modelName - Name of the model
-     * @returns {object|null} Model definition or null
-     */
-    function getModelByName(modelName) {
-      if (!currentAST || !currentAST.datas) return null;
-      return currentAST.datas.find(d => d.name === modelName);
-    }
-    
-    /**
-     * Construct endpoint path from model name
-     * Pattern: Message → /messages
-     * @param {string} modelName - Name of the model
-     * @returns {string} Endpoint path
-     */
-    function getEndpointPath(modelName) {
-      return '/' + modelName.toLowerCase() + 's';
-    }
-    
-    /**
-     * Format field value based on type
-     * @param {any} value - Field value
-     * @param {string} type - Field type (text, number, yes/no, datetime)
-     * @returns {string} Formatted value
-     */
-    function formatFieldValue(value, type) {
-      if (value === null || value === undefined) return '';
-      
-      switch(type) {
-        case 'yes/no':
-          return value ? '✓' : '○';
-        case 'datetime':
-          return new Date(value).toLocaleString();
-        case 'number':
-          return String(value);
-        case 'text':
-        default:
-          return String(value);
-      }
-    }
-    
     // Listen for messages from extension
     window.addEventListener('message', event => {
       const message = event.data;
@@ -668,9 +530,9 @@ function getWebviewContent(webview, context) {
         
         case 'backendStatus':
           updateBackendStatus(message.status, message.message);
-          // Load data when backend connects
+          // Load todos when backend connects
           if (message.status === 'connected') {
-            setTimeout(() => loadData(), 100);
+            setTimeout(() => loadTodos(), 100);
           }
           break;
         
@@ -683,8 +545,8 @@ function getWebviewContent(webview, context) {
           break;
         
         case 'addTaskWithTitle':
-          // Execute the action with input from VS Code input box
-          executeActionWithTitle(message.actionName, message.viewName, message.title, message.paramName);
+          // Execute the action with the title from VS Code input box
+          executeActionWithTitle(message.actionName, message.viewName, message.title);
           break;
         
         case 'editTaskWithTitle':
@@ -816,26 +678,17 @@ function getWebviewContent(webview, context) {
             button.onclick = () => {
               console.log('[Webview] Button clicked:', btn.label);
               
-              // Check if action needs user input
+              // Check if action needs user input (has title parameter)
               const action = currentAST.actions.find(a => a.name === btn.action);
-              if (action && action.params && action.params.length > 0) {
-                // Check if it's a single-parameter action
-                if (action.params.length === 1) {
-                  const paramName = action.params[0].name;
-                  // Ask extension to show input box for single parameter
-                  vscode.postMessage({
-                    type: 'promptForTitle',
-                    actionName: btn.action,
-                    viewName: view.name,
-                    paramName: paramName  // Pass the actual parameter name
-                  });
-                } else {
-                  // Multi-parameter actions - show inline form
-                  console.log('[Webview] Multi-parameter action:', action.params);
-                  showMultiFieldForm(btn.action, view.name, action.params);
-                }
+              if (action && action.params && action.params.some(p => p.name === 'title')) {
+                // Ask extension to show input box
+                vscode.postMessage({
+                  type: 'promptForTitle',
+                  actionName: btn.action,
+                  viewName: view.name
+                });
               } else {
-                // Execute action directly (no parameters)
+                // Execute action directly
                 executeAction(btn.action, view.name);
               }
             };
@@ -845,40 +698,14 @@ function getWebviewContent(webview, context) {
           viewDiv.appendChild(buttonsDiv);
         }
         
-        // Support multiple lists (either view.list or view.lists)
-        const listModels = [];
+        // List
         if (view.list) {
-          listModels.push(view.list);
-        }
-        if (view.lists && Array.isArray(view.lists)) {
-          listModels.push(...view.lists);
-        }
-        
-        // Render each list
-        if (listModels.length > 0) {
-          listModels.forEach(modelName => {
-            const listSection = document.createElement('div');
-            listSection.className = 'list-section';
-            listSection.setAttribute('data-model', modelName);
-            
-            // List section title
-            const listTitle = document.createElement('div');
-            listTitle.className = 'list-section-title';
-            listTitle.textContent = modelName + 's';
-            listSection.appendChild(listTitle);
-            
-            // List container
-            const listDiv = document.createElement('div');
-            listDiv.className = 'list';
-            listDiv.setAttribute('data-model', modelName);
-            
-            // Dynamic empty message
-            const pluralName = modelName.toLowerCase() + 's';
-            listDiv.innerHTML = '<div class="list-empty">No ' + pluralName + ' yet. Click the button above to create one!</div>';
-            
-            listSection.appendChild(listDiv);
-            viewDiv.appendChild(listSection);
-          });
+          const listDiv = document.createElement('div');
+          listDiv.className = 'list';
+          listDiv.innerHTML = \`
+            <div class="list-empty">No tasks yet. Click "Add Task" to create one!</div>
+          \`;
+          viewDiv.appendChild(listDiv);
         }
         
         appDiv.appendChild(viewDiv);
@@ -928,21 +755,28 @@ function getWebviewContent(webview, context) {
           console.log('[Webview] Add operation:', op);
           console.log('[Webview] op.data:', op.data);
           console.log('[Webview] op.fields:', op.fields);
+          console.log('[Webview] op.with:', op.with);
           
-          // Dynamic add operation - construct endpoint and body
+          // Handle add operations by making POST calls to backend
           try {
-            const modelName = op.data;
-            const endpoint = getEndpointPath(modelName);
+            // Extract data type (e.g., "Todo")
+            const dataType = op.data;
+            console.log('[Webview] dataType:', dataType);
             
-            // Build request body from op.fields
-            const body = op.fields || {};
+            // Build request body from op.fields or op.with
+            const body = {};
+            if (op.fields && typeof op.fields === 'object') {
+              Object.assign(body, op.fields);
+              console.log('[Webview] Copied from op.fields:', body);
+            } else if (op.with && typeof op.with === 'object') {
+              Object.assign(body, op.with);
+              console.log('[Webview] Copied from op.with:', body);
+            }
             
-            console.log('[Webview] Creating ' + modelName + ' via POST ' + endpoint, body);
-            const result = await callBackend('POST', endpoint, body);
-            console.log('[Webview] ✅ ' + modelName + ' created:', result);
-            
-            showToast('✅ Created!', 'success');
-            await loadData();
+            // Add operations should be handled via executeActionWithTitle
+            // (triggered by promptForTitle message from button click)
+            console.log('[Webview] Add operation - should use executeActionWithTitle instead');
+            showToast('Please use the button to add tasks', 'info');
           } catch (error) {
             console.error('[Webview] ❌ Add failed:', error);
             showToast('❌ Error: ' + error.message, 'error');
@@ -953,9 +787,9 @@ function getWebviewContent(webview, context) {
       }
     }
     
-    // Execute action with user-provided input (from VS Code input box)
-    async function executeActionWithTitle(actionName, viewName, userInput, paramName) {
-      console.log('[Webview] Executing action with input:', actionName, userInput, 'param:', paramName);
+    // Execute action with user-provided title (from VS Code input box)
+    async function executeActionWithTitle(actionName, viewName, title) {
+      console.log('[Webview] Executing action with title:', actionName, title);
       
       const action = currentAST.actions.find(a => a.name === actionName);
       if (!action) {
@@ -963,200 +797,25 @@ function getWebviewContent(webview, context) {
         return;
       }
       
-      // Execute each operation
+      // Execute each operation, replacing 'title' parameter
       for (const op of action.ops) {
-        if (op.kind === 'add') {
+        if (op.kind === 'add' && op.data === 'Todo') {
           try {
-            const modelName = op.data;
-            const endpoint = getEndpointPath(modelName);
+            const body = {
+              title: title,
+              done: false
+            };
             
-            // Build request body
-            const body = {};
+            console.log('[Webview] Creating Todo via POST /todos', body);
+            const result = await callBackend('POST', '/todos', body);
+            console.log('[Webview] ✅ Todo created:', result);
             
-            // First, add any default fields from op.fields
-            if (op.fields && typeof op.fields === 'object') {
-              Object.assign(body, op.fields);
-            }
-            
-            // Then override with user input (this ensures user input takes precedence)
-            if (paramName) {
-              body[paramName] = userInput;
-            } else {
-              // Fallback to 'title' for backward compatibility
-              body['title'] = userInput;
-            }
-            
-            console.log('[Webview] [SINGLE-PARAM] Creating ' + modelName + ' via POST ' + endpoint, body);
-            const result = await callBackend('POST', endpoint, body);
-            console.log('[Webview] [SINGLE-PARAM] ✅ ' + modelName + ' created:', result);
-            
-            showToast('✅ Created!', 'success');
-            
-            // Wait for backend to process, then reload
-            console.log('[Webview] [SINGLE-PARAM] Waiting 300ms before reloading...');
-            setTimeout(async () => {
-              console.log('[Webview] [SINGLE-PARAM] Calling loadData()...');
-              try {
-                await loadData();
-                console.log('[Webview] [SINGLE-PARAM] ✅ loadData() completed');
-              } catch (err) {
-                console.error('[Webview] [SINGLE-PARAM] ❌ loadData() failed:', err);
-              }
-            }, 300);
+            showToast('✅ Task added!', 'success');
+            await loadTodos();
           } catch (error) {
             console.error('[Webview] ❌ Add failed:', error);
             showToast('❌ Error: ' + error.message, 'error');
           }
-        }
-      }
-    }
-    
-    // Show multi-field form for actions with multiple parameters
-    function showMultiFieldForm(actionName, viewName, params) {
-      console.log('[Webview] Showing multi-field form for:', actionName, params);
-      
-      // Create modal overlay
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
-      
-      // Create form dialog
-      const dialog = document.createElement('div');
-      dialog.style.cssText = 'background: var(--vscode-editor-background); border: 1px solid var(--vscode-widget-border); border-radius: 8px; padding: 20px; min-width: 400px; max-width: 500px;';
-      
-      // Form title
-      const title = document.createElement('h3');
-      title.style.marginTop = '0';
-      title.textContent = actionName.replace(/([A-Z])/g, ' $1').trim(); // Add spaces before capitals
-      dialog.appendChild(title);
-      
-      // Create form
-      const form = document.createElement('form');
-      const inputs = {};
-      
-      params.forEach(param => {
-        const fieldDiv = document.createElement('div');
-        fieldDiv.style.marginBottom = '15px';
-        
-        const label = document.createElement('label');
-        label.style.display = 'block';
-        label.style.marginBottom = '5px';
-        label.style.color = 'var(--vscode-descriptionForeground)';
-        label.textContent = param.name.charAt(0).toUpperCase() + param.name.slice(1) + ':';
-        
-        const input = document.createElement('input');
-        input.type = param.type === 'datetime' ? 'datetime-local' : 'text';
-        input.name = param.name;
-        input.style.cssText = 'width: 100%; padding: 6px 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;';
-        input.placeholder = 'Enter ' + param.name;
-        
-        inputs[param.name] = input;
-        
-        fieldDiv.appendChild(label);
-        fieldDiv.appendChild(input);
-        form.appendChild(fieldDiv);
-      });
-      
-      // Buttons
-      const buttonDiv = document.createElement('div');
-      buttonDiv.style.cssText = 'margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;';
-      
-      const cancelBtn = document.createElement('button');
-      cancelBtn.type = 'button';
-      cancelBtn.textContent = 'Cancel';
-      cancelBtn.style.cssText = 'padding: 6px 12px; background: transparent; color: var(--vscode-button-secondaryForeground); border: 1px solid var(--vscode-button-border); border-radius: 2px; cursor: pointer;';
-      cancelBtn.onclick = () => overlay.remove();
-      
-      const submitBtn = document.createElement('button');
-      submitBtn.type = 'submit';
-      submitBtn.textContent = 'Create';
-      submitBtn.style.cssText = 'padding: 6px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 2px; cursor: pointer;';
-      
-      buttonDiv.appendChild(cancelBtn);
-      buttonDiv.appendChild(submitBtn);
-      form.appendChild(buttonDiv);
-      
-      // Form submit handler
-      form.onsubmit = (e) => {
-        e.preventDefault();
-        
-        // Collect values
-        const values = {};
-        for (const [name, input] of Object.entries(inputs)) {
-          values[name] = input.value;
-        }
-        
-        console.log('[Webview] Form submitted with values:', values);
-        
-        // Execute action with all parameters
-        executeActionWithMultipleInputs(actionName, viewName, values);
-        
-        // Close dialog
-        overlay.remove();
-      };
-      
-      dialog.appendChild(form);
-      overlay.appendChild(dialog);
-      document.body.appendChild(overlay);
-      
-      // Focus first input
-      const firstInput = Object.values(inputs)[0];
-      if (firstInput) {
-        firstInput.focus();
-      }
-    }
-    
-    // Execute action with multiple parameters
-    async function executeActionWithMultipleInputs(actionName, viewName, inputs) {
-      console.log('[Webview] Executing action with multiple inputs:', actionName, inputs);
-      
-      const action = currentAST.actions.find(a => a.name === actionName);
-      if (!action) {
-        console.error('[Webview] Action not found:', actionName);
-        return;
-      }
-      
-      // Execute each operation
-      for (const op of action.ops) {
-        if (op.kind === 'add') {
-          try {
-            const modelName = op.data;
-            const endpoint = getEndpointPath(modelName);
-            
-            // Build request body
-            const body = {};
-            
-            // First, add any default fields from op.fields
-            if (op.fields && typeof op.fields === 'object') {
-              Object.assign(body, op.fields);
-            }
-            
-            // Then override with all user inputs
-            Object.assign(body, inputs);
-            
-            console.log('[Webview] [MULTI-FIELD] Creating ' + modelName + ' via POST ' + endpoint, body);
-            const result = await callBackend('POST', endpoint, body);
-            console.log('[Webview] [MULTI-FIELD] ✅ ' + modelName + ' created:', result);
-            
-            showToast('✅ Created!', 'success');
-            
-            // Wait for backend to process, then reload
-            console.log('[Webview] [MULTI-FIELD] Waiting 300ms before reloading...');
-            setTimeout(async () => {
-              console.log('[Webview] [MULTI-FIELD] Calling loadData()...');
-              try {
-                await loadData();
-                console.log('[Webview] [MULTI-FIELD] ✅ loadData() completed');
-              } catch (err) {
-                console.error('[Webview] [MULTI-FIELD] ❌ loadData() failed:', err);
-              }
-            }, 300);
-          } catch (error) {
-            console.error('[Webview] ❌ Add failed:', error);
-            showToast('❌ Error: ' + error.message, 'error');
-          }
-        } else if (op.kind === 'show') {
-          console.log('[Webview] Show view:', op.view);
         }
       }
     }
@@ -1183,210 +842,119 @@ function getWebviewContent(webview, context) {
         
         console.log('[Webview] ✅ Task updated:', updated);
         showToast('✏️ Task updated!', 'success');
-        await loadData();
+        await loadTodos();
       } catch (error) {
         console.error('[Webview] ❌ Edit failed:', error);
         showToast('❌ Error: ' + error.message, 'error');
       }
     }
     
-    /**
-     * Load data from backend dynamically based on AST
-     */
-    async function loadData() {
-      console.log('[Webview] Loading data from backend...');
-      
-      if (!currentAST || !currentAST.views || currentAST.views.length === 0) {
-        console.error('[Webview] No views in AST');
-        return;
-      }
-      
-      // Load data for all views
-      for (const view of currentAST.views) {
-        // Collect all list models for this view
-        const listModels = [];
-        if (view.list) {
-          listModels.push(view.list);
+    async function loadTodos() {
+      console.log('[Webview] Loading todos from backend...');
+      try {
+        const todos = await callBackend('GET', '/todos');
+        console.log('[Webview] Loaded todos:', todos);
+        
+        // Update the list display
+        const listDiv = document.querySelector('.list');
+        if (listDiv) {
+          listDiv.innerHTML = '';
+          if (todos && todos.length > 0) {
+            todos.forEach(todo => {
+              const item = document.createElement('div');
+              item.className = 'list-item';
+              item.style.display = 'flex';
+              item.style.alignItems = 'center';
+              item.style.gap = '8px';
+              
+              // Title span (clickable to toggle)
+              const titleSpan = document.createElement('span');
+              titleSpan.style.flex = '1';
+              titleSpan.style.cursor = 'pointer';
+              titleSpan.style.textDecoration = todo.done ? 'line-through' : 'none';
+              titleSpan.textContent = todo.title;
+              titleSpan.onclick = async () => {
+                try {
+                  console.log('[Webview] Toggling todo:', todo.id);
+                  const updated = await callBackend('PUT', '/todos/' + todo.id, {
+                    title: todo.title,
+                    done: !todo.done
+                  });
+                  console.log('[Webview] ✅ Todo updated:', updated);
+                  showToast(updated.done ? '✅ Marked as done!' : '○ Marked as not done', 'success');
+                  await loadTodos();
+                } catch (error) {
+                  console.error('[Webview] ❌ Toggle failed:', error);
+                  showToast('❌ Error: ' + error.message, 'error');
+                }
+              };
+              
+              // Status icon
+              const statusSpan = document.createElement('span');
+              statusSpan.style.color = 'var(--vscode-descriptionForeground)';
+              statusSpan.style.fontSize = '0.9em';
+              statusSpan.textContent = todo.done ? '✓' : '○';
+              
+              // Edit button
+              const editBtn = document.createElement('button');
+              editBtn.textContent = '✏️';
+              editBtn.style.background = 'transparent';
+              editBtn.style.border = 'none';
+              editBtn.style.cursor = 'pointer';
+              editBtn.style.padding = '4px 8px';
+              editBtn.style.fontSize = '14px';
+              editBtn.style.opacity = '0.6';
+              editBtn.style.transition = 'opacity 0.2s';
+              editBtn.onmouseenter = () => { editBtn.style.opacity = '1'; };
+              editBtn.onmouseleave = () => { editBtn.style.opacity = '0.6'; };
+              editBtn.onclick = (e) => {
+                e.stopPropagation();
+                vscode.postMessage({
+                  type: 'promptForEdit',
+                  todoId: todo.id,
+                  currentTitle: todo.title
+                });
+              };
+              
+              // Delete button
+              const deleteBtn = document.createElement('button');
+              deleteBtn.textContent = '🗑️';
+              deleteBtn.style.background = 'transparent';
+              deleteBtn.style.border = 'none';
+              deleteBtn.style.cursor = 'pointer';
+              deleteBtn.style.padding = '4px 8px';
+              deleteBtn.style.fontSize = '14px';
+              deleteBtn.style.opacity = '0.6';
+              deleteBtn.style.transition = 'opacity 0.2s';
+              deleteBtn.onmouseenter = () => { deleteBtn.style.opacity = '1'; };
+              deleteBtn.onmouseleave = () => { deleteBtn.style.opacity = '0.6'; };
+              deleteBtn.onclick = async (e) => {
+                e.stopPropagation();
+                try {
+                  console.log('[Webview] Deleting todo:', todo.id);
+                  await callBackend('DELETE', '/todos/' + todo.id);
+                  console.log('[Webview] ✅ Todo deleted');
+                  showToast('🗑️ Task deleted', 'success');
+                  await loadTodos();
+                } catch (error) {
+                  console.error('[Webview] ❌ Delete failed:', error);
+                  showToast('❌ Error: ' + error.message, 'error');
+                }
+              };
+              
+              item.appendChild(titleSpan);
+              item.appendChild(statusSpan);
+              item.appendChild(editBtn);
+              item.appendChild(deleteBtn);
+              listDiv.appendChild(item);
+            });
+          } else {
+            listDiv.innerHTML = '<div class="list-item" style="color: var(--vscode-descriptionForeground); font-style: italic;">No tasks yet. Click "Add Task" to create one!</div>';
+          }
         }
-        if (view.lists && Array.isArray(view.lists)) {
-          listModels.push(...view.lists);
-        }
-        
-        // Load data for each list model
-        for (const modelName of listModels) {
-          const model = getModelByName(modelName);
-          if (!model) {
-            console.error('[Webview] Model not found:', modelName);
-            continue;
-          }
-          
-          const endpoint = getEndpointPath(modelName);
-          
-          try {
-            console.log('[Webview] Calling GET', endpoint);
-            const response = await callBackend('GET', endpoint);
-            console.log('[Webview] Raw response for', modelName, ':', response);
-            
-            // Handle different response formats
-            let items;
-            if (Array.isArray(response)) {
-              items = response;
-            } else if (response && typeof response === 'object') {
-              const pluralName = modelName.toLowerCase() + 's';
-              items = response[pluralName] || response.data || response.items || response.results || [];
-              console.log('[Webview] Extracted items from property:', pluralName, '- count:', items.length);
-            } else {
-              items = [];
-            }
-            
-            console.log('[Webview] Final items for', modelName, ':', items.length, 'items');
-            
-            // Find the specific list div for this model
-            const listDiv = document.querySelector('.list[data-model="' + modelName + '"]');
-            if (listDiv) {
-              renderItems(items, model, modelName, listDiv);
-            } else {
-              console.error('[Webview] List div not found for model:', modelName);
-            }
-          } catch (error) {
-            console.error('[Webview] Failed to load data for', modelName, ':', error);
-          }
-        }
+      } catch (error) {
+        console.error('[Webview] Failed to load todos:', error);
       }
-    }
-    
-    /**
-     * Render items in the list dynamically
-     * @param {Array} items - Array of items from backend
-     * @param {object} model - Model definition from AST
-     * @param {string} modelName - Name of the model
-     * @param {HTMLElement} listDiv - The list container element
-     */
-    function renderItems(items, model, modelName, listDiv) {
-      if (!listDiv) {
-        console.error('[Webview] List div not provided');
-        return;
-      }
-      
-      listDiv.innerHTML = '';
-      
-      // Empty state
-      if (!items || items.length === 0) {
-        const pluralName = modelName.toLowerCase() + 's';
-        listDiv.innerHTML = '<div class="list-item" style="color: var(--vscode-descriptionForeground); font-style: italic;">No ' + pluralName + ' yet. Click the button above to create one!</div>';
-        return;
-      }
-      
-      // Render each item
-      items.forEach(item => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'list-item';
-        itemDiv.style.display = 'flex';
-        itemDiv.style.alignItems = 'center';
-        itemDiv.style.gap = '8px';
-        
-        // Fields container
-        const fieldsContainer = document.createElement('div');
-        fieldsContainer.style.flex = '1';
-        fieldsContainer.style.display = 'flex';
-        fieldsContainer.style.gap = '12px';
-        fieldsContainer.style.flexWrap = 'wrap';
-        
-        // Render each field (skip id)
-        model.fields.forEach(field => {
-          if (field.name === 'id') return;
-          
-          const fieldContainer = document.createElement('div');
-          fieldContainer.style.display = 'flex';
-          fieldContainer.style.flexDirection = 'column';
-          fieldContainer.style.gap = '2px';
-          
-          // Field label
-          const labelSpan = document.createElement('span');
-          labelSpan.className = 'field-label';
-          labelSpan.textContent = field.name;
-          
-          // Field value
-          const valueSpan = document.createElement('span');
-          valueSpan.className = 'field-value';
-          const formattedValue = formatFieldValue(item[field.name], field.type);
-          valueSpan.textContent = formattedValue;
-          
-          // Smart styling based on field name or type
-          const fieldNameLower = field.name.toLowerCase();
-          if (fieldNameLower.includes('price') || fieldNameLower.includes('total')) {
-            valueSpan.classList.add('price');
-            // Format as currency
-            if (typeof item[field.name] === 'number') {
-              valueSpan.textContent = '$' + item[field.name].toFixed(2);
-            }
-          } else if (fieldNameLower === 'status') {
-            valueSpan.classList.add('status');
-          } else if (fieldNameLower.includes('email')) {
-            valueSpan.classList.add('email');
-          } else if (field.type === 'yes/no') {
-            valueSpan.style.fontSize = '1.4em';
-            valueSpan.textContent = item[field.name] ? '✓ Yes' : '○ No';
-            valueSpan.style.color = item[field.name] ? 
-              '#4ec9b0' : 
-              'var(--vscode-descriptionForeground)';
-          }
-          
-          fieldContainer.appendChild(labelSpan);
-          fieldContainer.appendChild(valueSpan);
-          fieldsContainer.appendChild(fieldContainer);
-        });
-        
-        // Edit button (placeholder for now)
-        const editBtn = document.createElement('button');
-        editBtn.textContent = '✏️';
-        editBtn.style.background = 'transparent';
-        editBtn.style.border = 'none';
-        editBtn.style.cursor = 'pointer';
-        editBtn.style.padding = '4px 8px';
-        editBtn.style.fontSize = '14px';
-        editBtn.style.opacity = '0.6';
-        editBtn.style.transition = 'opacity 0.2s';
-        editBtn.onmouseenter = () => { editBtn.style.opacity = '1'; };
-        editBtn.onmouseleave = () => { editBtn.style.opacity = '0.6'; };
-        editBtn.onclick = (e) => {
-          e.stopPropagation();
-          console.log('[Webview] Edit not yet implemented for:', modelName);
-          showToast('✏️ Edit coming soon!', 'info');
-        };
-        
-        // Delete button
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '🗑️';
-        deleteBtn.style.background = 'transparent';
-        deleteBtn.style.border = 'none';
-        deleteBtn.style.cursor = 'pointer';
-        deleteBtn.style.padding = '4px 8px';
-        deleteBtn.style.fontSize = '14px';
-        deleteBtn.style.opacity = '0.6';
-        deleteBtn.style.transition = 'opacity 0.2s';
-        deleteBtn.onmouseenter = () => { deleteBtn.style.opacity = '1'; };
-        deleteBtn.onmouseleave = () => { deleteBtn.style.opacity = '0.6'; };
-        deleteBtn.onclick = async (e) => {
-          e.stopPropagation();
-          try {
-            const endpoint = getEndpointPath(modelName);
-            console.log('[Webview] Deleting:', endpoint + '/' + item.id);
-            await callBackend('DELETE', endpoint + '/' + item.id);
-            console.log('[Webview] ✅ Deleted');
-            showToast('🗑️ Deleted!', 'success');
-            await loadData();
-          } catch (error) {
-            console.error('[Webview] ❌ Delete failed:', error);
-            showToast('❌ Error: ' + error.message, 'error');
-          }
-        };
-        
-        itemDiv.appendChild(fieldsContainer);
-        itemDiv.appendChild(editBtn);
-        itemDiv.appendChild(deleteBtn);
-        listDiv.appendChild(itemDiv);
-      });
     }
     
     function showToast(message, type = 'info') {

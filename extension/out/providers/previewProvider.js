@@ -40,11 +40,13 @@ const vscode = __importStar(require("vscode"));
  * Phase 2: Full webview-based preview with BobaScript runtime
  */
 class ShepLangPreviewProvider {
+    context;
     static register(context) {
         const provider = new ShepLangPreviewProvider(context);
         const providerRegistration = vscode.window.registerCustomEditorProvider(ShepLangPreviewProvider.viewType, provider);
         return providerRegistration;
     }
+    static viewType = 'sheplang.preview';
     constructor(context) {
         this.context = context;
     }
@@ -123,5 +125,4 @@ class ShepLangPreviewProvider {
     }
 }
 exports.ShepLangPreviewProvider = ShepLangPreviewProvider;
-ShepLangPreviewProvider.viewType = 'sheplang.preview';
 //# sourceMappingURL=previewProvider.js.map

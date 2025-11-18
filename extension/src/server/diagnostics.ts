@@ -7,7 +7,7 @@ export async function validateDocument(document: TextDocument): Promise<Diagnost
 
   try {
     if (document.languageId === 'sheplang') {
-      const { parseShep } = await import('@radix-obsidian/sheplang-language');
+      const { parseShep } = await import('@goldensheepai/sheplang-language');
       return validateShepLang(document, text, parseShep);
     } else if (document.languageId === 'shepthon') {
       // ShepThon support is optional - return empty diagnostics if not available
