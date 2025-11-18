@@ -1,4 +1,4 @@
-import { parseShep, type Diagnostic, type CompilationResult } from '@sheplang/language';
+import { parseShep, type Diagnostic, type CompilationResult } from '@radix-obsidian/sheplang-language';
 import { transpile } from './transpiler.js';
 
 /**

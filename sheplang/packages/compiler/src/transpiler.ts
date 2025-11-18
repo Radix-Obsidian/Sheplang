@@ -1,5 +1,5 @@
 import type { GenFile, GenResult } from './types.js';
-import type { AppModel } from '@sheplang/language';
+import type { AppModel } from '@radix-obsidian/sheplang-language';
 import { templateTsConfig, templateModels, templateActions, templateViews, templateIndex } from './templates.js';
 
 export function transpile(app: AppModel): GenResult {
