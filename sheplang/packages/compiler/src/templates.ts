@@ -1,4 +1,4 @@
-import type { AppModel } from '@radix-obsidian/sheplang-language';
+import type { AppModel } from '@goldensheepai/sheplang-language';
 
 const typeMap: Record<string, string> = {
   'text': 'string',

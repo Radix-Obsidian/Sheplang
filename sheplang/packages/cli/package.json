@@ -1,6 +1,6 @@
 {
   "name": "@goldensheepai/sheplang",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "type": "module",
   "main": "dist/index.js",
@@ -35,9 +35,9 @@
     "stats": "node --enable-source-maps dist/commands/stats.js"
   },
   "dependencies": {
-    "@goldensheepai/sheplang-to-boba": "workspace:*",
-    "@goldensheepai/sheplang-language": "workspace:*",
-    "@goldensheepai/sheplang-compiler": "workspace:*",
+    "@goldensheepai/sheplang-to-boba": "^0.1.4",
+    "@goldensheepai/sheplang-language": "^0.1.4",
+    "@goldensheepai/sheplang-compiler": "^0.1.1",
     "chokidar": "^3.6.0",
     "express": "^4.19.2",
     "ws": "^8.18.0",

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve, basename } from "node:path";
-import { transpileShepToBoba } from "@radix-obsidian/sheplang-to-boba";
-import { generateApp } from "@sheplang/compiler"; // TODO: Update when compiler is in alpha
+import { transpileShepToBoba } from "@goldensheepai/sheplang-to-boba";
+import { generateApp } from "@goldensheepai/sheplang-compiler"; // TODO: Update when compiler is in alpha
 import { writeTextFileSync, mkdirSync } from "../util/fs.js";
 
 export async function cmdBuild(args: string[], flags: Record<string, any>) {

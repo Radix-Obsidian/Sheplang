@@ -1,6 +1,6 @@
 // Use the real parser from the language package (no mocks)
-import { parseShep } from "@radix-obsidian/sheplang-language";
-import type { Diagnostic, CompilationResult } from "@radix-obsidian/sheplang-language";
+import { parseShep } from "@goldensheepai/sheplang-language";
+import type { Diagnostic, CompilationResult } from "@goldensheepai/sheplang-language";
 
 /**
  * Result of transpiling ShepLang to BobaScript

@@ -1,4 +1,4 @@
-import { parseShep } from "@radix-obsidian/sheplang-language";
+import { parseShep } from "@goldensheepai/sheplang-language";
 import { readFileSync } from "node:fs";
 
 export async function cmdParse(args: string[]) {
