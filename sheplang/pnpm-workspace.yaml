@@ -1,9 +1,10 @@
 packages:
   - "packages/language"
   - "packages/cli"
-  - "packages/compiler"
   - "packages/runtime"
-  - "packages/transpiler"
   - "../adapters/*"
   - "examples"
   - "e2e"
+  # Not in alpha release:
+  # - "packages/compiler"
+  # - "packages/transpiler"
