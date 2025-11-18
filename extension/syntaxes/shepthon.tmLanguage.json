@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ShepThon",
+  "scopeName": "source.shepthon",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#types" },
+    { "include": "#operators" },
+    { "include": "#http-methods" },
+    { "include": "#database" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.shepthon",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.shepthon",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.shepthon",
+          "match": "\\b(if|else|for|in|return|let)\\b"
+        },
+        {
+          "name": "keyword.declaration.shepthon",
+          "match": "\\b(app|model|endpoint|job)\\b"
+        },
+        {
+          "name": "keyword.schedule.shepthon",
+          "match": "\\b(every|minutes|hours|days)\\b"
+        },
+        {
+          "name": "constant.language.shepthon",
+          "match": "\\b(true|false|null|now)\\b"
+        },
+        {
+          "name": "keyword.operator.shepthon",
+          "match": "\\b(and|or|not)\\b"
+        }
+      ]
+    },
+    "http-methods": {
+      "patterns": [
+        {
+          "name": "keyword.other.http-method.shepthon",
+          "match": "\\b(GET|POST|PUT|DELETE)\\b"
+        }
+      ]
+    },
+    "database": {
+      "patterns": [
+        {
+          "name": "variable.language.database.shepthon",
+          "match": "\\bdb\\b"
+        },
+        {
+          "name": "entity.name.function.database.shepthon",
+          "match": "\\.(find|findAll|create|update|delete)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.shepthon",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.shepthon",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.shepthon",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.shepthon",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.shepthon",
+          "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.shepthon",
+          "match": "\\b(string|number|bool|id|datetime)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.shepthon",
+          "match": "(=|\\+|\\-|\\*|/|<|>|<=|>=|==|!=|->|:)"
+        }
+      ]
+    }
+  }
+}
