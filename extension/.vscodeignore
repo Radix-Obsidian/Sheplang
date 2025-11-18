@@ -8,3 +8,10 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+../sheplang/**
+node_modules/@radix-obsidian/sheplang-language/src/**
+node_modules/@radix-obsidian/sheplang-language/test/**
+node_modules/@radix-obsidian/sheplang-language/node_modules/**
+node_modules/**/test/**
+node_modules/**/*.ts
+node_modules/**/*.map
