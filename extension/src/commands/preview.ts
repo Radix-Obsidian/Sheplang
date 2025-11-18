@@ -33,7 +33,7 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
 
   try {
     // Dynamic import for ESM package
-    const { parseShep } = await import('@radix-obsidian/sheplang-language');
+    const { parseShep } = await import('@goldensheepai/sheplang-language');
     
     // Parse ShepLang file
     console.log('[Preview] Parsing .shep file:', editor.document.uri.fsPath);

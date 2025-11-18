@@ -43,8 +43,9 @@ const bridgeService_1 = require("./bridgeService");
 // Import our direct CommonJS-compatible implementation
 const direct_parser_1 = require("./direct-parser");
 class RuntimeManager {
+    activeRuntimes = new Map();
+    statusBarItem;
     constructor(context) {
-        this.activeRuntimes = new Map();
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this.statusBarItem.command = 'sheplang.restartBackend';
         context.subscriptions.push(this.statusBarItem);

@@ -40,8 +40,9 @@ const vscode = __importStar(require("vscode"));
  * Provides clear, actionable feedback to developers
  */
 class OutputChannelManager {
+    channel;
+    isVisible = false;
     constructor() {
-        this.isVisible = false;
         this.channel = vscode.window.createOutputChannel('ShepLang', 'log');
     }
     /**

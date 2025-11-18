@@ -1,10 +1,13 @@
 {
-  "name": "@sheplang/compiler",
-  "version": "0.0.1",
+  "name": "@goldensheepai/sheplang-compiler",
+  "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b",
     "test": "vitest --run",
@@ -14,7 +17,7 @@
     "typescript": "^5.6.3"
   },
   "devDependencies": {
-    "@radix-obsidian/sheplang-language": "workspace:*",
+    "@goldensheepai/sheplang-language": "workspace:*",
     "@types/node": "^20.10.0",
     "vitest": "^1.6.0",
     "eslint": "^8.57.0",

@@ -1,5 +1,5 @@
 {
-  "name": "@radix-obsidian/sheplang-to-boba",
+  "name": "@goldensheepai/sheplang-to-boba",
   "version": "0.1.3",
   "private": false,
   "type": "module",
@@ -26,7 +26,7 @@
     "test": "vitest run --dir ."
   },
   "dependencies": {
-    "@radix-obsidian/sheplang-language": "workspace:*"
+    "@goldensheepai/sheplang-language": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",
