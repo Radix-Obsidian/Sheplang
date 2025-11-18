@@ -19,7 +19,7 @@
     "directory": "adapters/sheplang-to-boba"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",

@@ -19,7 +19,7 @@
     "directory": "sheplang/packages/language"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "scripts": {
     "generate": "langium generate",

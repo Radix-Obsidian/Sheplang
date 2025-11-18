@@ -46,7 +46,42 @@ jobs:
       run: node ./sheplang/packages/cli/dist/index.js --version
       working-directory: ./
 
-  publish:
+  publish-npm:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10
+    
+    - name: Setup Node.js for NPM
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build workspace
+      run: pnpm -w -r build
+    
+    - name: Publish to NPM (ordered dependencies)
+      run: |
+        # Publish in dependency order: language -> adapter -> cli
+        cd sheplang/packages/language && npm publish --access public
+        cd ../../../adapters/sheplang-to-boba && npm publish --access public
+        cd ../../sheplang/packages/cli && npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  
+  publish-github:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: test
     runs-on: ubuntu-latest
@@ -62,13 +97,12 @@ jobs:
       with:
         version: 10
     
-    - name: Setup Node.js
+    - name: Setup Node.js for GitHub Packages
       uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: 'pnpm'
         registry-url: 'https://npm.pkg.github.com'
-        scope: '@radix-obsidian'
     
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -76,17 +110,12 @@ jobs:
     - name: Build workspace
       run: pnpm -w -r build
     
-    - name: Configure GitHub Packages authentication
-      run: |
-        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-        echo "@radix-obsidian:registry=https://npm.pkg.github.com" >> ~/.npmrc
-    
-    - name: Publish packages to GitHub Packages (ordered dependencies)
+    - name: Publish to GitHub Packages (ordered dependencies)
       run: |
         # Publish in dependency order: language -> adapter -> cli
-        pnpm publish --no-git-checks --filter '@sheplang/language'
-        pnpm publish --no-git-checks --filter '@adapters/sheplang-to-boba'
-        pnpm publish --no-git-checks --filter 'sheplang'
+        cd sheplang/packages/language && npm publish
+        cd ../../../adapters/sheplang-to-boba && npm publish
+        cd ../../sheplang/packages/cli && npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
