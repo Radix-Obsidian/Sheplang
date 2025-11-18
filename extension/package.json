@@ -1,0 +1,143 @@
+{
+  "name": "sheplang-vscode",
+  "displayName": "ShepLang - AI-Native Verified Programming",
+  "description": "The first AI-native programming language with built-in verification. Write in English, ship verified code.",
+  "version": "1.0.0",
+  "publisher": "golden-sheep-ai",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "sheplang",
+    "ai",
+    "verification",
+    "full-stack",
+    "shepthon",
+    "verified",
+    "type-safe"
+  ],
+  "activationEvents": [
+    "onLanguage:sheplang",
+    "onLanguage:shepthon"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "sheplang",
+        "aliases": ["ShepLang", "sheplang"],
+        "extensions": [".shep"],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "shepthon",
+        "aliases": ["ShepThon", "shepthon"],
+        "extensions": [".shepthon"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sheplang",
+        "scopeName": "source.sheplang",
+        "path": "./syntaxes/sheplang.tmLanguage.json"
+      },
+      {
+        "language": "shepthon",
+        "scopeName": "source.shepthon",
+        "path": "./syntaxes/shepthon.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "sheplang.showPreview",
+        "title": "ShepLang: Show Preview",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "sheplang.newProject",
+        "title": "ShepLang: New Project"
+      },
+      {
+        "command": "sheplang.restartBackend",
+        "title": "ShepLang: Restart Backend"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceLangId == sheplang",
+          "command": "sheplang.showPreview",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ShepLang",
+      "properties": {
+        "sheplang.autoPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open preview when opening .shep files"
+        },
+        "sheplang.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "sheplang",
+        "path": "./snippets/sheplang.json"
+      },
+      {
+        "language": "shepthon",
+        "path": "./snippets/shepthon.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "vscode-uri": "^3.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.22.0",
+    "typescript": "^5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript.git",
+    "directory": "extension"
+  },
+  "bugs": {
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript/issues"
+  },
+  "homepage": "https://github.com/Radix-Obsidian/Sheplang-BobaScript#readme",
+  "license": "MIT",
+  "qna": "marketplace",
+  "galleryBanner": {
+    "color": "#4B5563",
+    "theme": "dark"
+  }
+}
