@@ -1,3 +1,4 @@
+import { describe, test, expect } from 'vitest';
 import { transpileShepToBoba } from '../src';
 import fs from 'fs';
 import path from 'path';
