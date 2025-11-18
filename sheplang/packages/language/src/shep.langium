@@ -32,13 +32,19 @@ ActionDecl:
   '}';
 
 ParamDecl: name=ID (':' type=TypeRef)?;
-Stmt: AddStmt | ShowStmt | RawStmt;
+Stmt: AddStmt | ShowStmt | CallStmt | LoadStmt | RawStmt;
 
 AddStmt:
   'add' ref=[DataDecl] 'with' fields+=FieldValue (',' fields+=FieldValue)*;
 
 ShowStmt:
   'show' view=[ViewDecl];
+
+CallStmt:
+  'call' method=('GET'|'POST'|'PUT'|'PATCH'|'DELETE') path=STRING ('with' fields+=ID (',' fields+=ID)*)?;
+
+LoadStmt:
+  'load' method=('GET'|'POST'|'PUT'|'PATCH'|'DELETE') path=STRING 'into' variable=ID;
 
 FieldValue: name=ID ('=' value=Expr)?;
 

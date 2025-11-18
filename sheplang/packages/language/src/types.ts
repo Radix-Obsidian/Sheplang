@@ -8,6 +8,8 @@ export type AppModel = {
     ops: (
       | { kind: 'add'; data: string; fields: Record<string, string> }
       | { kind: 'show'; view: string }
+      | { kind: 'call'; method: string; path: string; fields: string[] }
+      | { kind: 'load'; method: string; path: string; variable: string }
       | { kind: 'raw'; text: string }
     )[];
   }[];

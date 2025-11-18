@@ -1,0 +1,43 @@
+app TaskManager
+
+data Task:
+  fields:
+    title: text
+    completed: yes/no
+    priority: text
+  rules:
+    - "title required"
+    - "priority must be low, medium, or high"
+
+view Dashboard:
+  list Task
+  button "New Task" -> CreateTask
+  button "Refresh" -> LoadTasks
+
+view TaskDetails:
+  list Task
+  button "Mark Complete" -> CompleteTask
+  button "Delete" -> DeleteTask
+
+action CreateTask(title, priority):
+  call POST "/tasks" with title, priority
+  load GET "/tasks" into tasks
+  show Dashboard
+
+action LoadTasks():
+  load GET "/tasks" into tasks
+  show Dashboard
+
+action CompleteTask(taskId):
+  call PUT "/tasks/:id" with taskId
+  load GET "/tasks" into tasks
+  show Dashboard
+
+action DeleteTask(taskId):
+  call DELETE "/tasks/:id"
+  load GET "/tasks" into tasks
+  show Dashboard
+
+action ViewTask(taskId):
+  load GET "/tasks/:id" into task
+  show TaskDetails

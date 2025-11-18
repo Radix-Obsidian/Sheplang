@@ -1,6 +1,6 @@
 import type { LangiumSharedCoreServices, LangiumCoreServices, Module } from 'langium';
 import { createDefaultCoreModule, createDefaultSharedCoreModule, inject } from 'langium';
-import { ShepGeneratedModule, shepGeneratedSharedModule } from '../generated/module.js';
+import { ShepGeneratedModule, shepGeneratedSharedModule } from './generated/module.js';
 
 export type ShepAddedServices = {
   // Add custom services here if needed in future phases

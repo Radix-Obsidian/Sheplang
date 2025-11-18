@@ -10,7 +10,7 @@ import type {
   BooleanLiteral,
   StringLiteral,
   IdentifierRef
-} from '../generated/ast.js';
+} from './generated/ast.js';
 
 export function mapToAppModel(ast: ShepFile): AppModel {
   const app = ast.app;
@@ -81,7 +81,7 @@ function mapActionDecl(decl: ActionDecl): AppModel['actions'][0] {
 }
 
 function mapStmt(
-  stmt: AddStmt | ShowStmt | RawStmt,
+  stmt: any,
   actionName: string
 ): AppModel['actions'][0]['ops'][0] {
   if (stmt.$type === 'AddStmt') {
@@ -101,6 +101,20 @@ function mapStmt(
       throw new Error(`Unresolved view reference in action "${actionName}"`);
     }
     return { kind: 'show', view: ref.name };
+  } else if (stmt.$type === 'CallStmt') {
+    return {
+      kind: 'call',
+      method: stmt.method,
+      path: stmt.path,
+      fields: stmt.fields?.map((f: any) => f) || []
+    };
+  } else if (stmt.$type === 'LoadStmt') {
+    return {
+      kind: 'load',
+      method: stmt.method,
+      path: stmt.path,
+      variable: stmt.variable
+    };
   } else {
     return { kind: 'raw', text: stmt.text };
   }
