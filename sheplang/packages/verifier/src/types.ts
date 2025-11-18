@@ -14,14 +14,21 @@
  * - Array types: [User]
  */
 export type Type = 
+  // Primitive types
   | { kind: 'text' }
   | { kind: 'number' }
   | { kind: 'yes/no' }
   | { kind: 'datetime' }
   | { kind: 'id' }
+  // Model types
   | { kind: 'model'; name: string }
+  // Collection types
   | { kind: 'array'; elementType: Type }
+  // Nullable types
   | { kind: 'nullable'; baseType: Type }
+  // Null type (for definitely null values)
+  | { kind: 'null' }
+  // Unknown type (for unresolved references)
   | { kind: 'unknown' };  // For error recovery
 
 /**

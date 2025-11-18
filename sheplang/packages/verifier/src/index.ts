@@ -7,6 +7,7 @@
 import type { AppModel } from '@sheplang/language';
 import type { Diagnostic, VerificationResult } from './types.js';
 import { checkTypeSafety } from './passes/typeSafety.js';
+import { checkNullSafety } from './passes/nullSafety.js';
 
 // Export types
 export type { Type, Diagnostic, VerificationResult, TypeEnvironment } from './types.js';
@@ -24,12 +25,25 @@ export {
   inferListReturnType 
 } from './solvers/typeInference.js';
 
+// Export control flow
+export { 
+  createFlowEnvironment,
+  cloneEnvironment,
+  refineTypes,
+  isNonNull,
+  markAsChecked,
+  type FlowEnvironment
+} from './solvers/controlFlow.js';
+
 // Export passes
 export { checkTypeSafety } from './passes/typeSafety.js';
+export { checkNullSafety } from './passes/nullSafety.js';
 
 /**
  * Main verification function.
- * Currently runs Pass 1 (Type Safety).
+ * Runs multiple verification passes:
+ * - Pass 1: Type Safety (40% of bugs)
+ * - Pass 2: Null Safety (30% of bugs)
  * 
  * @param appModel - Parsed ShepLang application model
  * @returns Verification result with diagnostics
@@ -43,7 +57,7 @@ export { checkTypeSafety } from './passes/typeSafety.js';
  * const result = verify(appModel);
  * 
  * if (!result.passed) {
- *   console.error('Type errors found:', result.errors);
+ *   console.error('Verification errors:', result.errors);
  * }
  * ```
  */
@@ -60,14 +74,22 @@ export function verify(appModel: AppModel): VerificationResult {
     else info.push(d);
   }
   
+  // Pass 2: Null Safety
+  const nullDiagnostics = checkNullSafety(appModel);
+  for (const d of nullDiagnostics) {
+    if (d.severity === 'error') errors.push(d);
+    else if (d.severity === 'warning') warnings.push(d);
+    else info.push(d);
+  }
+  
   // Calculate summary
-  const totalChecks = 1;  // Only 1 pass for now
+  const totalChecks = 2;  // Type Safety + Null Safety
   const errorCount = errors.length;
   const warningCount = warnings.length;
   const passed = errorCount === 0;
   
   // Confidence score: 100 if no errors, scaled down by warnings
-  const confidenceScore = passed ? Math.max(90, 100 - warningCount * 5) : 0;
+  const confidenceScore = passed ? Math.max(85, 100 - warningCount * 3) : 0;
   
   return {
     passed,

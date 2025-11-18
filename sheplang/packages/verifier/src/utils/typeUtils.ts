@@ -19,13 +19,14 @@ export function isCompatible(expected: Type, actual: Type): boolean {
     return true;
   }
   
-  // Nullable can accept base type
+  // Nullable can accept base type or null
   if (expected.kind === 'nullable') {
+    if (actual.kind === 'null') return true;
     return isCompatible(expected.baseType, actual);
   }
   
-  // Base type cannot accept nullable (must check explicitly)
-  if (actual.kind === 'nullable') {
+  // Base type cannot accept nullable or null (must check explicitly)
+  if (actual.kind === 'nullable' || actual.kind === 'null') {
     return false;
   }
   
@@ -48,7 +49,7 @@ export function isCompatible(expected: Type, actual: Type): boolean {
  * isNullable({ kind: 'model', name: 'User' }) // false
  */
 export function isNullable(type: Type): boolean {
-  return type.kind === 'nullable';
+  return type.kind === 'nullable' || type.kind === 'null';
 }
 
 /**
@@ -64,6 +65,10 @@ export function isNullable(type: Type): boolean {
 export function removeNull(type: Type): Type {
   if (type.kind === 'nullable') {
     return type.baseType;
+  }
+  // null type becomes unknown when removing null
+  if (type.kind === 'null') {
+    return { kind: 'unknown' };
   }
   return type;
 }
@@ -107,6 +112,7 @@ export function formatType(type: Type): string {
     case 'model': return type.name;
     case 'array': return `[${formatType(type.elementType)}]`;
     case 'nullable': return `${formatType(type.baseType)} | null`;
+    case 'null': return 'null';
     case 'unknown': return 'unknown';
   }
 }
