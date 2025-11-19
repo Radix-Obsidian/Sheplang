@@ -11,6 +11,7 @@ import { newProjectCommand } from './commands/newProject';
 import { restartBackendCommand } from './commands/restartBackend';
 import { showOutputCommand } from './commands/showOutput';
 import { createBackendFileCommand } from './commands/createBackendFile';
+import { importFromFigma, showFigmaSetupInstructions } from './commands/importFromFigma';
 import { RuntimeManager } from './services/runtimeManager';
 import { outputChannel } from './services/outputChannel';
 
@@ -57,7 +58,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('sheplang.newProject', () => newProjectCommand(context)),
     vscode.commands.registerCommand('sheplang.restartBackend', () => restartBackendCommand(context)),
     vscode.commands.registerCommand('sheplang.showOutput', () => showOutputCommand()),
-    vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand())
+    vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
+    vscode.commands.registerCommand('sheplang.importFromFigma', () => importFromFigma()),
+    vscode.commands.registerCommand('sheplang.figmaSetup', () => showFigmaSetupInstructions())
   );
   outputChannel.success('All commands registered');
 

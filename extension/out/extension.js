@@ -43,6 +43,7 @@ const newProject_1 = require("./commands/newProject");
 const restartBackend_1 = require("./commands/restartBackend");
 const showOutput_1 = require("./commands/showOutput");
 const createBackendFile_1 = require("./commands/createBackendFile");
+const importFromFigma_1 = require("./commands/importFromFigma");
 const runtimeManager_1 = require("./services/runtimeManager");
 const outputChannel_1 = require("./services/outputChannel");
 let client;
@@ -74,7 +75,7 @@ function activate(context) {
     outputChannel_1.outputChannel.info('Registering commands...');
     context.subscriptions.push(vscode.commands.registerCommand('sheplang.showPreview', async () => {
         await (0, preview_1.showPreviewCommand)(context, runtimeManager);
-    }), vscode.commands.registerCommand('sheplang.newProject', () => (0, newProject_1.newProjectCommand)(context)), vscode.commands.registerCommand('sheplang.restartBackend', () => (0, restartBackend_1.restartBackendCommand)(context)), vscode.commands.registerCommand('sheplang.showOutput', () => (0, showOutput_1.showOutputCommand)()), vscode.commands.registerCommand('sheplang.createBackendFile', () => (0, createBackendFile_1.createBackendFileCommand)()));
+    }), vscode.commands.registerCommand('sheplang.newProject', () => (0, newProject_1.newProjectCommand)(context)), vscode.commands.registerCommand('sheplang.restartBackend', () => (0, restartBackend_1.restartBackendCommand)(context)), vscode.commands.registerCommand('sheplang.showOutput', () => (0, showOutput_1.showOutputCommand)()), vscode.commands.registerCommand('sheplang.createBackendFile', () => (0, createBackendFile_1.createBackendFileCommand)()), vscode.commands.registerCommand('sheplang.importFromFigma', () => (0, importFromFigma_1.importFromFigma)()), vscode.commands.registerCommand('sheplang.figmaSetup', () => (0, importFromFigma_1.showFigmaSetupInstructions)()));
     outputChannel_1.outputChannel.success('All commands registered');
     // Start Language Server
     startLanguageServer(context);

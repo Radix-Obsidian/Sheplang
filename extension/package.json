@@ -67,6 +67,15 @@
       {
         "command": "sheplang.restartBackend",
         "title": "ShepLang: Restart Backend"
+      },
+      {
+        "command": "sheplang.importFromFigma",
+        "title": "ShepLang: Import from Figma",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "sheplang.figmaSetup",
+        "title": "ShepLang: Setup Figma Access Token"
       }
     ],
     "menus": {
@@ -92,6 +101,12 @@
           "enum": ["off", "messages", "verbose"],
           "default": "off",
           "description": "Traces the communication between VS Code and the language server."
+        },
+        "sheplang.figmaAccessToken": {
+          "type": "string",
+          "default": "",
+          "description": "Figma Personal Access Token for importing designs. Get one at figma.com/settings → Security → Generate new token",
+          "scope": "application"
         }
       }
     },
