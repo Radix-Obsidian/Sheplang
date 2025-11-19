@@ -2,7 +2,8 @@
 
 [![Build Status](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions/workflows/verify.yml/badge.svg)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions)
 [![Tests](https://img.shields.io/badge/tests-128%2F128%20passing-brightgreen)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions)
-[![Version](https://img.shields.io/badge/version-v1.0.0--alpha-blue)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/releases)
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/releases)
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-blue)](https://marketplace.visualstudio.com/items?itemName=GoldenSheepAI.sheplang-vscode)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
@@ -43,7 +44,7 @@ app DogReminders {
 
 ---
 
-## 🚀 Alpha Status (100% Complete)
+## 🚀 Release Status (100% Complete)
 
 | Component | Status | Tests | Coverage |
 |-----------|--------|-------|----------|
