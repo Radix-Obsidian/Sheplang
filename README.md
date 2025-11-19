@@ -1,6 +1,6 @@
 # 🐑 ShepLang - The First AI-Native Verified Programming Language
 
-[![Build Status](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions/workflows/verify.yml/badge.svg)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions)
+[![Project Status: Active](https://img.shields.io/badge/Project-Active-brightgreen.svg)](https://github.com/Radix-Obsidian/Sheplang-BobaScript)
 [![Tests](https://img.shields.io/badge/tests-128%2F128%20passing-brightgreen)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/actions)
 [![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/Radix-Obsidian/Sheplang-BobaScript/releases)
 [![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-blue)](https://marketplace.visualstudio.com/items?itemName=GoldenSheepAI.sheplang-vscode)
