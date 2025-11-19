@@ -15,6 +15,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2025-11-18
+
+### 🎉 VS Code Marketplace Launch
+
+#### Added
+- ✅ **VS Code Extension published to Marketplace**
+  - Extension ID: `GoldenSheepAI.sheplang-vscode`
+  - Marketplace URL: https://marketplace.visualstudio.com/items?itemName=GoldenSheepAI.sheplang-vscode
+  - One-click installation from VS Code
+- ✅ Comprehensive marketplace README with screenshots
+- ✅ 30+ code snippets for rapid development
+- ✅ Full language server integration
+
+#### Changed
+- Updated publisher from `golden-sheep-ai` to `GoldenSheepAI`
+- Standardized all package scopes to `@goldensheepai`
+- Updated all import paths to use new scoped packages
+
+#### Fixed
+- Resolved TypeScript compilation errors in extension
+- Fixed package.json references for marketplace compatibility
+
+---
+
 ## [1.0.0-alpha] - 2025-11-17
 
 ### 🎉 Alpha Release - Production Ready
