@@ -54,7 +54,7 @@ async function showPreviewCommand(context, runtimeManager) {
     outputChannel_1.outputChannel.info('Active file:', editor.document.fileName);
     try {
         // Dynamic import for ESM package
-        const { parseShep } = await import('@radix-obsidian/sheplang-language');
+        const { parseShep } = await import('@goldensheepai/sheplang-language');
         // Parse ShepLang file
         console.log('[Preview] Parsing .shep file:', editor.document.uri.fsPath);
         const source = editor.document.getText();

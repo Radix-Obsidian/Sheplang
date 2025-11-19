@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseAndMap } from '@radix-obsidian/sheplang-language';
+import { parseAndMap } from '@goldensheepai/sheplang-language';
 import { transpile } from '../src/transpiler';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

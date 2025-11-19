@@ -7,7 +7,7 @@ async function validateDocument(document) {
     const text = document.getText();
     try {
         if (document.languageId === 'sheplang') {
-            const { parseShep } = await import('@radix-obsidian/sheplang-language');
+            const { parseShep } = await import('@goldensheepai/sheplang-language');
             return validateShepLang(document, text, parseShep);
         }
         else if (document.languageId === 'shepthon') {
