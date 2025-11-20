@@ -22,10 +22,7 @@
     "verified",
     "type-safe"
   ],
-  "activationEvents": [
-    "onLanguage:sheplang",
-    "onLanguage:shepthon"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
@@ -69,13 +66,14 @@
         "title": "ShepLang: Restart Backend"
       },
       {
-        "command": "sheplang.importFromFigma",
-        "title": "ShepLang: Import from Figma",
+        "command": "sheplang.importFromNextJS",
+        "title": "ShepLang: Import from Next.js/React Project",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "sheplang.figmaSetup",
-        "title": "ShepLang: Setup Figma Access Token"
+        "command": "sheplang.importFromWebflow",
+        "title": "ShepLang: Import from Webflow Export",
+        "icon": "$(cloud-download)"
       }
     ],
     "menus": {

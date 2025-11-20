@@ -14,19 +14,30 @@ exports.convertFigmaToSpec = convertFigmaToSpec;
  * Convert Figma file data to FigmaShepSpec
  *
  * @param figmaData - Figma REST API response
+ * @param selectedFrameIds - Optional array of frame IDs to filter to (from user selection)
  * @returns FigmaShepSpec ready for .shep generation
  */
-function convertFigmaToSpec(figmaData) {
+function convertFigmaToSpec(figmaData, selectedFrameIds) {
     // Find all FRAME nodes (these represent screens)
     const allFrames = findFrameNodes(figmaData.document);
     if (allFrames.length === 0) {
         throw new Error('No frames found in Figma file. Please select frames that represent screens.');
     }
-    // Filter to top-level frames only (ignore nested frames/components)
-    const topLevelFrames = filterTopLevelFrames(allFrames);
+    // If user selected specific frames, use only those
+    let framesToUse = allFrames;
+    if (selectedFrameIds && selectedFrameIds.length > 0) {
+        framesToUse = allFrames.filter(frame => selectedFrameIds.includes(frame.id));
+    }
+    else {
+        // Otherwise, filter to top-level frames only (ignore nested frames/components)
+        framesToUse = filterTopLevelFrames(allFrames);
+    }
+    if (framesToUse.length === 0) {
+        throw new Error('No valid frames found. Please select frames that represent screens.');
+    }
     // Extract entities and screens
-    const entities = extractEntities(topLevelFrames);
-    const screens = extractScreens(topLevelFrames);
+    const entities = extractEntities(framesToUse);
+    const screens = extractScreens(framesToUse);
     // Clean up app name
     const appName = cleanAppName(figmaData.name);
     return {
@@ -153,45 +164,35 @@ function extractEntities(frames) {
             }))
         });
     }
-    // Ensure at least one entity
-    if (entities.length === 0) {
-        entities.push({
-            name: 'Task',
-            fields: [
-                { name: 'title', type: 'text', required: true },
-                { name: 'completed', type: 'yes/no', required: false }
-            ]
-        });
-    }
+    // NOTE: If no entities are found, return empty array.
+    // The wizard will ask the user to define entities.
+    // This is more honest than forcing a generic "Task" entity.
     return entities;
 }
 /**
  * Consolidate similar entity names to a base entity
- * e.g., Simple, WithTags, SubTasks, TaskEmpty → Task
+ *
+ * IMPORTANT: This is now CONSERVATIVE and structural-only.
+ * We do NOT aggressively collapse everything to Task/User/Post.
+ * Instead, we only consolidate obvious duplicates (e.g., TaskList, TaskDetail → Task).
+ *
+ * The wizard will handle semantic refinement (renaming, field definition).
+ * This function only handles structural deduplication.
  */
 function consolidateEntityName(name) {
     const lowerName = name.toLowerCase();
-    // Common entity consolidation patterns (aggressive)
-    if (lowerName.includes('task') || lowerName.includes('todo') || lowerName.includes('item') ||
-        lowerName.includes('simple') || lowerName.includes('tags') || lowerName.includes('subtask') ||
-        lowerName.includes('checked') || lowerName.includes('empty') || lowerName.includes('active') ||
-        lowerName.includes('swipe') || lowerName.includes('delete')) {
-        return 'Task';
+    // CONSERVATIVE: Only consolidate obvious variants of the same entity
+    // e.g., "TaskList" and "TaskDetail" both refer to "Task"
+    // Strip common screen suffixes to get base entity name
+    const baseEntity = name
+        .replace(/List|Detail|Create|Edit|Add|New|Form|Screen|View|Page|Modal|Dialog/gi, '')
+        .trim();
+    // If we stripped something and got a meaningful name, use it
+    if (baseEntity && baseEntity !== name) {
+        return sanitizeName(baseEntity);
     }
-    if (lowerName.includes('user') || lowerName.includes('profile') || lowerName.includes('account')) {
-        return 'User';
-    }
-    if (lowerName.includes('post') || lowerName.includes('article') || lowerName.includes('blog')) {
-        return 'Post';
-    }
-    if (lowerName.includes('comment') || lowerName.includes('reply') || lowerName.includes('feedback')) {
-        return 'Comment';
-    }
-    if (lowerName.includes('home') || lowerName.includes('dashboard')) {
-        return 'Task'; // Home/dashboard usually shows tasks
-    }
-    // If no consolidation pattern matches, return cleaned name
-    return name;
+    // Otherwise, return the original name as-is (don't force to Task/User/Post)
+    return sanitizeName(name);
 }
 /**
  * Extract meaningful field names (not UI text like dates, times, or button labels)
@@ -249,10 +250,10 @@ function extractScreens(frames) {
         }
         seenNames.add(screenName);
         const widgets = extractWidgets(frame);
-        // Skip screens with no meaningful widgets
-        if (widgets.length === 0) {
-            continue;
-        }
+        // NOTE: We no longer skip screens with no widgets.
+        // Even if we can't detect widgets, generate a placeholder view
+        // so users can see the frame structure and add widgets manually.
+        // The wizard will help them define the semantics.
         // Infer screen type from name and content
         let screenType = 'detail';
         let entityName;
@@ -295,14 +296,23 @@ function extractWidgets(frame) {
     const seenWidgets = new Set();
     function traverse(node) {
         const lowerName = node.name.toLowerCase();
-        // Detect buttons (only if explicitly named, not generic rectangles)
+        // Detect buttons
+        // Strategy: Look for nodes with "button/btn/cta" in name, OR
+        // INSTANCE/COMPONENT nodes with text content (likely UI kit components)
         if (node.type === 'FRAME' ||
             node.type === 'INSTANCE' ||
             node.type === 'COMPONENT') {
-            if (lowerName.includes('button') || lowerName.includes('btn') || lowerName.includes('cta')) {
+            const hasButtonKeyword = lowerName.includes('button') ||
+                lowerName.includes('btn') ||
+                lowerName.includes('cta');
+            const isLikelyButton = (node.type === 'INSTANCE' || node.type === 'COMPONENT') &&
+                !lowerName.includes('icon') &&
+                !lowerName.includes('image') &&
+                !lowerName.includes('avatar');
+            if (hasButtonKeyword || isLikelyButton) {
                 const buttonText = getTextFromNode(node);
                 // Skip if no meaningful text found
-                if (!buttonText || buttonText.toLowerCase().startsWith('rectangle')) {
+                if (!buttonText || buttonText.toLowerCase().startsWith('rectangle') || buttonText.length < 2) {
                     return;
                 }
                 const label = buttonText;

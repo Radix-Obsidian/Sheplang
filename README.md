@@ -149,7 +149,23 @@ POST /todos -> db.add("todos", body)
 - Unambiguous grammar (no weird edge cases)
 - Verified output (AI can't generate broken code)
 
-### 5. **Real-Time Preview**
+### 5. **Import from No-Code Tools** 🆕
+
+**ShepLang is the graduation layer for your no-code prototypes:**
+
+Turn your no-code/low-code projects into owned, maintainable code:
+
+- ✅ **Figma Make** - Export React code, import to ShepLang
+- ✅ **Lovable** - Convert Lovable projects to ShepLang
+- ✅ **v0.dev** - Import Vercel AI projects
+- ✅ **Bolt.new** - Import StackBlitz projects
+- ✅ **Builder.io** - Import Builder React exports
+- ✅ **Framer** - Import Framer React code
+- 🔨 **Webflow** - Convert Webflow HTML exports (coming soon)
+
+**Value:** Own your code, extend beyond platform limits, hire devs to customize, no lock-in.
+
+### 6. **Real-Time Preview**
 
 See your app as you build it:
 - Live reload on every keystroke

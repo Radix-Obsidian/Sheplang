@@ -36,6 +36,12 @@
 
 **Q1 2026 - Target: March 2026**
 
+### Import from No-Code Tools 🆕
+- [ ] Next.js/React importer (Tier 1: Figma Make, Lovable, v0.dev, Bolt.new, Builder.io, Framer)
+- [ ] Webflow HTML→React converter (Tier 2)
+- [ ] Semantic wizard for all importers
+- [ ] Partnership outreach (Figma, Webflow)
+
 ### VSCode Extension Polish
 - [ ] Marketplace publication
 - [ ] Auto-completion improvements

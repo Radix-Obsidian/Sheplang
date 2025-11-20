@@ -41,7 +41,7 @@ class FigmaAPIClient {
      * @param fileId - The Figma file ID (from URL: figma.com/file/{fileId}/...)
      * @returns Complete file data including document tree
      */
-    async getFile(fileId) {
+    async getFile(fileId, options) {
         const url = `${this.baseUrl}/files/${fileId}`;
         const maxRetries = 3;
         let attempts = 0;
@@ -65,13 +65,16 @@ class FigmaAPIClient {
                 // Get additional rate limit info from headers
                 const planTier = response.headers.get('x-figma-plan-tier');
                 const rateLimitType = response.headers.get('x-figma-rate-limit-type');
+                const retryMessage = `Figma rate limit hit (plan: ${planTier ?? 'unknown'}, type: ${rateLimitType ?? 'unknown'}). ` +
+                    `Waiting ${retryAfter}s before retry ${attempts}/${maxRetries}...`;
+                options?.onStatus?.(retryMessage);
                 if (attempts >= maxRetries) {
                     throw new Error(`Figma rate limit exceeded after ${maxRetries} attempts. ` +
-                        `Plan: ${planTier}, Type: ${rateLimitType}. ` +
+                        `Plan: ${planTier ?? 'unknown'}, Type: ${rateLimitType ?? 'unknown'}. ` +
                         `Please wait ${retryAfter} seconds before trying again.`);
                 }
                 // Wait for the official retry period
-                console.log(`[Figma API] Rate limited. Waiting ${retryAfter}s before retry ${attempts}/${maxRetries}...`);
+                console.log(`Figma API 429: ${retryMessage}`);
                 await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
                 continue;
             }
