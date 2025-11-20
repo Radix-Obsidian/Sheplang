@@ -44,8 +44,8 @@ const restartBackend_1 = require("./commands/restartBackend");
 const showOutput_1 = require("./commands/showOutput");
 const createBackendFile_1 = require("./commands/createBackendFile");
 // import { manageFigmaToken } from './commands/manageFigmaToken';
-// TODO: Add Next.js/React importer
-// import { importFromNextJS } from './commands/importFromNextJS';
+// Next.js/React importer
+const importFromNextJS_1 = require("./commands/importFromNextJS");
 // TODO: Add Webflow importer
 // import { importFromWebflow } from './commands/importFromWebflow';
 const runtimeManager_1 = require("./services/runtimeManager");
@@ -79,7 +79,10 @@ function activate(context) {
     outputChannel_1.outputChannel.info('Registering commands...');
     context.subscriptions.push(vscode.commands.registerCommand('sheplang.showPreview', async () => {
         await (0, preview_1.showPreviewCommand)(context, runtimeManager);
-    }), vscode.commands.registerCommand('sheplang.newProject', () => (0, newProject_1.newProjectCommand)(context)), vscode.commands.registerCommand('sheplang.restartBackend', () => (0, restartBackend_1.restartBackendCommand)(context)), vscode.commands.registerCommand('sheplang.showOutput', () => (0, showOutput_1.showOutputCommand)()), vscode.commands.registerCommand('sheplang.createBackendFile', () => (0, createBackendFile_1.createBackendFileCommand)()));
+    }), vscode.commands.registerCommand('sheplang.newProject', () => (0, newProject_1.newProjectCommand)(context)), vscode.commands.registerCommand('sheplang.restartBackend', () => (0, restartBackend_1.restartBackendCommand)(context)), vscode.commands.registerCommand('sheplang.showOutput', () => (0, showOutput_1.showOutputCommand)()), vscode.commands.registerCommand('sheplang.createBackendFile', () => (0, createBackendFile_1.createBackendFileCommand)()), vscode.commands.registerCommand('sheplang.importFromNextJS', () => (0, importFromNextJS_1.importFromNextJS)())
+    // TODO: Uncomment when Webflow importer is ready
+    // vscode.commands.registerCommand('sheplang.importFromWebflow', () => importFromWebflow())
+    );
     outputChannel_1.outputChannel.success('All commands registered');
     // Start Language Server
     startLanguageServer(context);

@@ -13,8 +13,8 @@ import { showOutputCommand } from './commands/showOutput';
 import { createBackendFileCommand } from './commands/createBackendFile';
 // import { manageFigmaToken } from './commands/manageFigmaToken';
 
-// TODO: Add Next.js/React importer
-// import { importFromNextJS } from './commands/importFromNextJS';
+// Next.js/React importer
+import { importFromNextJS } from './commands/importFromNextJS';
 
 // TODO: Add Webflow importer
 // import { importFromWebflow } from './commands/importFromWebflow';
@@ -65,14 +65,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('sheplang.restartBackend', () => restartBackendCommand(context)),
     vscode.commands.registerCommand('sheplang.showOutput', () => showOutputCommand()),
     vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
-    // TODO: Uncomment when Next.js importer is ready
-    // vscode.commands.registerCommand('sheplang.importFromNextJS', () => importFromNextJS()),
+    vscode.commands.registerCommand('sheplang.importFromNextJS', () => importFromNextJS())
     
     // TODO: Uncomment when Webflow importer is ready
     // vscode.commands.registerCommand('sheplang.importFromWebflow', () => importFromWebflow())
-    
-    // Figma token management still available for future use
-    // vscode.commands.registerCommand('sheplang.manageFigmaToken', () => manageFigmaToken())
   );
   outputChannel.success('All commands registered');
 
