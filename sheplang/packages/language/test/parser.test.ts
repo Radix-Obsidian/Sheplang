@@ -18,4 +18,26 @@ describe('parser → AppModel', () => {
     const expected = JSON.parse(readFileSync(resolve(__dirname, 'fixtures/appmodel.todo.json'), 'utf8'));
     expect(res.appModel).toEqual(expected);
   });
+
+  it('parses a simple flow declaration', async () => {
+    const src = `app TestApp
+
+flow CreateUser:
+  from: UserForm
+  trigger: "User clicks Create"
+  steps:
+    - "Validate input"
+    - "Create user record"`;
+
+    const res = await parseAndMap(src, 'file://flow.shep');
+    expect(res.diagnostics.length).toBe(0);
+    expect(res.appModel.flows).toBeDefined();
+    expect(res.appModel.flows).toHaveLength(1);
+    const flow = res.appModel.flows![0];
+    expect(flow.name).toBe('CreateUser');
+    expect(flow.from).toBe('UserForm');
+    expect(flow.trigger).toBe('User clicks Create');
+    expect(flow.steps).toHaveLength(2);
+    expect(flow.steps[0].description).toBe('Validate input');
+  });
 });

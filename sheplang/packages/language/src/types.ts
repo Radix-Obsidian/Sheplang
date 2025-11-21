@@ -24,11 +24,17 @@ export type Statement =
 
 export type AppModel = {
   name: string;
-  datas: { name: string; fields: { name: string; type: string }[]; rules: string[] }[];
+  datas: { name: string; fields: { name: string; type: string; constraints: any[] }[]; rules: string[] }[];
   views: { name: string; list?: string; buttons: { label: string; action: string }[] }[];
   actions: {
     name: string;
     params: { name: string; type?: string }[];
     ops: Statement[];
+  }[];
+  flows?: {
+    name: string;
+    from: string;
+    trigger: string;
+    steps: { description: string }[];
   }[];
 };

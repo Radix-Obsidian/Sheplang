@@ -13,6 +13,21 @@ describe('transpileShepToBoba', () => {
     expect(result.output).toBeTruthy();
     expect(result.diagnostics).toEqual([]);
     expect(result.canonicalAst).toBeDefined();
+
+    // Basic canonical AST sanity checks for the Todo example
+    const ast = result.canonicalAst as any;
+    expect(ast.type).toBe('App');
+    expect(ast.name).toBeDefined();
+    expect(Array.isArray(ast.body)).toBe(true);
+
+    const components = ast.body.filter((n: any) => n.type === 'ComponentDecl');
+    const states = ast.body.filter((n: any) => n.type === 'StateDecl');
+    const routes = ast.body.filter((n: any) => n.type === 'RouteDecl');
+
+    // From todo.shep we expect one Dashboard view, one Todo data, and one CreateTodo action
+    expect(components.some((c: any) => c.name === 'Dashboard')).toBe(true);
+    expect(states.some((s: any) => s.name === 'Todo')).toBe(true);
+    expect(routes.some((r: any) => r.path === '/CreateTodo' && r.target === 'CreateTodo')).toBe(true);
   });
   
   // Negative cases

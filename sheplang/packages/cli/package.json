@@ -35,9 +35,9 @@
     "stats": "node --enable-source-maps dist/commands/stats.js"
   },
   "dependencies": {
-    "@goldensheepai/sheplang-to-boba": "^0.1.4",
-    "@goldensheepai/sheplang-language": "^0.1.4",
-    "@goldensheepai/sheplang-compiler": "^0.1.1",
+    "@goldensheepai/sheplang-to-boba": "workspace:*",
+    "@goldensheepai/sheplang-language": "workspace:*",
+    "@goldensheepai/sheplang-compiler": "workspace:*",
     "chokidar": "^3.6.0",
     "express": "^4.19.2",
     "ws": "^8.18.0",

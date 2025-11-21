@@ -126,10 +126,10 @@ export async function streamlinedImport(context: vscode.ExtensionContext): Promi
             return;
           }
 
-          // File generation with visual feedback
-          progress.report({ message: '📝 Generating ShepLang files...', increment: 20 });
+          // File generation with AI agent (NOT just TODOs or CRUD!)
+          progress.report({ message: '🤖 Generating production-ready code with AI...', increment: 20 });
           
-          const project = await generateFromPlan(appModel, architecturePlan, outputFolder);
+          const project = await generateFromPlan(appModel, architecturePlan, outputFolder, context);
           
           outputChannel.success(`✓ Created ${project.files.length} files in ${architecturePlan.structure} structure`);
           
@@ -630,8 +630,28 @@ async function selectOutputFolder(): Promise<string | undefined> {
     );
 
     if (useWorkspace === 'Create in workspace') {
+      // Ask for project name
+      const projectName = await vscode.window.showInputBox({
+        prompt: 'What should we name your project?',
+        placeHolder: 'my-awesome-app',
+        value: 'my-sheplang-app',
+        validateInput: (value) => {
+          if (!value || value.trim().length === 0) {
+            return 'Project name cannot be empty';
+          }
+          if (!/^[a-z0-9-_]+$/i.test(value)) {
+            return 'Project name can only contain letters, numbers, hyphens, and underscores';
+          }
+          return null;
+        }
+      });
+
+      if (!projectName) {
+        return undefined; // User cancelled
+      }
+
       const workspaceRoot = workspaceFolders[0].uri.fsPath;
-      const shepFolder = path.join(workspaceRoot, 'sheplang-import');
+      const shepFolder = path.join(workspaceRoot, projectName);
       
       if (!fs.existsSync(shepFolder)) {
         fs.mkdirSync(shepFolder, { recursive: true });

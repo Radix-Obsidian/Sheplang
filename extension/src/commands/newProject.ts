@@ -82,6 +82,29 @@ const TEMPLATES: ProjectTemplate[] = [
     }
   },
   {
+    id: 'todo-core',
+    name: '04 - Todo (ShepLang Core)',
+    description: 'Battle-tested todo app using the core ShepLang syntax',
+    files: {
+      frontend: `app MyTodos
+
+data Todo:
+  fields:
+    title: text
+    done: yes/no
+  rules:
+    - "user can update own items"
+
+view Dashboard:
+  list Todo
+  button "Add Task" -> CreateTodo
+
+action CreateTodo(title):
+  add Todo with title, done=false
+  show Dashboard`
+    }
+  },
+  {
     id: 'dog-reminders',
     name: '05 - Dog Reminders (Full-Stack)',
     description: 'Complete app with frontend + backend',

@@ -1,0 +1,9 @@
+app TestApp
+
+data User:
+  fields:
+    name: text required unique
+    age: number optional
+    rating: number max = 5
+    status: text default = "active"
+    flag: text default = true

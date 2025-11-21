@@ -4,8 +4,16 @@
     {
       "name": "Todo",
       "fields": [
-        { "name": "title", "type": "text" },
-        { "name": "done", "type": "yes/no" }
+        {
+          "name": "title",
+          "type": "text",
+          "constraints": []
+        },
+        {
+          "name": "done",
+          "type": "yes/no",
+          "constraints": []
+        }
       ],
       "rules": ["user can update own items"]
     }

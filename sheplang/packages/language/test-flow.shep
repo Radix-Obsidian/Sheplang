@@ -1,0 +1,12 @@
+app TestApp
+
+data User:
+  fields:
+    id: id
+
+flow CreateUser:
+  from: UserForm
+  trigger: "User clicks Create"
+  steps:
+    - "Validate input"
+    - "Create user record"

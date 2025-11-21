@@ -91,10 +91,13 @@ function activate(context) {
             await vscode.workspace.getConfiguration('sheplang').update('anthropicApiKey', key, vscode.ConfigurationTarget.Global);
             vscode.window.showInformationMessage('✓ API key updated! You now have unlimited imports.');
         }
-    })
-    // TODO: Uncomment when Webflow importer is ready
-    // vscode.commands.registerCommand('sheplang.importFromWebflow', () => importFromWebflow())
-    );
+    }), 
+    // Error broadcasting command (used internally for error handling)
+    vscode.commands.registerCommand('sheplang.broadcastError', (error) => {
+        const message = typeof error === 'string' ? error : error.message;
+        outputChannel_1.outputChannel.error(message);
+        vscode.window.showErrorMessage(`ShepLang: ${message}`);
+    }));
     outputChannel_1.outputChannel.success('All commands registered');
     // Start Language Server
     startLanguageServer(context);

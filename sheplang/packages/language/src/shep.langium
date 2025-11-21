@@ -6,7 +6,7 @@ entry ShepFile: app=AppDecl;
 AppDecl:
   'app' name=ID '{' decls+=TopDecl* '}';
 
-TopDecl: DataDecl | ViewDecl | ActionDecl;
+TopDecl: DataDecl | ViewDecl | ActionDecl | FlowDecl;
 
 DataDecl:
   'data' name=ID '{'
@@ -14,8 +14,18 @@ DataDecl:
     ('rules' ':' '{' rules+=RuleDecl* '}')?
   '}';
 
-FieldDecl: name=ID ':' type=TypeRef;
-TypeRef: base=('text'|'number'|'yes/no'|'id'|'date'|'email'|ID);
+FieldDecl: name=ID ':' type=TypeRef constraints+=Constraint*;
+
+Constraint:
+  kind=('required' | 'unique' | 'optional')
+| 'max' '=' max=NUMBER
+| 'default' '=' value=(STRING | NUMBER | BooleanLiteral | ID);
+
+TypeRef: base=BaseType isArray?='[]'?;
+
+BaseType: SimpleType | RefType;
+SimpleType: value=('text'|'number'|'yes/no'|'id'|'date'|'email'|'money'|'image'|'datetime'|'richtext'|'file'|ID);
+RefType: 'ref' '[' entity=ID ']';
 
 RuleDecl: '-' text=STRING;
 
@@ -30,6 +40,15 @@ ActionDecl:
   'action' name=ID '(' (params+=ParamDecl (',' params+=ParamDecl)*)? ')' '{'
      statements+=Stmt*
   '}';
+
+FlowDecl:
+  'flow' name=ID ':'
+    'from' ':' from=ID
+    'trigger' ':' trigger=STRING
+    'steps' ':' steps+=FlowStep*;
+
+FlowStep:
+  '-' description=STRING;
 
 ParamDecl: name=ID (':' type=TypeRef)?;
 Stmt: AddStmt | ShowStmt | CallStmt | LoadStmt | UpdateStmt | DeleteStmt | IfStmt | ForStmt | AssignStmt | RawStmt;

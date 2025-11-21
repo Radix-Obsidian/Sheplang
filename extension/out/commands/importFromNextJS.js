@@ -188,8 +188,8 @@ async function importFromNextJS(context) {
                     outputChannel_1.outputChannel.info('Import cancelled during architecture planning');
                     return;
                 }
-                progress.report({ message: 'Generating custom project structure...' });
-                const project = await (0, intelligentScaffold_1.generateFromPlan)(appModel, architecturePlan, outputFolder);
+                progress.report({ message: '🤖 Generating production-ready code with AI...' });
+                const project = await (0, intelligentScaffold_1.generateFromPlan)(appModel, architecturePlan, outputFolder, context);
                 outputChannel_1.outputChannel.success(`✓ Created ${project.files.length} files`);
                 outputChannel_1.outputChannel.success(`Architecture: ${architecturePlan.structure}`);
                 mainFilePath = path.join(outputFolder, 'README.md');
@@ -327,8 +327,26 @@ async function selectOutputFolder() {
             placeHolder: 'Where should we save the generated .shep files?'
         });
         if (useWorkspace === 'Create in workspace') {
+            // Ask for project name
+            const projectName = await vscode.window.showInputBox({
+                prompt: 'What should we name your project?',
+                placeHolder: 'my-awesome-app',
+                value: 'my-sheplang-app',
+                validateInput: (value) => {
+                    if (!value || value.trim().length === 0) {
+                        return 'Project name cannot be empty';
+                    }
+                    if (!/^[a-z0-9-_]+$/i.test(value)) {
+                        return 'Project name can only contain letters, numbers, hyphens, and underscores';
+                    }
+                    return null;
+                }
+            });
+            if (!projectName) {
+                return undefined; // User cancelled
+            }
             const workspaceRoot = workspaceFolders[0].uri.fsPath;
-            const shepFolder = path.join(workspaceRoot, 'sheplang-import');
+            const shepFolder = path.join(workspaceRoot, projectName);
             // Create folder if it doesn't exist
             if (!fs.existsSync(shepFolder)) {
                 fs.mkdirSync(shepFolder, { recursive: true });

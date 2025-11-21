@@ -7,8 +7,10 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { AppModel } from '../parsers/astAnalyzer';
 import { ArchitecturePlan } from '../wizard/architectureWizard';
+import { ShepLangCodeAgent, ComponentSpec, EntitySpec } from '../ai/sheplangCodeAgent';
 
 export interface GeneratedProject {
   rootPath: string;
@@ -28,13 +30,16 @@ export interface GeneratedFile {
 export async function generateFromPlan(
   appModel: AppModel,
   plan: ArchitecturePlan,
-  outputPath: string
+  outputPath: string,
+  context?: vscode.ExtensionContext
 ): Promise<GeneratedProject> {
+  // Create AI agent if context provided
+  const agent = context ? new ShepLangCodeAgent(context) : null;
   const files: GeneratedFile[] = [];
 
   // Generate files for each folder in the plan
   for (const folder of plan.folders) {
-    const folderFiles = await generateFolderFiles(folder, appModel, plan);
+    const folderFiles = await generateFolderFiles(folder, appModel, plan, agent);
     files.push(...folderFiles);
   }
 
@@ -70,7 +75,8 @@ export async function generateFromPlan(
 async function generateFolderFiles(
   folder: any,
   appModel: AppModel,
-  plan: ArchitecturePlan
+  plan: ArchitecturePlan,
+  agent: ShepLangCodeAgent | null
 ): Promise<GeneratedFile[]> {
   const files: GeneratedFile[] = [];
 
@@ -90,7 +96,8 @@ async function generateFolderFiles(
       fileSpec,
       folder,
       appModel,
-      plan
+      plan,
+      agent
     );
 
     files.push({
@@ -103,7 +110,7 @@ async function generateFolderFiles(
   // Generate subfolders recursively
   if (folder.subfolders && Array.isArray(folder.subfolders)) {
     for (const subfolder of folder.subfolders) {
-      const subFiles = await generateFolderFiles(subfolder, appModel, plan);
+      const subFiles = await generateFolderFiles(subfolder, appModel, plan, agent);
       files.push(...subFiles);
     }
   }
@@ -125,7 +132,8 @@ async function generateFileContent(
   fileSpec: any,
   folder: any,
   appModel: AppModel,
-  plan: ArchitecturePlan
+  plan: ArchitecturePlan,
+  agent: ShepLangCodeAgent | null
 ): Promise<string> {
   const fileName = fileSpec.name;
   
@@ -151,22 +159,13 @@ async function generateFileContent(
       return generateActionFile(action, fileSpec);
     }
     
-    // Generic .shep file
-    return generateGenericShepFile(fileSpec);
+    // Generic .shep file (component, hook, config)
+    return await generateGenericShepFile(fileSpec, folder, agent);
   }
   
   if (fileName.endsWith('.shepthon')) {
-    // Backend API file
-    const entityName = fileName.replace('-api.shepthon', '').replace('.shepthon', '');
-    const entity = appModel.entities.find(
-      e => e.name.toLowerCase() === entityName.toLowerCase()
-    );
-    
-    if (entity) {
-      return generateBackendFile(entity, fileSpec, folder);
-    }
-    
-    return generateGenericBackendFile(fileSpec);
+    // Backend API file - Use AI agent for production-ready endpoints
+    return await generateBackendFileWithAgent(appModel, fileSpec, folder, agent);
   }
   
   // Unknown file type
@@ -243,54 +242,117 @@ function generateActionFile(action: any, fileSpec: any): string {
 }
 
 /**
- * Generate backend API file
+ * Generate backend API file with AI agent
+ * NOT just CRUD - includes auth, search, filters, uploads!
  */
-function generateBackendFile(entity: any, fileSpec: any, folder: any): string {
-  const tableName = entity.name.toLowerCase();
+async function generateBackendFileWithAgent(
+  appModel: AppModel,
+  fileSpec: any,
+  folder: any,
+  agent: ShepLangCodeAgent | null
+): Promise<string> {
+  // If agent available, generate production-ready backend
+  if (agent && appModel.entities.length > 0) {
+    console.log('[IntelligentScaffold] Generating production backend with AI agent...');
+    
+    // Convert entities to EntitySpec format
+    const entitySpecs: EntitySpec[] = appModel.entities.map(entity => ({
+      name: entity.name,
+      fields: entity.fields.map(field => ({
+        name: field.name,
+        type: field.type,
+        required: field.required
+      }))
+    }));
+    
+    try {
+      const backendCode = await agent.generateBackend(entitySpecs, appModel.appName);
+      if (backendCode) {
+        console.log('[IntelligentScaffold] ✓ AI agent generated production backend');
+        return backendCode;
+      }
+    } catch (error) {
+      console.warn('[IntelligentScaffold] AI agent failed, using fallback:', error);
+    }
+  }
   
-  let content = `// ${entity.name} API Endpoints\n`;
+  // Fallback: Generate basic CRUD (better than nothing)
+  console.log('[IntelligentScaffold] Using fallback CRUD backend');
+  return generateFallbackBackend(appModel, fileSpec);
+}
+
+/**
+ * Generate generic ShepLang file with AI agent
+ */
+async function generateGenericShepFile(
+  fileSpec: any,
+  folder: any,
+  agent: ShepLangCodeAgent | null
+): Promise<string> {
+  // If agent available, generate real component
+  if (agent) {
+    console.log(`[IntelligentScaffold] Generating component: ${fileSpec.name}`);
+    
+    // Determine component type from folder path
+    const folderPath = folder.path.toLowerCase();
+    let componentType: 'view' | 'component' | 'hook' | 'config' = 'component';
+    
+    if (folderPath.includes('view')) {
+      componentType = 'view';
+    } else if (folderPath.includes('hook')) {
+      componentType = 'hook';
+    } else if (folderPath.includes('config')) {
+      componentType = 'config';
+    }
+    
+    const spec: ComponentSpec = {
+      name: fileSpec.name.replace('.shep', ''),
+      purpose: fileSpec.purpose || 'Component functionality',
+      type: componentType,
+      dependencies: fileSpec.dependencies || []
+    };
+    
+    try {
+      const componentCode = await agent.generateComponent(spec);
+      if (componentCode) {
+        console.log(`[IntelligentScaffold] ✓ AI agent generated ${spec.name}`);
+        return componentCode;
+      }
+    } catch (error) {
+      console.warn(`[IntelligentScaffold] AI agent failed for ${spec.name}, using fallback:`, error);
+    }
+  }
+  
+  // Fallback: Generate basic template
+  return `// ${fileSpec.name}\n// ${fileSpec.purpose}\n\napp YourApp\n\n// TODO: Implement this file\n`;
+}
+
+/**
+ * Fallback: Generate basic CRUD backend
+ */
+function generateFallbackBackend(appModel: AppModel, fileSpec: any): string {
+  let content = `// ${appModel.appName} API\n`;
   content += `// ${fileSpec.purpose}\n\n`;
   
-  // Model definition
-  content += `model ${entity.name} {\n`;
-  for (const field of entity.fields) {
-    content += `  ${field.name}: String\n`;
+  for (const entity of appModel.entities) {
+    const tableName = entity.name.toLowerCase();
+    
+    content += `model ${entity.name} {\n`;
+    for (const field of entity.fields) {
+      content += `  ${field.name}: String\n`;
+    }
+    content += `  createdAt: DateTime\n`;
+    content += `  updatedAt: DateTime\n`;
+    content += `}\n\n`;
+    
+    content += `GET /${tableName} -> db.all("${tableName}")\n`;
+    content += `GET /${tableName}/:id -> db.find("${tableName}", params.id)\n`;
+    content += `POST /${tableName} -> db.add("${tableName}", body)\n`;
+    content += `PUT /${tableName}/:id -> db.update("${tableName}", params.id, body)\n`;
+    content += `DELETE /${tableName}/:id -> db.remove("${tableName}", params.id)\n\n`;
   }
-  content += `  createdAt: DateTime\n`;
-  content += `  updatedAt: DateTime\n`;
-  content += `}\n\n`;
-  
-  // CRUD endpoints
-  content += `// List all ${entity.name}s\n`;
-  content += `GET /${tableName} -> db.all("${tableName}")\n\n`;
-  
-  content += `// Get single ${entity.name} by ID\n`;
-  content += `GET /${tableName}/:id -> db.find("${tableName}", params.id)\n\n`;
-  
-  content += `// Create new ${entity.name}\n`;
-  content += `POST /${tableName} -> db.add("${tableName}", body)\n\n`;
-  
-  content += `// Update ${entity.name}\n`;
-  content += `PUT /${tableName}/:id -> db.update("${tableName}", params.id, body)\n\n`;
-  
-  content += `// Delete ${entity.name}\n`;
-  content += `DELETE /${tableName}/:id -> db.remove("${tableName}", params.id)\n`;
   
   return content;
-}
-
-/**
- * Generate generic ShepLang file
- */
-function generateGenericShepFile(fileSpec: any): string {
-  return `// ${fileSpec.name}\n// ${fileSpec.purpose}\n\n// TODO: Implement this file\n`;
-}
-
-/**
- * Generate generic backend file
- */
-function generateGenericBackendFile(fileSpec: any): string {
-  return `// ${fileSpec.name}\n// ${fileSpec.purpose}\n\n// TODO: Add API endpoints\n`;
 }
 
 /**

@@ -21,6 +21,7 @@ export function mapToAppModel(ast: ShepFile): AppModel {
   const datas: AppModel['datas'] = [];
   const views: AppModel['views'] = [];
   const actions: AppModel['actions'] = [];
+  const flows: AppModel['flows'] = [];
 
   for (const decl of app.decls) {
     if (decl.$type === 'DataDecl') {
@@ -29,10 +30,18 @@ export function mapToAppModel(ast: ShepFile): AppModel {
       views.push(mapViewDecl(decl));
     } else if (decl.$type === 'ActionDecl') {
       actions.push(mapActionDecl(decl));
+    } else if (decl.$type === 'FlowDecl') {
+      flows.push(mapFlowDecl(decl));
     }
   }
 
-  return { name: app.name, datas, views, actions };
+  return { 
+    name: app.name, 
+    datas, 
+    views, 
+    actions,
+    flows: flows.length > 0 ? flows : undefined
+  };
 }
 
 function mapDataDecl(decl: DataDecl): AppModel['datas'][0] {
@@ -40,10 +49,79 @@ function mapDataDecl(decl: DataDecl): AppModel['datas'][0] {
     name: decl.name,
     fields: decl.fields.map(f => ({
       name: f.name,
-      type: f.type.base
+      type: serializeBaseType(f.type.base) + (f.type.isArray ? '[]' : ''),
+      constraints: (f.constraints || []).map(c => serializeConstraint(c))
     })),
     rules: decl.rules.map(r => r.text)
   };
+}
+
+function serializeBaseType(baseType: any): string {
+  if (typeof baseType === 'string') {
+    return baseType;
+  }
+  
+  if (baseType && typeof baseType === 'object') {
+    if (baseType.$type === 'SimpleType') {
+      return baseType.value;
+    } else if (baseType.$type === 'RefType') {
+      return `ref[${baseType.entity}]`;
+    }
+  }
+  
+  return String(baseType);
+}
+
+function mapFlowDecl(decl: any): NonNullable<AppModel['flows']>[0] {
+  return {
+    name: decl.name,
+    from: decl.from,
+    trigger: decl.trigger,
+    steps: decl.steps.map((step: any) => ({
+      description: step.description
+    }))
+  };
+}
+
+function serializeConstraint(constraint: any): any {
+  // From generated AST, Constraint has shape:
+  // { $type: 'Constraint'; kind?: 'optional'|'required'|'unique'; max?: string; value?: BooleanLiteral | string }
+
+  if (!constraint) {
+    return { type: 'unknown' };
+  }
+
+  // If mapper is ever called with a plain string, keep a safe fallback
+  if (typeof constraint === 'string') {
+    return { type: constraint };
+  }
+
+  if (typeof constraint === 'object') {
+    // Keyword constraints: required / optional / unique
+    if (
+      typeof constraint.kind === 'string' &&
+      (constraint.kind === 'required' || constraint.kind === 'optional' || constraint.kind === 'unique')
+    ) {
+      return { type: constraint.kind };
+    }
+
+    // Max constraint: max = NUMBER (stored as string in AST)
+    if (typeof constraint.max === 'string') {
+      return { type: 'max', value: constraint.max };
+    }
+
+    // Default constraint: default = <literal>
+    if (constraint.value !== undefined) {
+      let v: any = constraint.value;
+      // Unwrap BooleanLiteral node if present
+      if (v && typeof v === 'object' && v.$type === 'BooleanLiteral') {
+        v = v.value === 'true';
+      }
+      return { type: 'default', value: v };
+    }
+  }
+
+  return { type: 'unknown' };
 }
 
 function mapViewDecl(decl: ViewDecl): AppModel['views'][0] {
@@ -74,7 +152,7 @@ function mapActionDecl(decl: ActionDecl): AppModel['actions'][0] {
     name: decl.name,
     params: decl.params.map(p => ({
       name: p.name,
-      type: p.type?.base
+      type: p.type ? serializeBaseType(p.type.base) : undefined
     })),
     ops: decl.statements.map(stmt => mapStmt(stmt, decl.name))
   };

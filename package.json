@@ -2,7 +2,7 @@
   "name": "sheplang-root",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.21.0",
+  "packageManager": "pnpm@10.23.0",
   "scripts": {
     "verify": "node ./scripts/verify.js",
     "verify:ci": "cd sheplang && pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test",
