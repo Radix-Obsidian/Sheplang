@@ -28,14 +28,24 @@
     "languages": [
       {
         "id": "sheplang",
-        "aliases": ["ShepLang", "sheplang"],
-        "extensions": [".shep"],
+        "aliases": [
+          "ShepLang",
+          "sheplang"
+        ],
+        "extensions": [
+          ".shep"
+        ],
         "configuration": "./language-configuration.json"
       },
       {
         "id": "shepthon",
-        "aliases": ["ShepThon", "shepthon"],
-        "extensions": [".shepthon"],
+        "aliases": [
+          "ShepThon",
+          "shepthon"
+        ],
+        "extensions": [
+          ".shepthon"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -74,6 +84,41 @@
         "command": "sheplang.importFromWebflow",
         "title": "ShepLang: Import from Webflow Export",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "sheplang.showAIUsage",
+        "title": "ShepLang: Show AI Import Usage",
+        "icon": "$(info)"
+      },
+      {
+        "command": "sheplang.resetAIUsage",
+        "title": "ShepLang: Reset AI Usage (Testing)",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "sheplang.updateApiKey",
+        "title": "ShepLang: Update Anthropic API Key",
+        "icon": "$(key)"
+      },
+      {
+        "command": "sheplang.showPreviewInBrowser",
+        "title": "ShepLang: Show Preview in Browser",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "sheplang.stopPreviewServer",
+        "title": "ShepLang: Stop Preview Server",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "sheplang.quickStart",
+        "title": "ShepLang: Quick Start",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "sheplang.openExamples",
+        "title": "ShepLang: Open Example Project",
+        "icon": "$(book)"
       }
     ],
     "menus": {
@@ -85,18 +130,44 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "sheplang.quickStart",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "!editorFocus || editorLangId == sheplang"
+      },
+      {
+        "command": "sheplang.showPreview",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorLangId == sheplang"
+      }
+    ],
     "configuration": {
-      "title": "ShepLang",
+      "type": "object",
+      "title": "ShepLang Configuration",
       "properties": {
         "sheplang.autoPreview": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically open preview when opening .shep files"
+          "description": "Automatically open preview when opening .shep files",
+          "scope": "window"
+        },
+        "sheplang.preview.port": {
+          "type": "number",
+          "default": 3000,
+          "description": "Port for browser-based live preview server",
+          "scope": "window"
         },
         "sheplang.trace.server": {
           "scope": "window",
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Traces the communication between VS Code and the language server."
         },
@@ -104,6 +175,18 @@
           "type": "string",
           "default": "",
           "description": "Figma Personal Access Token for importing designs. Get one at figma.com/settings → Security → Generate new token",
+          "scope": "application"
+        },
+        "sheplang.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Optional: Your Anthropic API key for unlimited AI-powered imports. Leave empty to use free tier (5 imports/month). Get a key at console.anthropic.com",
+          "scope": "application"
+        },
+        "sheplang.debugBypassLimits": {
+          "type": "boolean",
+          "default": false,
+          "description": "Debug: Bypass import limits for testing AI functionality. Do not enable in production.",
           "scope": "application"
         }
       }
@@ -121,19 +204,24 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "package": "vsce package",
-    "publish": "vsce publish"
+    "prebuild": "node scripts/build-config.js",
+    "compile": "npm run prebuild && tsc -p ./",
+    "watch": "npm run prebuild && tsc -watch -p ./",
+    "package": "npm run compile && vsce package",
+    "publish": "npm run compile && vsce publish"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
     "@goldensheepai/sheplang-language": "file:../sheplang/packages/language",
+    "express": "^4.18.2",
+    "socket.io": "^4.6.0",
     "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.11",
     "vscode-uri": "^3.0.8"
   },
   "devDependencies": {
+    "@types/express": "^4.17.17",
     "@types/node": "^20.x",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^2.22.0",

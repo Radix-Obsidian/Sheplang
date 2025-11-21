@@ -7,6 +7,7 @@ import {
   TransportKind
 } from 'vscode-languageclient/node';
 import { showPreviewCommand } from './commands/preview';
+import { showPreviewInBrowser, stopPreviewServer } from './commands/previewInBrowser';
 import { newProjectCommand } from './commands/newProject';
 import { restartBackendCommand } from './commands/restartBackend';
 import { showOutputCommand } from './commands/showOutput';
@@ -14,12 +15,20 @@ import { createBackendFileCommand } from './commands/createBackendFile';
 // import { manageFigmaToken } from './commands/manageFigmaToken';
 
 // Next.js/React importer
-import { importFromNextJS } from './commands/importFromNextJS';
+import { streamlinedImport } from './commands/streamlinedImport';
 
 // TODO: Add Webflow importer
 // import { importFromWebflow } from './commands/importFromWebflow';
 import { RuntimeManager } from './services/runtimeManager';
 import { outputChannel } from './services/outputChannel';
+import { showUsageStats, resetUsageForTesting } from './ai/usageTracker';
+
+// Extraordinary features
+import { initializeAutoPreview } from './features/autoPreview';
+import { registerIntelliSense } from './features/intelligentCompletion';
+import { registerQuickStart, showQuickStartForNewUsers } from './features/quickStart';
+import { registerDiagnostics } from './features/diagnostics';
+import { registerSemanticHighlighting } from './features/semanticHighlighting';
 
 let client: LanguageClient;
 let runtimeManager: RuntimeManager;
@@ -38,22 +47,10 @@ export function activate(context: vscode.ExtensionContext) {
   runtimeManager = new RuntimeManager(context);
   context.subscriptions.push(runtimeManager);
 
-  // Show welcome message on first activation
-  const hasSeenWelcome = context.globalState.get('sheplang.hasSeenWelcome');
-  if (!hasSeenWelcome) {
-    vscode.window.showInformationMessage(
-      '🐑 Welcome to ShepLang! Create beautiful full-stack apps with AI-native syntax.',
-      'New Project',
-      'View Examples'
-    ).then(selection => {
-      if (selection === 'New Project') {
-        vscode.commands.executeCommand('sheplang.newProject');
-      } else if (selection === 'View Examples') {
-        vscode.env.openExternal(vscode.Uri.parse('https://github.com/Radix-Obsidian/Sheplang-BobaScript/tree/main/examples'));
-      }
-    });
-    context.globalState.update('sheplang.hasSeenWelcome', true);
-  }
+  // Show quick start for new users (minimalist approach)
+  setTimeout(() => {
+    showQuickStartForNewUsers(context);
+  }, 1000);
 
   // Register commands
   outputChannel.info('Registering commands...');
@@ -61,11 +58,29 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('sheplang.showPreview', async () => {
       await showPreviewCommand(context, runtimeManager);
     }),
+    vscode.commands.registerCommand('sheplang.showPreviewInBrowser', () => showPreviewInBrowser(context)),
+    vscode.commands.registerCommand('sheplang.stopPreviewServer', () => stopPreviewServer()),
     vscode.commands.registerCommand('sheplang.newProject', () => newProjectCommand(context)),
     vscode.commands.registerCommand('sheplang.restartBackend', () => restartBackendCommand(context)),
     vscode.commands.registerCommand('sheplang.showOutput', () => showOutputCommand()),
     vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
-    vscode.commands.registerCommand('sheplang.importFromNextJS', () => importFromNextJS())
+    vscode.commands.registerCommand('sheplang.importFromNextJS', () => streamlinedImport(context)),
+    
+    // AI usage management commands
+    vscode.commands.registerCommand('sheplang.showAIUsage', () => showUsageStats(context)),
+    vscode.commands.registerCommand('sheplang.resetAIUsage', () => resetUsageForTesting(context)),
+    vscode.commands.registerCommand('sheplang.updateApiKey', async () => {
+      const key = await vscode.window.showInputBox({
+        prompt: 'Enter your Anthropic API key (for unlimited imports)',
+        placeHolder: 'sk-ant-api03-...',
+        password: true,
+        ignoreFocusOut: true
+      });
+      if (key) {
+        await vscode.workspace.getConfiguration('sheplang').update('anthropicApiKey', key, vscode.ConfigurationTarget.Global);
+        vscode.window.showInformationMessage('✓ API key updated! You now have unlimited imports.');
+      }
+    })
     
     // TODO: Uncomment when Webflow importer is ready
     // vscode.commands.registerCommand('sheplang.importFromWebflow', () => importFromWebflow())
@@ -75,7 +90,30 @@ export function activate(context: vscode.ExtensionContext) {
   // Start Language Server
   startLanguageServer(context);
 
-  // Auto-preview on .shep file open (if enabled)
+  // ✨ Initialize extraordinary features
+  outputChannel.info('Initializing extraordinary features...');
+  
+  // Auto-start live preview when .shep files are opened
+  initializeAutoPreview(context);
+  outputChannel.success('✓ Auto-preview enabled');
+  
+  // Context-aware IntelliSense and hover documentation
+  registerIntelliSense(context);
+  outputChannel.success('✓ Intelligent completion enabled');
+  
+  // Quick start system (replaces heavy onboarding)
+  registerQuickStart(context);
+  outputChannel.success('✓ Quick start ready');
+  
+  // Comprehensive error diagnostics
+  const diagnosticsManager = registerDiagnostics(context);
+  outputChannel.success('✓ Error diagnostics enabled');
+  
+  // Semantic syntax highlighting (beyond basic TextMate)
+  registerSemanticHighlighting(context);
+  outputChannel.success('✓ Semantic highlighting enabled');
+
+  // Legacy auto-preview code (keeping for backward compatibility)
   const autoPreview = vscode.workspace.getConfiguration('sheplang').get('autoPreview', true);
   if (autoPreview) {
     context.subscriptions.push(

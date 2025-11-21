@@ -38,14 +38,14 @@ function generateMainShepFile(appModel: AppModel): string {
   let output = '';
 
   // Header comment
-  output += `# ${appModel.appName}\n`;
-  output += `# Generated from Next.js project: ${appModel.projectRoot}\n`;
-  output += `# \n`;
-  output += `# This is a generated ShepLang scaffold. Review and customize:\n`;
-  output += `# - Fill in TODO comments with your business logic\n`;
-  output += `# - Refine entity fields as needed\n`;
-  output += `# - Add validation rules\n`;
-  output += `# - Customize view layouts\n`;
+  output += `// ${appModel.appName}\n`;
+  output += `// Generated from Next.js project: ${appModel.projectRoot}\n`;
+  output += `// \n`;
+  output += `// This is a generated ShepLang scaffold. Review and customize:\n`;
+  output += `// - Fill in TODO comments with your business logic\n`;
+  output += `// - Refine entity fields as needed\n`;
+  output += `// - Add validation rules\n`;
+  output += `// - Customize view layouts\n`;
   output += `\n`;
 
   // App declaration
@@ -53,18 +53,18 @@ function generateMainShepFile(appModel: AppModel): string {
 
   // High-level TODOs
   if (appModel.todos.length > 0) {
-    output += `# TODOs from import:\n`;
+    output += `// TODOs from import:\n`;
     for (const todo of appModel.todos) {
-      output += `# - ${todo}\n`;
+      output += `// - ${todo}\n`;
     }
     output += `\n`;
   }
 
   // Data blocks
   if (appModel.entities.length > 0) {
-    output += `# ========================================\n`;
-    output += `# Data Models\n`;
-    output += `# ========================================\n\n`;
+    output += `// ========================================\n`;
+    output += `// Data Models\n`;
+    output += `// ========================================\n\n`;
 
     for (const entity of appModel.entities) {
       output += generateDataBlock(entity);
@@ -73,22 +73,29 @@ function generateMainShepFile(appModel: AppModel): string {
   }
 
   // View blocks
-  if (appModel.views.length > 0) {
-    output += `# ========================================\n`;
-    output += `# Views (Screens)\n`;
-    output += `# ========================================\n\n`;
+  output += `// ========================================\n`;
+  output += `// Views (Screens)\n`;
+  output += `// ========================================\n\n`;
 
-    for (const view of appModel.views) {
-      output += generateViewBlock(view, appModel.entities);
-      output += `\n`;
-    }
+  // Ensure we have at least one view
+  const views = appModel.views.length > 0 ? appModel.views : [createDefaultView(appModel)];
+  
+  // Auto-create Dashboard view if actions reference it
+  const needsDashboard = appModel.actions.some(a => a.apiCalls.length === 0);
+  if (needsDashboard && !views.find(v => v.name === 'Dashboard')) {
+    views.push(createDashboardView(appModel));
+  }
+
+  for (const view of views) {
+    output += generateViewBlock(view, appModel.entities);
+    output += `\n`;
   }
 
   // Action blocks
   if (appModel.actions.length > 0) {
-    output += `# ========================================\n`;
-    output += `# Actions (Business Logic)\n`;
-    output += `# ========================================\n\n`;
+    output += `// ========================================\n`;
+    output += `// Actions (Business Logic)\n`;
+    output += `// ========================================\n\n`;
 
     for (const action of appModel.actions) {
       output += generateActionBlock(action, appModel.entities);
@@ -97,9 +104,9 @@ function generateMainShepFile(appModel: AppModel): string {
   }
 
   // Footer
-  output += `# ========================================\n`;
-  output += `# End of ${appModel.appName}\n`;
-  output += `# ========================================\n`;
+  output += `// ========================================\n`;
+  output += `// End of ${appModel.appName}\n`;
+  output += `// ========================================\n`;
 
   return output;
 }
@@ -112,9 +119,11 @@ function generateDataBlock(entity: Entity): string {
 
   // Source comment
   if (entity.source === 'prisma') {
-    output += `# From Prisma model\n`;
+    output += `// From Prisma model\n`;
+  } else if (entity.source === 'user-input') {
+    output += `// You told us to track this ✓\n`;
   } else {
-    output += `# Inferred from views\n`;
+    output += `// Inferred from views\n`;
   }
 
   output += `data ${entity.name}:\n`;
@@ -122,13 +131,15 @@ function generateDataBlock(entity: Entity): string {
 
   // Fields
   for (const field of entity.fields) {
-    const requiredComment = field.required ? '' : ' # optional';
+    const requiredComment = field.required ? '' : ' // optional';
     output += `    ${field.name}: ${field.type}${requiredComment}\n`;
   }
 
-  // Add TODO if entity was inferred
+  // Add TODO if entity was inferred or user-provided
   if (entity.source === 'inferred') {
-    output += `  # TODO: Add more fields as needed\n`;
+    output += `  // TODO: Add more fields as needed\n`;
+  } else if (entity.source === 'user-input') {
+    output += `  // TODO: Add the specific fields you need for ${entity.name}\n`;
   }
 
   return output;
@@ -141,14 +152,14 @@ function generateViewBlock(view: View, entities: Entity[]): string {
   let output = '';
 
   // Source comment
-  output += `# From: ${view.filePath}\n`;
+  output += `// From: ${view.filePath}\n`;
   output += `view ${view.name}:\n`;
 
   // Widgets
   if (view.widgets.length === 0) {
-    output += `  # TODO: Add widgets for this view\n`;
-    output += `  # Example: list EntityName\n`;
-    output += `  # Example: button "Click me" -> HandleAction\n`;
+    output += `  // TODO: Add widgets for this view\n`;
+    output += `  // Example: list EntityName\n`;
+    output += `  // Example: button "Click me" -> HandleAction\n`;
   } else {
     for (const widget of view.widgets) {
       if (widget.kind === 'list') {
@@ -159,8 +170,8 @@ function generateViewBlock(view: View, entities: Entity[]): string {
         output += `  button "${label}" -> ${action}\n`;
       } else if (widget.kind === 'form') {
         const action = widget.actionName || 'HandleSubmit';
-        output += `  # TODO: Define form inputs\n`;
-        output += `  # form for ${action}\n`;
+        output += `  // TODO: Define form inputs\n`;
+        output += `  // form for ${action}\n`;
       }
     }
   }
@@ -175,7 +186,7 @@ function generateActionBlock(action: Action, entities: Entity[]): string {
   let output = '';
 
   // Source comment
-  output += `# Source: ${action.source}\n`;
+  output += `// Source: ${action.source}\n`;
 
   // Parameters
   const params = action.parameters.length > 0
@@ -187,7 +198,7 @@ function generateActionBlock(action: Action, entities: Entity[]): string {
   // Action TODOs
   if (action.todos.length > 0) {
     for (const todo of action.todos) {
-      output += `  # ${todo}\n`;
+      output += `  // ${todo}\n`;
     }
   }
 
@@ -216,7 +227,7 @@ function generateActionBlock(action: Action, entities: Entity[]): string {
     const targetView = inferTargetView(action.name, entities);
     output += `  show ${targetView}\n`;
   } else {
-    output += `  # TODO: Implement action logic\n`;
+    output += `  // TODO: Implement action logic\n`;
     output += `  show Dashboard\n`;
   }
 
@@ -263,6 +274,38 @@ function inferTargetView(actionName: string, entities: Entity[]): string {
   }
 
   return 'Dashboard';
+}
+
+/**
+ * Create default view for apps with no detected views
+ */
+function createDefaultView(appModel: AppModel): View {
+  return {
+    name: 'MainView',
+    filePath: appModel.projectRoot,
+    widgets: []
+  };
+}
+
+/**
+ * Create Dashboard view (common pattern for app builders)
+ */
+function createDashboardView(appModel: AppModel): View {
+  const widgets: View['widgets'] = [];
+  
+  // Add list widget for each entity
+  for (const entity of appModel.entities) {
+    widgets.push({
+      kind: 'list',
+      entityName: entity.name
+    });
+  }
+  
+  return {
+    name: 'Dashboard',
+    filePath: appModel.projectRoot,
+    widgets
+  };
 }
 
 /**

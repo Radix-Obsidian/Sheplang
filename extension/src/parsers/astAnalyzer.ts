@@ -11,7 +11,8 @@
  */
 
 import * as path from 'path';
-import { ReactComponent, JSXElement, parseReactProject } from './reactParser';
+import * as fs from 'fs';
+import { ReactComponent, JSXElement, parseReactProject, parseReactFile } from './reactParser';
 import { PrismaSchema, PrismaModel, parsePrismaSchema, findPrismaSchema } from './prismaParser';
 
 export interface AppModel {
@@ -25,7 +26,7 @@ export interface AppModel {
 
 export interface Entity {
   name: string;
-  source: 'prisma' | 'inferred';
+  source: 'prisma' | 'inferred' | 'user-input';
   fields: EntityField[];
 }
 
@@ -63,9 +64,18 @@ export interface ActionAPICall {
 }
 
 /**
- * Analyze a Next.js project and extract app model
+ * Analyze a Next.js, Vite, or React project and extract app model
  */
 export async function analyzeProject(projectRoot: string): Promise<AppModel> {
+  const packageJsonPath = path.join(projectRoot, 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+  const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+
+  // Detect framework
+  let framework: 'nextjs' | 'vite' | 'react' = 'react';
+  if ('next' in allDeps) framework = 'nextjs';
+  else if ('vite' in allDeps) framework = 'vite';
+
   const appModel: AppModel = {
     appName: inferAppName(projectRoot),
     projectRoot,
@@ -75,7 +85,7 @@ export async function analyzeProject(projectRoot: string): Promise<AppModel> {
     todos: []
   };
 
-  // Step 1: Extract entities from Prisma
+  // Step 1: Extract entities from Prisma (if available)
   const prismaSchemaPath = findPrismaSchema(projectRoot);
   if (prismaSchemaPath) {
     const prismaSchema = parsePrismaSchema(prismaSchemaPath);
@@ -86,16 +96,25 @@ export async function analyzeProject(projectRoot: string): Promise<AppModel> {
     appModel.todos.push('No Prisma schema found - entities will need to be defined manually');
   }
 
-  // Step 2: Parse all React components
-  const components = parseReactProject(projectRoot);
+  // Step 2: Parse React components based on framework
+  let components: ReactComponent[] = [];
+  if (framework === 'nextjs') {
+    components = parseReactProject(projectRoot);
+  } else if (framework === 'vite' || framework === 'react') {
+    components = parseViteReactProject(projectRoot);
+  }
 
-  // Step 3: Extract views from pages
-  appModel.views = extractViewsFromComponents(components, appModel.entities);
+  // Step 3: Extract views and actions based on framework
+  if (framework === 'nextjs') {
+    appModel.views = extractViewsFromNextJSComponents(components, appModel.entities);
+    appModel.actions = extractActionsFromComponents(components, appModel.entities);
+  } else {
+    // For Vite/React single-page apps
+    appModel.views = extractViewsFromSinglePageComponents(components, appModel.entities);
+    appModel.actions = extractActionsFromComponents(components, appModel.entities);
+  }
 
-  // Step 4: Extract actions from handlers and API calls
-  appModel.actions = extractActionsFromComponents(components, appModel.entities);
-
-  // Step 5: Infer missing entities from views
+  // Step 4: Infer missing entities from views
   inferMissingEntities(appModel);
 
   return appModel;
@@ -363,6 +382,102 @@ function inferEntityFromAPIPath(apiPath: string, entities: Entity[]): Entity | u
   if (!resource) return undefined;
   
   return findEntityByName(resource, entities);
+}
+
+/**
+ * Parse React components in a Vite project structure
+ */
+function parseViteReactProject(projectRoot: string): ReactComponent[] {
+  const components: ReactComponent[] = [];
+
+  // In Vite projects, look in src/ directory
+  const srcDir = path.join(projectRoot, 'src');
+  if (!fs.existsSync(srcDir)) {
+    return components;
+  }
+
+  function walkSrcDir(dir: string) {
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory()) {
+        // Skip common non-component directories
+        if (!['node_modules', 'dist', 'build', 'public', 'assets'].includes(file)) {
+          walkSrcDir(filePath);
+        }
+      } else if (file.endsWith('.tsx') || file.endsWith('.jsx')) {
+        try {
+          const component = parseReactFile(filePath);
+          if (component) {
+            // Mark main App component as a "page" for single-page apps
+            if (file === 'App.tsx' || file === 'App.jsx') {
+              component.type = 'page';
+            }
+            components.push(component);
+          }
+        } catch (error) {
+          console.warn(`Failed to parse ${filePath}:`, error);
+        }
+      }
+    }
+  }
+
+  walkSrcDir(srcDir);
+  return components;
+}
+
+/**
+ * Extract views from Next.js components (pages)
+ */
+function extractViewsFromNextJSComponents(components: ReactComponent[], entities: Entity[]): View[] {
+  return extractViewsFromComponents(components, entities);
+}
+
+/**
+ * Extract views from single-page React components
+ */
+function extractViewsFromSinglePageComponents(components: ReactComponent[], entities: Entity[]): View[] {
+  const views: View[] = [];
+
+  // In single-page apps, the main App component represents the primary view
+  const appComponent = components.find(c => c.type === 'page' || c.name === 'App');
+  if (appComponent) {
+    const view: View = {
+      name: 'MainView', // Default name for single-page apps
+      filePath: appComponent.filePath,
+      widgets: []
+    };
+
+    // Extract widgets from the main component
+    for (const element of appComponent.elements) {
+      if (element.kind === 'list' && element.mapEntityHint) {
+        const entity = findEntityByName(element.mapEntityHint, entities);
+        view.widgets.push({
+          kind: 'list',
+          entityName: entity?.name || element.mapEntityHint
+        });
+      } else if (element.kind === 'button' && element.text) {
+        const actionName = inferActionName(element.text);
+        view.widgets.push({
+          kind: 'button',
+          label: element.text,
+          actionName
+        });
+      } else if (element.kind === 'form') {
+        view.widgets.push({
+          kind: 'form',
+          actionName: 'HandleFormSubmit'
+        });
+      }
+    }
+
+    views.push(view);
+  }
+
+  return views;
 }
 
 /**
