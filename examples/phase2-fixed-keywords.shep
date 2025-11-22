@@ -1,0 +1,58 @@
+app OrderManagement {
+  data Order {
+    fields: {
+      items: text
+      total: number
+      customerEmail: text
+    }
+    states: pending -> processing
+            processing -> shipped
+            shipped -> delivered
+            pending -> cancelled
+  }
+  
+  data User {
+    fields: {
+      email: text
+      name: text
+    }
+  }
+  
+  view OrderDashboard {
+    list Order
+    button "Create Order" -> CreateOrder
+  }
+  
+  action CreateOrder(items, total, customerEmail) {
+    add Order with items, total, customerEmail
+    show OrderDashboard
+  }
+  
+  workflow OrderProcessing {
+    on pending {
+      event ProcessPayment -> processing
+      event Cancel -> cancelled
+    }
+    on processing {
+      event Ship -> shipped
+    }
+    on shipped {
+      event Deliver -> delivered
+    }
+  }
+  
+  scheduler SendDailyReminders {
+    schedule: daily at 9am
+    action {
+      ~ send email to user.email
+    }
+  }
+  
+  scheduler ProcessPendingOrders {
+    trigger: on Order.created
+    delay: 1 hours
+    action {
+      ~ process payment for order
+    }
+  }
+}

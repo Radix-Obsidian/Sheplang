@@ -1,0 +1,16 @@
+app ContextualTest {
+  data Todo {
+    fields: {
+      title: text
+      job: text
+      schedule: text
+    }
+  }
+  
+  job SendReminders {
+    schedule: daily at 9am
+    action {
+      ~ send reminder emails
+    }
+  }
+}

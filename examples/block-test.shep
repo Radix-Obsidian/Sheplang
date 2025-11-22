@@ -1,0 +1,58 @@
+app BlockTest {
+  data {
+    Order {
+      fields: {
+        title: text
+        status: text
+        amount: number
+      }
+    }
+    
+    User {
+      fields: {
+        email: text
+        name: text
+      }
+    }
+  }
+  
+  views {
+    OrderView {
+      list Order
+      button "New Order" -> CreateOrder
+    }
+    
+    UserView {
+      list User
+      button "Add User" -> CreateUser
+    }
+  }
+  
+  actions {
+    CreateOrder(title, amount) {
+      add Order with title, amount, status="new"
+      show OrderView
+    }
+    
+    CreateUser(email, name) {
+      add User with email, name
+      show UserView
+    }
+  }
+  
+  schedulers {
+    SendReminders {
+      schedule: daily at 9am
+      action {
+        ~ send reminder emails
+      }
+    }
+    
+    ProcessOrders {
+      schedule: every 1 hours
+      action {
+        ~ process orders
+      }
+    }
+  }
+}

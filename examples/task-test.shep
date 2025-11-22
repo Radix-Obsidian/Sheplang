@@ -1,0 +1,15 @@
+app TaskTest {
+  data Order {
+    fields: {
+      title: text
+      status: text
+    }
+  }
+  
+  task OrderReminder {
+    schedule: daily at 9am
+    action {
+      ~ send reminder emails
+    }
+  }
+}

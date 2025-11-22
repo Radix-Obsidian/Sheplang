@@ -1,0 +1,18 @@
+app Basic {
+  data Todo {
+    fields: {
+      title: text
+      done: yes/no
+    }
+  }
+  
+  view Dashboard {
+    list Todo
+    button "Create Todo" -> CreateTodo
+  }
+  
+  action CreateTodo(title) {
+    add Todo with title
+    show Dashboard
+  }
+}

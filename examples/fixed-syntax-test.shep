@@ -1,0 +1,17 @@
+app FixedSyntaxTest {
+  data Todo {
+    fields: {
+      title: text
+      status: text
+      job: text
+    }
+    states: pending -> completed -> archived
+  }
+  
+  job SendReminders {
+    schedule: daily at 9am
+    action {
+      ~ send reminder emails
+    }
+  }
+}

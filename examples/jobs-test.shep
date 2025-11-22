@@ -1,0 +1,23 @@
+app JobsTest {
+  data User {
+    fields: {
+      email: text
+      name: text
+    }
+  }
+  
+  job SendDailyReminders {
+    schedule: daily at 9am
+    action {
+      ~ send email to all users
+    }
+  }
+  
+  job ProcessPendingOrders {
+    trigger: on Order.created
+    delay: 1 hours
+    action {
+      ~ process payment for order
+    }
+  }
+}

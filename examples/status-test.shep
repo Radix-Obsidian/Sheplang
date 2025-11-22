@@ -1,0 +1,13 @@
+app StatusTest {
+  data Order {
+    fields: {
+      title: text
+      total: number
+    }
+    status: pending -> processing
+  }
+  
+  view Dashboard {
+    list Order
+  }
+}

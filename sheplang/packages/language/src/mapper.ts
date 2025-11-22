@@ -4,12 +4,15 @@ import type {
   ActionDecl,
   DataDecl,
   ViewDecl,
+  JobDecl,
+  WorkflowDecl,
   AddStmt,
   ShowStmt,
   RawStmt,
   BooleanLiteral,
   StringLiteral,
-  IdentifierRef
+  IdentifierRef,
+  TransitionChain
 } from './generated/ast.js';
 
 export function mapToAppModel(ast: ShepFile): AppModel {
@@ -22,16 +25,44 @@ export function mapToAppModel(ast: ShepFile): AppModel {
   const views: AppModel['views'] = [];
   const actions: AppModel['actions'] = [];
   const flows: AppModel['flows'] = [];
+  const jobs: AppModel['jobs'] = [];
+  const workflows: AppModel['workflows'] = [];
+  
+  // For tracking transitions to add to data models
+  const transitions: Record<string, {from: string, to: string}[]> = {};
 
-  for (const decl of app.decls) {
-    if (decl.$type === 'DataDecl') {
-      datas.push(mapDataDecl(decl));
-    } else if (decl.$type === 'ViewDecl') {
-      views.push(mapViewDecl(decl));
-    } else if (decl.$type === 'ActionDecl') {
-      actions.push(mapActionDecl(decl));
-    } else if (decl.$type === 'FlowDecl') {
-      flows.push(mapFlowDecl(decl));
+  // Process all declarations
+  if (app.decls) {
+    for (const decl of app.decls) {
+      if (decl.$type === 'DataDecl') {
+        datas.push(mapDataDecl(decl));
+      } else if (decl.$type === 'ViewDecl') {
+        views.push(mapViewDecl(decl));
+      } else if (decl.$type === 'ActionDecl') {
+        actions.push(mapActionDecl(decl));
+      } else if (decl.$type === 'FlowDecl') {
+        flows.push(mapFlowDecl(decl));
+      } else if (decl.$type === 'JobDecl') {
+        jobs.push(mapJobDecl(decl));
+      } else if (decl.$type === 'WorkflowDecl') {
+        workflows.push(mapWorkflowDecl(decl));
+      }
+    }
+  }
+  
+  // Add transitions to data models
+  for (const data of datas) {
+    if (transitions[data.name]) {
+      const transitionsList = transitions[data.name];
+      const statesSet = new Set<string>();
+      transitionsList.forEach(t => {
+        statesSet.add(t.from);
+        statesSet.add(t.to);
+      });
+      data.status = {
+        states: Array.from(statesSet),
+        transitions: transitionsList
+      };
     }
   }
 
@@ -40,19 +71,42 @@ export function mapToAppModel(ast: ShepFile): AppModel {
     datas, 
     views, 
     actions,
-    flows: flows.length > 0 ? flows : undefined
+    flows: flows.length > 0 ? flows : undefined,
+    jobs: jobs.length > 0 ? jobs : undefined,
+    workflows: workflows.length > 0 ? workflows : undefined
   };
 }
 
 function mapDataDecl(decl: DataDecl): AppModel['datas'][0] {
+  // Extract fields from data declaration
+  const fields = decl.fields.map(f => ({
+    name: f.name,
+    type: serializeBaseType(f.type.base) + (f.type.isArray ? '[]' : ''),
+    constraints: (f.constraints || []).map(c => serializeConstraint(c))
+  }));
+  
+  // Extract rules if present
+  const rules = decl.rules?.map(r => r.text) || [];
+  
+  // Extract inline status transitions if present
+  let status: NonNullable<AppModel['datas'][0]['status']> | undefined;
+  if (decl.statusBlock?.chain && decl.statusBlock.chain.states && decl.statusBlock.chain.states.length > 0) {
+    const states = decl.statusBlock.chain.states;
+    const transitions = [];
+    for (let i = 0; i < states.length - 1; i++) {
+      transitions.push({ from: states[i], to: states[i + 1] });
+    }
+    status = {
+      states,
+      transitions
+    };
+  }
+  
   return {
     name: decl.name,
-    fields: decl.fields.map(f => ({
-      name: f.name,
-      type: serializeBaseType(f.type.base) + (f.type.isArray ? '[]' : ''),
-      constraints: (f.constraints || []).map(c => serializeConstraint(c))
-    })),
-    rules: decl.rules.map(r => r.text)
+    fields,
+    status,
+    rules
   };
 }
 
@@ -327,4 +381,110 @@ function mapExpr(expr: any): string {
     if (mapped.type === 'identifier') return mapped.name;
   }
   return String(mapped);
+}
+
+// No longer needed for direct state transitions
+// Keeping for reference on how to map state transitions
+
+// Phase II: Scheduler Declaration Mapping
+function mapJobDecl(decl: JobDecl): NonNullable<AppModel['jobs']>[0] {
+  const job: any = {
+    name: decl.name,
+    delay: decl.delay ? mapJobDelay(decl.delay) : undefined,
+    actions: decl.actions.map(stmt => mapStmt(stmt, decl.name))
+  };
+  
+  // Handle JobTiming union type
+  if (decl.timing) {
+    if (decl.timing.$type === 'JobSchedule') {
+      job.schedule = mapJobSchedule(decl.timing);
+    } else if (decl.timing.$type === 'JobTrigger') {
+      job.trigger = mapJobTrigger(decl.timing);
+    }
+  }
+  
+  return job;
+}
+
+function mapJobSchedule(schedule: any): any {
+  return mapScheduleTiming(schedule.timing);
+}
+
+function mapScheduleTiming(timing: any): any {
+  if (timing.$type === 'CronExpression') {
+    return {
+      type: 'cron',
+      pattern: timing.pattern
+    };
+  } else if (timing.$type === 'NaturalLanguage') {
+    return {
+      type: 'natural',
+      expression: serializeNaturalLanguage(timing)
+    };
+  }
+  
+  throw new Error(`Unknown schedule timing type: ${timing.$type}`);
+}
+
+function serializeNaturalLanguage(timing: any): string {
+  // Convert natural language timing back to string representation
+  if (timing.frequency) {
+    const freq = `${timing.frequency.amount} ${timing.frequency.unit}`;
+    return timing.time ? `every ${freq} at ${timing.time}` : `every ${freq}`;
+  } else if (timing.day && timing.time) {
+    return `weekly on ${timing.day} at ${timing.time}`;
+  } else if (timing.time) {
+    return `daily at ${timing.time}`;
+  }
+  // More patterns can be added as needed
+  return 'unknown schedule';
+}
+
+function mapJobTrigger(trigger: any): any {
+  return mapTriggerEvent(trigger.event);
+}
+
+function mapTriggerEvent(event: any): any {
+  return {
+    type: 'entity',
+    entity: event.entity || 'unknown',
+    eventType: event.eventType || 'created'
+  };
+}
+
+function mapJobDelay(delay: any): any {
+  return {
+    amount: delay.duration.amount,
+    unit: delay.duration.unit
+  };
+}
+
+// Phase II: Workflow Declaration Mapping
+function mapWorkflowDecl(decl: WorkflowDecl): NonNullable<AppModel['workflows']>[0] {
+  return {
+    name: decl.name,
+    events: decl.events.map(mapWorkflowEvent)
+  };
+}
+
+function mapWorkflowEvent(event: any): NonNullable<NonNullable<AppModel['workflows']>[0]['events']>[0] {
+  return {
+    state: event.state,
+    actions: event.actions.map(mapWorkflowAction)
+  };
+}
+
+function mapWorkflowAction(action: any): NonNullable<NonNullable<NonNullable<AppModel['workflows']>[0]['events']>[0]['actions']>[0] {
+  return {
+    name: action.name,
+    condition: action.condition ? mapWorkflowCondition(action.condition) : undefined,
+    target: action.target
+  };
+}
+
+function mapWorkflowCondition(condition: any): NonNullable<NonNullable<NonNullable<NonNullable<AppModel['workflows']>[0]['events']>[0]['actions']>[0]['condition']> {
+  return {
+    expression: mapExpression(condition.expression),
+    alternative: condition.alternative
+  };
 }

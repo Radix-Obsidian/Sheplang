@@ -1,0 +1,52 @@
+app OrderManagementSystem {
+  data Order {
+    fields: {
+      title: text
+      customerName: text
+      amount: number
+      orderStatus: text
+      assignedJob: text
+      deliverySchedule: text
+      lastAction: text
+    }
+    states: pending -> processing -> shipped -> delivered
+  }
+  
+  view OrderDashboard {
+    list Order
+    button "Create Order" -> CreateOrder
+  }
+  
+  data Customer {
+    fields: {
+      name: text
+      emailAddress: text
+      accountStatus: text
+    }
+  }
+  
+  job SendDailyReports {
+    schedule: daily at "9am"
+    action {
+      ~ "Generate and send daily order reports"
+    }
+  }
+  
+  job ProcessPendingOrders {
+    schedule: every 30 minutes
+    action {
+      ~ "Process all pending orders"
+    }
+  }
+  
+  action CreateOrder(title, customerName, amount) {
+    add Order with title, customerName, amount, orderStatus="pending", assignedJob="none", deliverySchedule="immediate", lastAction="create"
+    show OrderDashboard
+  }
+  
+  action UpdateOrderStatus(orderId, newStatus) {
+    ~ "Update order status"
+    show OrderDashboard
+  }
+}
+

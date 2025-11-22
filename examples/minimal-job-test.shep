@@ -1,0 +1,8 @@
+app MinimalJobTest {
+  job TestJob {
+    schedule: cron "0 9 * * *"
+    action {
+      ~ test action
+    }
+  }
+}

@@ -1,0 +1,16 @@
+app SimpleFixTest {
+  data Todo {
+    fields: {
+      title: text
+      priority: text
+    }
+    states: pending -> completed
+  }
+  
+  job SendReminders {
+    schedule: daily at "9am"
+    action {
+      ~ "send reminder emails"
+    }
+  }
+}

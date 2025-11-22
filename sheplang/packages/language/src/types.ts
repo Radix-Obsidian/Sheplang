@@ -22,9 +22,75 @@ export type Statement =
   | { kind: 'assign'; target: string; value: Expression }
   | { kind: 'raw'; text: string };
 
+// Phase II: State Machine Types
+export type StateTransition = {
+  from: string;
+  to: string;
+};
+
+export type StatusDeclaration = {
+  states: string[];
+  transitions: StateTransition[];
+};
+
+// Phase II: Job Types
+export type JobSchedule = {
+  type: 'cron' | 'natural';
+  pattern?: string;
+  expression?: string;
+};
+
+export type JobTrigger = {
+  type: 'lifecycle' | 'state_transition';
+  entity: string;
+  eventType?: string;
+  field?: string;
+  value?: string;
+};
+
+export type JobDelay = {
+  amount: string;
+  unit: string;
+};
+
+export type JobDeclaration = {
+  name: string;
+  schedule?: JobSchedule;
+  trigger?: JobTrigger;
+  delay?: JobDelay;
+  actions: Statement[];
+};
+
+// Phase II: Workflow Types
+export type WorkflowCondition = {
+  expression: Expression;
+  alternative?: string;
+};
+
+export type WorkflowAction = {
+  name: string;
+  condition?: WorkflowCondition;
+  target: string;
+};
+
+export type WorkflowEvent = {
+  state: string;
+  actions: WorkflowAction[];
+};
+
+export type WorkflowDeclaration = {
+  name: string;
+  events: WorkflowEvent[];
+};
+
 export type AppModel = {
   name: string;
-  datas: { name: string; fields: { name: string; type: string; constraints: any[] }[]; rules: string[] }[];
+  datas: { 
+    name: string; 
+    fields: { name: string; type: string; constraints: Record<string, unknown>[] }[]; 
+    status?: StatusDeclaration;
+    rules: string[] 
+  }[];
   views: { name: string; list?: string; buttons: { label: string; action: string }[] }[];
   actions: {
     name: string;
@@ -37,4 +103,6 @@ export type AppModel = {
     trigger: string;
     steps: { description: string }[];
   }[];
+  jobs?: JobDeclaration[];
+  workflows?: WorkflowDeclaration[];
 };

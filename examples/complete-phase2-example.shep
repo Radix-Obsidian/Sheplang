@@ -1,0 +1,37 @@
+app ECommerceDemo {
+  data User {
+    fields: {
+      email: text
+      name: text
+      role: text
+    }
+  }
+  
+  data Product {
+    fields: {
+      name: text
+      price: number
+      category: text
+    }
+  }
+  
+  view UserDashboard {
+    list User
+    button "Create User" -> CreateUser
+  }
+  
+  view ProductCatalog {
+    list Product
+    button "Add Product" -> CreateProduct
+  }
+  
+  action CreateUser(email, name, role) {
+    add User with email, name, role
+    show UserDashboard
+  }
+  
+  action CreateProduct(name, price, category) {
+    add Product with name, price, category
+    show ProductCatalog
+  }
+}

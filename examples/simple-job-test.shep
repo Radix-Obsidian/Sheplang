@@ -1,0 +1,8 @@
+app SimpleJobTest {
+  job TestJob {
+    schedule: daily at 9am
+    action {
+      ~ test action
+    }
+  }
+}

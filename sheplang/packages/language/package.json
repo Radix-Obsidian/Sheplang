@@ -11,7 +11,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "repository": {
     "type": "git",
@@ -29,17 +31,18 @@
     "clean": "rimraf dist lib src/generated"
   },
   "dependencies": {
+    "chevrotain-allstar": "^0.3.1",
     "langium": "^3.0.0"
   },
   "devDependencies": {
-    "langium-cli": "^3.0.0",
-    "typescript": "^5.6.3",
-    "ts-node": "^10.9.2",
     "@types/node": "^20.10.0",
-    "vitest": "^1.6.0",
-    "eslint": "^8.57.0",
-    "@typescript-eslint/parser": "^7.8.0",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
-    "rimraf": "^5.0.5"
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "langium-cli": "^3.0.0",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.0"
   }
 }

@@ -1,0 +1,15 @@
+app BackgroundTest {
+  data Order {
+    fields: {
+      title: text
+      status: text
+    }
+  }
+  
+  background OrderReminder {
+    schedule: daily at 9am
+    action {
+      ~ send reminder emails
+    }
+  }
+}

@@ -1,0 +1,18 @@
+app SimpleApp {
+  data Order {
+    fields: {
+      title: text
+      status: text
+    }
+  }
+  
+  view OrderView {
+    list Order
+    button "Create Order" -> CreateOrder
+  }
+  
+  action CreateOrder(title) {
+    add Order with title, status="new"
+    show OrderView
+  }
+}

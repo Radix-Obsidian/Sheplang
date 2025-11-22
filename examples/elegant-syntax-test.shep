@@ -1,0 +1,34 @@
+app ElegantApp {
+  data Todo {
+    fields: {
+      title: text
+      status: text
+      job: text
+    }
+    status: pending -> completed -> archived
+  }
+  
+  data Status {
+    fields: {
+      name: text
+      active: yes/no
+    }
+  }
+  
+  view TodoView {
+    list Todo
+    button "Create Todo" -> CreateTodo
+  }
+  
+  action CreateTodo(title) {
+    add Todo with title, status="pending", job="none"
+    show TodoView
+  }
+  
+  job SendReminders {
+    schedule: daily at 9am
+    action {
+      ~ send reminder emails
+    }
+  }
+}

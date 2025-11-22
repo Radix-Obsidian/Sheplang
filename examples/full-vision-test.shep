@@ -1,0 +1,33 @@
+app FullVisionTest {
+  data Todo {
+    fields: {
+      title: text
+      status: text
+      job: text
+      schedule: text
+      action: text
+      states: text
+    }
+    states: pending -> completed -> archived
+  }
+  
+  data Status {
+    fields: {
+      name: text
+      job: text
+      schedule: text
+    }
+  }
+  
+  job SendReminders {
+    schedule: daily at "9am"
+    action {
+      ~ "send reminder emails"
+    }
+  }
+  
+  action CreateTodo(title, status, job) {
+    add Todo with title, status, job, schedule="none", action="create", states="pending"
+    show TodoView
+  }
+}

@@ -1,0 +1,13 @@
+app SimpleTest {
+  data Todo {
+    fields: {
+      title: text
+      done: yes/no
+    }
+  }
+  
+  statemachine TodoStates {
+    entity: Todo
+    states: pending -> completed
+  }
+}

@@ -1,0 +1,26 @@
+app FullApp {
+  data Order {
+    fields: {
+      title: text
+      status: text
+      amount: number
+    }
+  }
+
+  view OrderView {
+    list Order
+    button "New Order" -> CreateOrder
+  }
+
+  action CreateOrder(title, amount) {
+    add Order with title, amount, status="new"
+    show OrderView
+  }
+
+  scheduler SendReminders {
+    schedule: daily at 9am
+    action {
+      ~ send reminder emails
+    }
+  }
+}
