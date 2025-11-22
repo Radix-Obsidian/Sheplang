@@ -1,0 +1,51 @@
+{
+  "name": "@goldensheepai/sheplang-database",
+  "version": "1.0.0",
+  "description": "Centralized database client for ShepLang using Neon and Prisma",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    }
+  },
+  "files": ["dist", "generated"],
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').cpSync('generated', 'dist/generated', {recursive: true, force: true})\"",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist generated",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "db:push": "prisma db push --schema=./prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
+    "db:studio": "prisma studio --schema=./prisma/schema.prisma",
+    "example": "tsx src/example.ts",
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.5",
+    "prisma": "^6.0.1",
+    "rimraf": "^6.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "keywords": [
+    "sheplang",
+    "database",
+    "prisma",
+    "neon",
+    "postgresql"
+  ],
+  "author": "Golden Sheep AI",
+  "license": "MIT"
+}

@@ -1,0 +1,16 @@
+app MyTodos
+
+data Todo:
+  fields:
+    title: text
+    done: yes/no
+  rules:
+    - "user can update own items"
+
+view Dashboard:
+  list Todo
+  button "Add Task" -> CreateTodo
+
+action CreateTodo(title):
+  add Todo with title, done=false
+  show Dashboard

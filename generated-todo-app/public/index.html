@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTodos Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .space-y-4 > * + * {
+            margin-top: 1rem;
+        }
+        .text-2xl {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .divide-y > * + * {
+            border-top: 1px solid #e5e5e5;
+        }
+        .py-4 {
+            padding: 1rem 0;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .error {
+            color: #dc2626;
+            background: #fef2f2;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+        .success {
+            color: #059669;
+            background: #f0fdf4;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function Dashboard() {
+            const [todos, setTodos] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [newTodo, setNewTodo] = useState('');
+
+            useEffect(() => {
+                loadTodos();
+            }, []);
+
+            const loadTodos = async () => {
+                try {
+                    const response = await fetch('/api/todos');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch todos');
+                    }
+                    const data = await response.json();
+                    setTodos(data);
+                    setError(null);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const createTodo = async () => {
+                if (!newTodo.trim()) return;
+
+                try {
+                    const response = await fetch('/api/todos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            title: newTodo,
+                            done: false
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to create todo');
+                    }
+
+                    const createdTodo = await response.json();
+                    setTodos([createdTodo, ...todos]);
+                    setNewTodo('');
+                    setError(null);
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            const toggleTodo = async (id, currentDone) => {
+                try {
+                    const response = await fetch(`/api/todos/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            done: !currentDone
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to update todo');
+                    }
+
+                    const updatedTodo = await response.json();
+                    setTodos(todos.map(todo => 
+                        todo.id === id ? updatedTodo : todo
+                    ));
+                    setError(null);
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            const deleteTodo = async (id) => {
+                try {
+                    const response = await fetch(`/api/todos/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to delete todo');
+                    }
+
+                    setTodos(todos.filter(todo => todo.id !== id));
+                    setError(null);
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            if (loading) {
+                return <div className="container"><p>Loading...</p></div>;
+            }
+
+            return (
+                <div className="container">
+                    <div className="space-y-4">
+                        <h1 className="text-2xl">MyTodos Dashboard</h1>
+                        
+                        {error && (
+                            <div className="error">
+                                Error: {error}
+                            </div>
+                        )}
+
+                        <div>
+                            <div style={{display: 'flex', gap: '8px', marginBottom: '16px'}}>
+                                <input
+                                    type="text"
+                                    value={newTodo}
+                                    onChange={(e) => setNewTodo(e.target.value)}
+                                    placeholder="Add a new todo..."
+                                    style={{flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px'}}
+                                    onKeyPress={(e) => e.key === 'Enter' && createTodo()}
+                                />
+                                <button className="btn" onClick={createTodo}>
+                                    Add Todo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 className="text-2xl">Todos ({todos.length})</h2>
+                            {todos.length === 0 ? (
+                                <p>No todos yet. Create your first one!</p>
+                            ) : (
+                                <div className="divide-y">
+                                    {todos.map((todo) => (
+                                        <div key={todo.id} className="py-4" style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                                            <input
+                                                type="checkbox"
+                                                checked={todo.done}
+                                                onChange={() => toggleTodo(todo.id, todo.done)}
+                                                style={{cursor: 'pointer'}}
+                                            />
+                                            <span style={{flex: 1, textDecoration: todo.done ? 'line-through' : 'none'}}>
+                                                {todo.title}
+                                            </span>
+                                            <small style={{color: '#666'}}>
+                                                {new Date(todo.createdAt).toLocaleString()}
+                                            </small>
+                                            <button 
+                                                className="btn" 
+                                                onClick={() => deleteTodo(todo.id)}
+                                                style={{background: '#dc2626', padding: '4px 8px', fontSize: '12px'}}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>

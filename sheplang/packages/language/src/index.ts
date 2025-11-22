@@ -84,5 +84,5 @@ export async function parseAndMap(source: string, filePath = 'input.shep') {
 
 export { mapToAppModel };
 export { preprocessIndentToBraces, preprocessWithMap } from './preprocessor.js';
-export type { AppModel } from './types.js';
+export type { AppModel, Statement, Expression } from './types.js';
 export type { Diagnostic, CompilationResult } from './types/diagnostics.js';
