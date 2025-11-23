@@ -17,6 +17,9 @@ import { createBackendFileCommand } from './commands/createBackendFile';
 // Next.js/React importer
 import { streamlinedImport } from './commands/streamlinedImport';
 
+// ShepLang Project Wizard
+import { startProjectWizard } from './commands/projectWizard';
+
 // TODO: Add Webflow importer
 // import { importFromWebflow } from './commands/importFromWebflow';
 import { RuntimeManager } from './services/runtimeManager';
@@ -65,6 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('sheplang.showOutput', () => showOutputCommand()),
     vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
     vscode.commands.registerCommand('sheplang.importFromNextJS', () => streamlinedImport(context)),
+    vscode.commands.registerCommand('sheplang.startProjectWizard', () => startProjectWizard(context)),
     
     // AI usage management commands
     vscode.commands.registerCommand('sheplang.showAIUsage', () => showUsageStats(context)),

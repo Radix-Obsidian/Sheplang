@@ -1,0 +1,160 @@
+/**
+ * Phase 3 Full-Stack Example
+ * Demonstrates complete frontend-to-backend integration
+ * 
+ * Features:
+ * - CallStmt (POST, PUT, DELETE)
+ * - LoadStmt (GET)
+ * - Path parameters
+ * - Request validation
+ * - Full CRUD operations
+ */
+
+app TaskManager {
+  // Data model
+  data Task {
+    fields: {
+      title: text
+      description: text
+      status: text
+      priority: text
+      assignedTo: text
+    }
+    states: todo -> in_progress -> done
+  }
+  
+  data User {
+    fields: {
+      name: text
+      email: text
+      role: text
+    }
+  }
+  
+  // Views
+  view TaskList {
+    list Task
+    button "New Task" -> CreateTask
+    button "Refresh" -> LoadTasks
+  }
+  
+  view TaskDetail {
+    show Task
+    button "Edit" -> EditTask
+    button "Delete" -> DeleteTask
+    button "Complete" -> CompleteTask
+    button "Back" -> TaskList
+  }
+  
+  view CreateTask {
+    form {
+      input title
+      input description
+      input priority
+      input assignedTo
+    }
+    button "Create" -> SubmitTask
+    button "Cancel" -> TaskList
+  }
+  
+  view Dashboard {
+    show User
+    list Task
+    button "New Task" -> CreateTask
+  }
+  
+  // Actions - Full CRUD with API Integration
+  
+  // CREATE: POST request with validation
+  action SubmitTask(title, description, priority, assignedTo) {
+    call POST "/tasks" with title, description, priority, assignedTo
+    show TaskList
+  }
+  
+  // READ: GET all tasks
+  action LoadTasks() {
+    load GET "/tasks" into tasks
+    show TaskList
+  }
+  
+  // READ: GET single task by ID
+  action ViewTask(taskId) {
+    load GET "/tasks/:id" into task
+    show TaskDetail
+  }
+  
+  // UPDATE: PUT request with path parameter
+  action UpdateTask(taskId, title, description, priority) {
+    call PUT "/tasks/:id" with title, description, priority
+    show TaskList
+  }
+  
+  // UPDATE: PATCH for partial update (status change)
+  action CompleteTask(taskId) {
+    call PATCH "/tasks/:id" with status
+    show TaskList
+  }
+  
+  // DELETE: DELETE request
+  action DeleteTask(taskId) {
+    call DELETE "/tasks/:id"
+    show TaskList
+  }
+  
+  // Multiple API calls in one action
+  action RefreshDashboard(userId) {
+    load GET "/users/:id" into user
+    load GET "/tasks" into tasks
+    show Dashboard
+  }
+  
+  // Background job for task reminders
+  job TaskReminder {
+    schedule: daily at "9am"
+    action {
+      load GET "/tasks/overdue" into overdueTasks
+      ~ "Send reminder emails for overdue tasks"
+    }
+  }
+}
+
+/**
+ * Generated Output:
+ * 
+ * FRONTEND:
+ * - actions/SubmitTask.ts - async function with fetch() POST call
+ * - actions/LoadTasks.ts - async function with fetch() GET call
+ * - actions/ViewTask.ts - GET with path parameter
+ * - actions/UpdateTask.ts - PUT with validation
+ * - actions/CompleteTask.ts - PATCH for partial update
+ * - actions/DeleteTask.ts - DELETE request
+ * - views/TaskList.tsx - React component
+ * - views/TaskDetail.tsx - React component
+ * - views/CreateTask.tsx - Form component
+ * - views/Dashboard.tsx - Dashboard component
+ * 
+ * BACKEND:
+ * - api/routes/tasks.ts - Express router with:
+ *   - POST /tasks - Create task with validation
+ *   - GET /tasks - Get all tasks
+ *   - GET /tasks/:id - Get single task
+ *   - PUT /tasks/:id - Update task
+ *   - PATCH /tasks/:id - Partial update
+ *   - DELETE /tasks/:id - Delete task
+ *   - GET /tasks/overdue - Custom query
+ * - api/routes/users.ts - User endpoints
+ * - api/server.ts - Express app with all routes
+ * 
+ * DATABASE:
+ * - prisma/schema.prisma - Task and User models
+ * - Prisma CRUD operations in all endpoints
+ * 
+ * FEATURES:
+ * ✅ Request validation (400 errors)
+ * ✅ Path parameters (:id)
+ * ✅ Error handling (404, 500 errors)
+ * ✅ Type safety throughout
+ * ✅ Async/await patterns
+ * ✅ State machine integration
+ * ✅ Background jobs
+ */

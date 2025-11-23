@@ -117,10 +117,78 @@ ${fields}
         return `  // Navigate to ${op.view}
   return { redirect: '/${op.view.toLowerCase()}' };`;
       }
+      if (op.kind === 'call') {
+        // Phase 3: API call code generation
+        const method = op.method;
+        const path = op.path;
+        const fields = op.fields || [];
+        const hasBody = method !== 'GET' && method !== 'DELETE' && fields.length > 0;
+        
+        return `  // API call: ${method} ${path}
+  const callResponse = await fetch('/api${path}', {
+    method: '${method}',
+    headers: { 'Content-Type': 'application/json' }${hasBody ? `,
+    body: JSON.stringify({ ${fields.join(', ')} })` : ''}
+  });
+  
+  if (!callResponse.ok) {
+    throw new Error(\`API call failed: \${callResponse.statusText}\`);
+  }
+  
+  const callResult = await callResponse.json();`;
+      }
+      if (op.kind === 'load') {
+        // Phase 3: Data loading code generation
+        const method = op.method;
+        const path = op.path;
+        const variable = op.variable;
+        
+        return `  // Load data: ${method} ${path}
+  const loadResponse = await fetch('/api${path}', {
+    method: '${method}',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  
+  if (!loadResponse.ok) {
+    throw new Error(\`Load failed: \${loadResponse.statusText}\`);
+  }
+  
+  const ${variable} = await loadResponse.json();`;
+      }
+      if (op.kind === 'workflow') {
+        // Phase 3: Workflow Engine code generation
+        const steps = op.steps || [];
+        const workflowCode = steps.map((step: any, index: number) => {
+          const stepBody = step.body?.map((stmt: any) => {
+            if (stmt.kind === 'call') {
+              const hasBody = stmt.method !== 'GET' && stmt.method !== 'DELETE' && stmt.fields && stmt.fields.length > 0;
+              return `    const response${index} = await fetch('/api${stmt.path}', {
+      method: '${stmt.method}',
+      headers: { 'Content-Type': 'application/json' }${hasBody ? `,
+      body: JSON.stringify({ ${stmt.fields.join(', ')} })` : ''}
+    });
+    if (!response${index}.ok) throw new Error('${step.name} failed');`;
+            }
+            return `    // ${stmt.kind}`;
+          }).join('\n') || '';
+          
+          return `  // Step: ${step.name}
+  try {
+${stepBody}
+  } catch (error) {
+    console.error('Step ${step.name} failed:', error);${op.errorHandler ? `
+    return await ${op.errorHandler}();` : `
+    throw error;`}
+  }`;
+        }).join('\n\n');
+        
+        return `  // Workflow: ${steps.map((s: any) => s.name).join(' → ')}
+${workflowCode}`;
+      }
       if (op.kind === 'raw' && 'text' in op) {
         return `  // Custom operation\n  console.log(${JSON.stringify(op.text || '')});`;
       }
-      // Handle other statement kinds (call, load, update, delete, etc.)
+      // Handle other statement kinds (update, delete, etc.)
       return `  // TODO: Implement ${op.kind} operation\n  console.log('${op.kind}:', ${JSON.stringify(op)});`;
     }).join('\n\n');
 

@@ -20,7 +20,14 @@ export type Statement =
   | { kind: 'if'; condition: Expression; thenBranch: Statement[]; elseIfs: { condition: Expression; body: Statement[] }[]; elseBranch: Statement[] }
   | { kind: 'for'; type: 'each' | 'range'; variable: string; collection?: Expression; start?: Expression; end?: Expression; body: Statement[] }
   | { kind: 'assign'; target: string; value: Expression }
+  | { kind: 'workflow'; steps: WorkflowStepDef[]; errorHandler?: string }
   | { kind: 'raw'; text: string };
+
+// Phase 3: Workflow Step Definition
+export type WorkflowStepDef = {
+  name: string;
+  body: Statement[];
+};
 
 // Phase II: State Machine Types
 export type StateTransition = {

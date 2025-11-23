@@ -22,13 +22,18 @@ TransitionChain:
   states+=ShepIdentifier ('->' states+=ShepIdentifier)+;
 
 // Contextual keyword support - allows keywords as identifiers per Langium docs
-ShepIdentifier returns string: ID | 'status' | 'job' | 'background' | 'states' | 'schedule' | 'action';
+ShepIdentifier returns string: ID | 'status' | 'job' | 'background' | 'states' | 'schedule' | 'action' | 'step';
 
 FieldDecl: name=ShepIdentifier ':' type=TypeRef constraints+=Constraint*;
 
 Constraint:
   kind=('required' | 'unique' | 'optional')
 | 'max' '=' max=NUMBER
+| 'min' '=' min=NUMBER
+| 'email' '=' emailValidation=('true'|'false')
+| 'pattern' '=' pattern=STRING
+| 'minLength' '=' minLength=NUMBER
+| 'maxLength' '=' maxLength=NUMBER
 | 'default' '=' value=(STRING | NUMBER | BooleanLiteral | ShepIdentifier);
 
 TypeRef: base=BaseType isArray?='[]'?;
@@ -119,7 +124,15 @@ EventType returns string:
   'created' | 'updated' | 'deleted';
 
 ParamDecl: name=ShepIdentifier (':' type=TypeRef)?;
-Stmt: AddStmt | ShowStmt | CallStmt | LoadStmt | UpdateStmt | DeleteStmt | IfStmt | ForStmt | AssignStmt | RawStmt;
+Stmt: AddStmt | ShowStmt | CallStmt | LoadStmt | UpdateStmt | DeleteStmt | IfStmt | ForStmt | AssignStmt | WorkflowStmt | RawStmt;
+
+// Phase 3: Workflow Engine - Simple step → step → step syntax
+WorkflowStmt:
+  steps+=WorkflowStep ('->' steps+=WorkflowStep)*
+  ('on' 'error' '->' errorHandler=[ActionDecl])?;
+
+WorkflowStep:
+  'step' name=ShepIdentifier '{' body+=Stmt* '}';
 
 AddStmt:
   'add' ref=[DataDecl] 'with' fields+=FieldValue (',' fields+=FieldValue)*;

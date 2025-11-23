@@ -15,6 +15,37 @@ import {
   templateJobPrismaSchema,
   processJobs 
 } from './job-templates.js';
+import { 
+  generateRealtimeServer, 
+  generateRealtimeServerUsage 
+} from './realtime-server-template.js';
+import { 
+  generateRealtimeHook,
+  generateRealtimeContext 
+} from './realtime-client-template.js';
+import {
+  generatePrismaRealtimeMiddleware
+} from './realtime-middleware-template.js';
+import {
+  generateAppValidation
+} from './validation-template.js';
+import {
+  generateStripeClient,
+  generateSendGridClient,
+  generateTwilioClient,
+  generateS3Client,
+  generateElasticsearchClient,
+  generateIntegrationManager
+} from './integration-templates.js';
+import {
+  generateHealthCheckEndpoint,
+  generateEnvManager,
+  generateCircuitBreaker,
+  generateRetryLogic
+} from './integration-health.js';
+import {
+  generateScreens
+} from './screen-templates.js';
 import Handlebars from 'handlebars';
 
 // Register Handlebars helpers
@@ -143,6 +174,98 @@ export function transpile(app: AppModel): GenResult {
       path: 'api/prisma/job-schema.prisma',
       content: compileTemplate(templateJobPrismaSchema, jobContext)
     });
+  }
+  
+  // Phase 4: Real-time Layer - Generate Socket.io infrastructure
+  // Server-side real-time
+  files.push({
+    path: 'api/realtime/server.ts',
+    content: generateRealtimeServer()
+  });
+  
+  files.push({
+    path: 'api/realtime/middleware.ts',
+    content: generatePrismaRealtimeMiddleware()
+  });
+  
+  // Client-side real-time - Generate hooks for each data model
+  for (const data of app.datas) {
+    files.push({
+      path: `hooks/use${data.name}Realtime.ts`,
+      content: generateRealtimeHook(data.name)
+    });
+  }
+  
+  // Global realtime context
+  files.push({
+    path: 'contexts/RealtimeContext.tsx',
+    content: generateRealtimeContext()
+  });
+  
+  // Phase 5: Validation Engine - Generate validation for all models
+  const validationFiles = generateAppValidation(app);
+  for (const file of validationFiles) {
+    files.push(file);
+  }
+  
+  // Phase 6: Integration Hub - Generate integration clients
+  const integrations = ['Stripe', 'SendGrid', 'Twilio', 'S3', 'Elasticsearch'];
+  
+  files.push({
+    path: 'integrations/clients/Stripe.ts',
+    content: generateStripeClient()
+  });
+  
+  files.push({
+    path: 'integrations/clients/SendGrid.ts',
+    content: generateSendGridClient()
+  });
+  
+  files.push({
+    path: 'integrations/clients/Twilio.ts',
+    content: generateTwilioClient()
+  });
+  
+  files.push({
+    path: 'integrations/clients/S3.ts',
+    content: generateS3Client()
+  });
+  
+  files.push({
+    path: 'integrations/clients/Elasticsearch.ts',
+    content: generateElasticsearchClient()
+  });
+  
+  files.push({
+    path: 'integrations/IntegrationManager.ts',
+    content: generateIntegrationManager(integrations)
+  });
+  
+  // Phase 6 Week 2: Production Integration Features
+  files.push({
+    path: 'api/routes/health.ts',
+    content: generateHealthCheckEndpoint()
+  });
+  
+  files.push({
+    path: 'integrations/EnvironmentManager.ts',
+    content: generateEnvManager()
+  });
+  
+  files.push({
+    path: 'integrations/CircuitBreaker.ts',
+    content: generateCircuitBreaker()
+  });
+  
+  files.push({
+    path: 'integrations/RetryLogic.ts',
+    content: generateRetryLogic()
+  });
+  
+  // Phase 7: ShepUI - Generate advanced screen components
+  const screenFiles = generateScreens(app);
+  for (const file of screenFiles) {
+    files.push(file);
   }
   
   // index

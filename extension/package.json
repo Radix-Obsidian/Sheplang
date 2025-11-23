@@ -119,6 +119,16 @@
         "command": "sheplang.openExamples",
         "title": "ShepLang: Open Example Project",
         "icon": "$(book)"
+      },
+      {
+        "command": "sheplang.startProjectWizard",
+        "title": "ShepLang: Start Project Wizard",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "sheplang.quickCreateProject",
+        "title": "ShepLang: Quick Create Project",
+        "icon": "$(add)"
       }
     ],
     "menus": {

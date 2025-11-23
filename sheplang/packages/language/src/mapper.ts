@@ -164,6 +164,31 @@ function serializeConstraint(constraint: any): any {
       return { type: 'max', value: constraint.max };
     }
 
+    // Phase 5: Min constraint
+    if (typeof constraint.min === 'string') {
+      return { type: 'min', value: constraint.min };
+    }
+
+    // Phase 5: MinLength constraint
+    if (typeof constraint.minLength === 'string') {
+      return { type: 'minLength', value: constraint.minLength };
+    }
+
+    // Phase 5: MaxLength constraint
+    if (typeof constraint.maxLength === 'string') {
+      return { type: 'maxLength', value: constraint.maxLength };
+    }
+
+    // Phase 5: Email validation constraint
+    if (typeof constraint.emailValidation === 'string') {
+      return { type: 'email', value: constraint.emailValidation === 'true' };
+    }
+
+    // Phase 5: Pattern (regex) constraint
+    if (typeof constraint.pattern === 'string') {
+      return { type: 'pattern', value: constraint.pattern };
+    }
+
     // Default constraint: default = <literal>
     if (constraint.value !== undefined) {
       let v: any = constraint.value;
@@ -310,6 +335,16 @@ function mapStmt(
       kind: 'assign',
       target: stmt.target,
       value: mapExpression(stmt.value)
+    };
+  } else if (stmt.$type === 'WorkflowStmt') {
+    // Phase 3: Workflow Engine
+    return {
+      kind: 'workflow',
+      steps: stmt.steps?.map((step: any) => ({
+        name: step.name,
+        body: step.body?.map((s: any) => mapStmt(s, actionName)) || []
+      })) || [],
+      errorHandler: stmt.errorHandler?.ref?.name
     };
   } else if (stmt.$type === 'RawStmt') {
     return { kind: 'raw', text: stmt.text };
