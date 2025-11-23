@@ -7,6 +7,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ShepLangProjectWizard } from '../wizard/projectWizard';
+import { ProgressPanel } from '../ui/progressPanel';
 import { ScaffoldingAgent } from '../wizard/scaffoldingAgent';
 import { outputChannel } from '../services/outputChannel';
 

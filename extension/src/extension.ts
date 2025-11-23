@@ -19,6 +19,7 @@ import { streamlinedImport } from './commands/streamlinedImport';
 
 // ShepLang Project Wizard
 import { startProjectWizard } from './commands/projectWizard';
+import { testWizard, quickTestWizard } from './commands/testWizard';
 
 // TODO: Add Webflow importer
 // import { importFromWebflow } from './commands/importFromWebflow';
@@ -69,6 +70,8 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
     vscode.commands.registerCommand('sheplang.importFromNextJS', () => streamlinedImport(context)),
     vscode.commands.registerCommand('sheplang.startProjectWizard', () => startProjectWizard(context)),
+    vscode.commands.registerCommand('sheplang.testWizard', () => testWizard()),
+    vscode.commands.registerCommand('sheplang.quickTestWizard', () => quickTestWizard()),
     
     // AI usage management commands
     vscode.commands.registerCommand('sheplang.showAIUsage', () => showUsageStats(context)),

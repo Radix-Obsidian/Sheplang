@@ -47,6 +47,9 @@ const createBackendFile_1 = require("./commands/createBackendFile");
 // import { manageFigmaToken } from './commands/manageFigmaToken';
 // Next.js/React importer
 const streamlinedImport_1 = require("./commands/streamlinedImport");
+// ShepLang Project Wizard
+const projectWizard_1 = require("./commands/projectWizard");
+const testWizard_1 = require("./commands/testWizard");
 // TODO: Add Webflow importer
 // import { importFromWebflow } from './commands/importFromWebflow';
 const runtimeManager_1 = require("./services/runtimeManager");
@@ -78,7 +81,7 @@ function activate(context) {
     outputChannel_1.outputChannel.info('Registering commands...');
     context.subscriptions.push(vscode.commands.registerCommand('sheplang.showPreview', async () => {
         await (0, preview_1.showPreviewCommand)(context, runtimeManager);
-    }), vscode.commands.registerCommand('sheplang.showPreviewInBrowser', () => (0, previewInBrowser_1.showPreviewInBrowser)(context)), vscode.commands.registerCommand('sheplang.stopPreviewServer', () => (0, previewInBrowser_1.stopPreviewServer)()), vscode.commands.registerCommand('sheplang.newProject', () => (0, newProject_1.newProjectCommand)(context)), vscode.commands.registerCommand('sheplang.restartBackend', () => (0, restartBackend_1.restartBackendCommand)(context)), vscode.commands.registerCommand('sheplang.showOutput', () => (0, showOutput_1.showOutputCommand)()), vscode.commands.registerCommand('sheplang.createBackendFile', () => (0, createBackendFile_1.createBackendFileCommand)()), vscode.commands.registerCommand('sheplang.importFromNextJS', () => (0, streamlinedImport_1.streamlinedImport)(context)), 
+    }), vscode.commands.registerCommand('sheplang.showPreviewInBrowser', () => (0, previewInBrowser_1.showPreviewInBrowser)(context)), vscode.commands.registerCommand('sheplang.stopPreviewServer', () => (0, previewInBrowser_1.stopPreviewServer)()), vscode.commands.registerCommand('sheplang.newProject', () => (0, newProject_1.newProjectCommand)(context)), vscode.commands.registerCommand('sheplang.restartBackend', () => (0, restartBackend_1.restartBackendCommand)(context)), vscode.commands.registerCommand('sheplang.showOutput', () => (0, showOutput_1.showOutputCommand)()), vscode.commands.registerCommand('sheplang.createBackendFile', () => (0, createBackendFile_1.createBackendFileCommand)()), vscode.commands.registerCommand('sheplang.importFromNextJS', () => (0, streamlinedImport_1.streamlinedImport)(context)), vscode.commands.registerCommand('sheplang.startProjectWizard', () => (0, projectWizard_1.startProjectWizard)(context)), vscode.commands.registerCommand('sheplang.testWizard', () => (0, testWizard_1.testWizard)()), vscode.commands.registerCommand('sheplang.quickTestWizard', () => (0, testWizard_1.quickTestWizard)()), 
     // AI usage management commands
     vscode.commands.registerCommand('sheplang.showAIUsage', () => (0, usageTracker_1.showUsageStats)(context)), vscode.commands.registerCommand('sheplang.resetAIUsage', () => (0, usageTracker_1.resetUsageForTesting)(context)), vscode.commands.registerCommand('sheplang.updateApiKey', async () => {
         const key = await vscode.window.showInputBox({

@@ -13,13 +13,18 @@ import { FlowGenerator } from '../generators/flowGenerator';
 import { ScreenGenerator } from '../generators/screenGenerator';
 import { IntegrationGenerator } from '../generators/integrationGenerator';
 import { ReadmeGenerator } from '../generators/readmeGenerator';
+import { SyntaxValidator } from '../validation/syntaxValidator';
+import { ProgressPanel } from '../ui/progressPanel';
 
 export class ScaffoldingAgent {
   private workspaceRoot: string;
   private progressCallback?: (progress: GenerationProgress) => void;
+  private syntaxValidator: SyntaxValidator;
+  private progressPanel?: ProgressPanel;
 
   constructor(workspaceRoot: string) {
     this.workspaceRoot = workspaceRoot;
+    this.syntaxValidator = SyntaxValidator.getInstance();
   }
 
   /**
@@ -31,38 +36,106 @@ export class ScaffoldingAgent {
   ): Promise<void> {
     this.progressCallback = progressCallback;
     
+    // Initialize progress panel
+    this.progressPanel = new ProgressPanel({
+      title: `🎯 Generating ${questionnaire.projectName}`,
+      showDetails: true,
+      showTiming: true,
+      autoClose: false
+    });
+    
+    this.progressPanel.show();
+    
+    // Initialize progress steps
+    this.progressPanel.initializeSteps([
+      {
+        id: 'structure',
+        name: 'Create Project Structure',
+        description: 'Setting up folders and basic files'
+      },
+      {
+        id: 'entities',
+        name: 'Generate Entities',
+        description: 'Creating data models and relationships'
+      },
+      {
+        id: 'flows',
+        name: 'Generate Flows',
+        description: 'Building business logic and workflows'
+      },
+      {
+        id: 'screens',
+        name: 'Generate Screens',
+        description: 'Creating user interfaces and views'
+      },
+      {
+        id: 'integrations',
+        name: 'Setup Integrations',
+        description: 'Configuring external services'
+      },
+      {
+        id: 'documentation',
+        name: 'Create Documentation',
+        description: 'Generating README and guides'
+      },
+      {
+        id: 'config',
+        name: 'Save Configuration',
+        description: 'Finalizing project settings'
+      }
+    ]);
+    
+    // Handle panel messages
+    this.progressPanel.onDidClose(() => {
+      outputChannel.info('Progress panel closed');
+    });
+    
     try {
       outputChannel.section('Generating ShepLang Project');
       outputChannel.info(`Project: ${questionnaire.projectName}`);
       outputChannel.info(`Type: ${questionnaire.projectType}`);
 
       // Step 1: Create project structure
+      this.progressPanel.startStep('structure', ['Creating folders...', 'Setting up basic structure...']);
       await this.updateProgress('Creating project structure...', 10);
       const projectPath = await this.createProjectStructure(questionnaire);
+      this.progressPanel.completeStep('structure', ['Project structure created successfully']);
 
       // Step 2: Generate entities
+      this.progressPanel.startStep('entities', ['Parsing entities...', 'Generating .shep files...']);
       await this.updateProgress('Generating entities...', 30);
       await this.generateEntities(questionnaire, projectPath);
+      this.progressPanel.completeStep('entities', ['All entities generated']);
 
       // Step 3: Generate flows
+      this.progressPanel.startStep('flows', ['Creating auth flow...', 'Generating feature flows...']);
       await this.updateProgress('Generating flows...', 50);
       await this.generateFlows(questionnaire, projectPath);
+      this.progressPanel.completeStep('flows', ['All flows generated']);
 
       // Step 4: Generate screens
+      this.progressPanel.startStep('screens', ['Creating dashboard...', 'Generating entity screens...']);
       await this.updateProgress('Generating screens...', 70);
       await this.generateScreens(questionnaire, projectPath);
+      this.progressPanel.completeStep('screens', ['All screens generated']);
 
       // Step 5: Generate integrations
+      this.progressPanel.startStep('integrations', ['Setting up services...', 'Configuring webhooks...']);
       await this.updateProgress('Setting up integrations...', 85);
       await this.generateIntegrations(questionnaire, projectPath);
+      this.progressPanel.completeStep('integrations', ['All integrations configured']);
 
       // Step 6: Generate documentation
+      this.progressPanel.startStep('documentation', ['Creating README...', 'Generating guides...']);
       await this.updateProgress('Creating documentation...', 95);
       await this.generateDocumentation(questionnaire, projectPath);
+      this.progressPanel.completeStep('documentation', ['Documentation created']);
 
       // Step 7: Save configuration
+      this.progressPanel.startStep('config', ['Saving project settings...']);
       await this.updateProgress('Saving configuration...', 100);
       await this.saveConfiguration(questionnaire, projectPath);
+      this.progressPanel.completeStep('config', ['Configuration saved']);
 
       // Success!
       await this.updateProgress('✅ Project generated successfully!', 100);
@@ -81,11 +154,80 @@ export class ScaffoldingAgent {
       outputChannel.error('Project generation failed:', error);
       await this.updateProgress('❌ Generation failed', 0, error as Error);
       
+      // Mark current step as failed
+      if (this.progressPanel) {
+        const currentStep = this.progressPanel['steps']?.find((s: any) => s.status === 'in-progress');
+        if (currentStep) {
+          this.progressPanel.failStep(currentStep.id, error as Error);
+        }
+      }
+      
       vscode.window.showErrorMessage(
         `Project generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
       
       throw error;
+    } finally {
+      // Close progress panel after a delay
+      setTimeout(() => {
+        if (this.progressPanel) {
+          this.progressPanel.close();
+        }
+      }, 3000);
+    }
+  }
+
+  /**
+   * Validate and write a file with syntax checking
+   */
+  private async validateAndWriteFile(filePath: string, content: string, fileType: string): Promise<boolean> {
+    try {
+      // Validate syntax for .shep files
+      if (filePath.endsWith('.shep')) {
+        const validation = await this.syntaxValidator.validate(content, filePath);
+        
+        if (!validation.isValid) {
+          outputChannel.error(`Syntax errors in ${filePath}:`, validation.errors);
+          
+          // Try auto-fix
+          if (validation.fixed) {
+            outputChannel.info(`Attempting auto-fix for ${filePath}...`);
+            const fixedValidation = await this.syntaxValidator.validate(validation.fixed, filePath);
+            
+            if (fixedValidation.isValid) {
+              await vscode.workspace.fs.writeFile(
+                vscode.Uri.file(filePath),
+                Buffer.from(validation.fixed, 'utf8')
+              );
+              outputChannel.success(`Auto-fixed and saved ${filePath}`);
+              return true;
+            }
+          }
+          
+          // Show errors to user
+          this.syntaxValidator.showValidationErrors(validation.errors, filePath);
+          
+          // Still write the file with errors so user can fix manually
+          await vscode.workspace.fs.writeFile(
+            vscode.Uri.file(filePath),
+            Buffer.from(content, 'utf8')
+          );
+          
+          return false;
+        }
+      }
+      
+      // Write the file
+      await vscode.workspace.fs.writeFile(
+        vscode.Uri.file(filePath),
+        Buffer.from(content, 'utf8')
+      );
+      
+      return true;
+      
+    } catch (error) {
+      outputChannel.error(`Failed to write ${filePath}:`, error);
+      return false;
     }
   }
 
@@ -152,12 +294,13 @@ export class ScaffoldingAgent {
       const entityContent = entityGenerator.generateEntity(entity, questionnaire);
       const entityFile = path.join(entitiesPath, `${entity.name}.shep`);
       
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(entityFile),
-        Buffer.from(entityContent, 'utf8')
-      );
+      const success = await this.validateAndWriteFile(entityFile, entityContent, 'entity');
       
-      outputChannel.info(`Generated entity: ${entity.name}.shep`);
+      if (success) {
+        outputChannel.info(`Generated entity: ${entity.name}.shep`);
+      } else {
+        outputChannel.warning(`Generated entity with syntax errors: ${entity.name}.shep`);
+      }
     }
   }
 
@@ -171,10 +314,13 @@ export class ScaffoldingAgent {
     // Generate auth flow
     const authFlow = flowGenerator.generateAuthFlow(questionnaire);
     const authPath = path.join(flowsPath, 'auth', 'authentication.shep');
-    await vscode.workspace.fs.writeFile(
-      vscode.Uri.file(authPath),
-      Buffer.from(authFlow, 'utf8')
-    );
+    
+    const authSuccess = await this.validateAndWriteFile(authPath, authFlow, 'flow');
+    if (authSuccess) {
+      outputChannel.info('Generated auth flow: authentication.shep');
+    } else {
+      outputChannel.warning('Generated auth flow with syntax errors: authentication.shep');
+    }
 
     // Generate feature flows
     for (const feature of questionnaire.features) {
@@ -182,10 +328,13 @@ export class ScaffoldingAgent {
       const featureFolder = this.sanitizeFolderName(feature.name);
       const featurePath = path.join(flowsPath, featureFolder, `${featureFolder}.shep`);
       
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(featurePath),
-        Buffer.from(featureFlow, 'utf8')
-      );
+      const success = await this.validateAndWriteFile(featurePath, featureFlow, 'flow');
+      
+      if (success) {
+        outputChannel.info(`Generated flow: ${featureFolder}.shep`);
+      } else {
+        outputChannel.warning(`Generated flow with syntax errors: ${featureFolder}.shep`);
+      }
     }
 
     // Generate webhook flows if integrations exist
@@ -193,10 +342,12 @@ export class ScaffoldingAgent {
       const webhookFlow = flowGenerator.generateWebhookFlow(questionnaire);
       const webhookPath = path.join(flowsPath, 'webhooks', 'integrations.shep');
       
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(webhookPath),
-        Buffer.from(webhookFlow, 'utf8')
-      );
+      const webhookSuccess = await this.validateAndWriteFile(webhookPath, webhookFlow, 'flow');
+      if (webhookSuccess) {
+        outputChannel.info('Generated webhook flow: integrations.shep');
+      } else {
+        outputChannel.warning('Generated webhook flow with syntax errors: integrations.shep');
+      }
     }
   }
 
@@ -210,10 +361,13 @@ export class ScaffoldingAgent {
     // Generate dashboard screen
     const dashboardScreen = screenGenerator.generateDashboard(questionnaire);
     const dashboardPath = path.join(screensPath, 'dashboard', 'main.shep');
-    await vscode.workspace.fs.writeFile(
-      vscode.Uri.file(dashboardPath),
-      Buffer.from(dashboardScreen, 'utf8')
-    );
+    
+    const dashboardSuccess = await this.validateAndWriteFile(dashboardPath, dashboardScreen, 'screen');
+    if (dashboardSuccess) {
+      outputChannel.info('Generated screen: dashboard/main.shep');
+    } else {
+      outputChannel.warning('Generated screen with syntax errors: dashboard/main.shep');
+    }
 
     // Generate entity list screens
     for (const entity of questionnaire.entities) {
@@ -221,19 +375,25 @@ export class ScaffoldingAgent {
       const entityFolder = entity.name.toLowerCase();
       const listPath = path.join(screensPath, entityFolder, 'list.shep');
       
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(listPath),
-        Buffer.from(listScreen, 'utf8')
-      );
+      const listSuccess = await this.validateAndWriteFile(listPath, listScreen, 'screen');
+      
+      if (listSuccess) {
+        outputChannel.info(`Generated screen: ${entityFolder}/list.shep`);
+      } else {
+        outputChannel.warning(`Generated screen with syntax errors: ${entityFolder}/list.shep`);
+      }
 
       // Generate detail screen
       const detailScreen = screenGenerator.generateEntityDetail(entity, questionnaire);
       const detailPath = path.join(screensPath, entityFolder, 'detail.shep');
       
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(detailPath),
-        Buffer.from(detailScreen, 'utf8')
-      );
+      const detailSuccess = await this.validateAndWriteFile(detailPath, detailScreen, 'screen');
+      
+      if (detailSuccess) {
+        outputChannel.info(`Generated screen: ${entityFolder}/detail.shep`);
+      } else {
+        outputChannel.warning(`Generated screen with syntax errors: ${entityFolder}/detail.shep`);
+      }
     }
   }
 
@@ -248,10 +408,13 @@ export class ScaffoldingAgent {
       const integrationContent = integrationGenerator.generateIntegration(integration, questionnaire);
       const integrationFile = path.join(integrationsPath, `${integration.service.toLowerCase()}.shep`);
       
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(integrationFile),
-        Buffer.from(integrationContent, 'utf8')
-      );
+      const success = await this.validateAndWriteFile(integrationFile, integrationContent, 'integration');
+      
+      if (success) {
+        outputChannel.info(`Generated integration: ${integration.service.toLowerCase()}.shep`);
+      } else {
+        outputChannel.warning(`Generated integration with syntax errors: ${integration.service.toLowerCase()}.shep`);
+      }
     }
   }
 
