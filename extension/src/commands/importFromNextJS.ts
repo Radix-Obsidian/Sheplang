@@ -112,6 +112,7 @@ export async function importFromNextJS(context: vscode.ExtensionContext): Promis
               appModel.entities.push({
                 name: entityName,
                 source: 'user-input',
+                filePath: '',
                 fields: [
                   { name: 'id', type: 'text', required: true },
                   { name: 'name', type: 'text', required: true }
@@ -128,7 +129,9 @@ export async function importFromNextJS(context: vscode.ExtensionContext): Promis
           const shouldSkip = skipWords.some(word => instr === word);
           
           if (!shouldSkip) {
+            if (appModel.todos) {
             appModel.todos.unshift(`Custom instruction: ${wizardInput.customInstructions}`);
+          }
           }
         }
 
@@ -485,8 +488,8 @@ function generateScaffoldReport(appModel: AppModel, scaffold: any): string {
   }
 
   // TODOs
-  if (appModel.todos.length > 0) {
-    report += `## TODOs\n\n`;
+  if (appModel.todos && appModel.todos.length > 0) {
+    report += '## TODOs & Notes\n\n';
     for (const todo of appModel.todos) {
       report += `- ${todo}\n`;
     }

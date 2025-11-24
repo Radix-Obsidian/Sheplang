@@ -107,7 +107,7 @@ export async function startProjectWizard(context: vscode.ExtensionContext): Prom
         progressChannel.show();
         
         await scaffoldingAgent.generateProject(questionnaire, (progress) => {
-          const message = `[${progress.percentage}%] ${progress.message}`;
+          const message = `[${progress.percentage || 0}%] ${progress.message || 'Processing...'}`;
           progressChannel.appendLine(message);
           
           if (progress.error) {
@@ -238,18 +238,18 @@ export async function quickCreateProject(context: vscode.ExtensionContext): Prom
         {
           name: 'User',
           fields: [
-            { name: 'name', type: 'text', required: true },
-            { name: 'email', type: 'text', required: true },
-            { name: 'createdAt', type: 'date' }
+            { name: 'name', type: 'text' as const, required: true },
+            { name: 'email', type: 'text' as const, required: true },
+            { name: 'createdAt', type: 'date' as const }
           ]
         }
       ],
       roleType: 'single-user' as any,
       roles: [],
       integrations: [],
-      apiStyle: 'REST',
+      apiStyle: 'REST' as const,
       realtime: false,
-      deployment: 'Vercel'
+      deployment: 'Vercel' as const
     };
 
     // Generate project
@@ -267,8 +267,8 @@ export async function quickCreateProject(context: vscode.ExtensionContext): Prom
         
         await scaffoldingAgent.generateProject(questionnaire, (genProgress) => {
           progress.report({ 
-            increment: genProgress.percentage / 100, 
-            message: genProgress.message 
+            increment: (genProgress.percentage || 0) / 100, 
+            message: genProgress.message || 'Processing...' 
           });
         });
 

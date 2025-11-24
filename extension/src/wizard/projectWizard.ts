@@ -6,7 +6,8 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ProjectQuestionnaire, ProjectType, UserRoleType, EntityDefinition, Integration, ProjectFeature } from './types';
+import { ProjectQuestionnaire, ProjectType, UserRoleType, EntityDefinition, Integration, ProjectFeature, DesignAnnotation } from './types';
+import { AnnotationParser } from './parsers/annotationParser';
 import { getWizardStyles, getWizardScripts } from './wizardHtml';
 import { outputChannel } from '../services/outputChannel';
 
@@ -15,7 +16,7 @@ export class ShepLangProjectWizard {
   private context: vscode.ExtensionContext;
   private questionnaire: Partial<ProjectQuestionnaire> = {};
   private currentStep: number = 1;
-  private readonly totalSteps: number = 6;
+  private readonly totalSteps: number = 7;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
@@ -26,7 +27,7 @@ export class ShepLangProjectWizard {
    */
   public async start(): Promise<ProjectQuestionnaire | undefined> {
     outputChannel.section('ShepLang Project Wizard');
-    
+
     // Create webview panel
     this.panel = vscode.window.createWebviewPanel(
       'shepLangWizard',
@@ -78,7 +79,7 @@ export class ShepLangProjectWizard {
       );
 
       // Handle panel disposal
-      this.panel.onDidDispose(() => {
+      this.panel!.onDidDispose(() => {
         resolve(undefined);
       });
     });
@@ -90,10 +91,10 @@ export class ShepLangProjectWizard {
   private async handleNextStep(data: any): Promise<void> {
     // Save current step data
     this.saveStepData(this.currentStep, data);
-    
+
     // Move to next step
     this.currentStep++;
-    
+
     if (this.currentStep > this.totalSteps) {
       this.currentStep = this.totalSteps;
       return;
@@ -110,7 +111,7 @@ export class ShepLangProjectWizard {
    */
   private async handlePreviousStep(): Promise<void> {
     this.currentStep--;
-    
+
     if (this.currentStep < 1) {
       this.currentStep = 1;
       return;
@@ -156,27 +157,35 @@ export class ShepLangProjectWizard {
           this.questionnaire.customDescription = data.customDescription;
         }
         break;
-      
+
       case 2: // Core Features
         this.questionnaire.features = data.features;
         break;
-      
-      case 3: // Data Model
+
+      case 3: // Design & Accessibility
+        this.questionnaire.designNotes = data.designNotes;
+        if (data.designNotes) {
+          const parser = new AnnotationParser();
+          this.questionnaire.designAnnotation = parser.parse(data.designNotes);
+        }
+        break;
+
+      case 4: // Data Model
         this.questionnaire.entities = data.entities;
         break;
-      
-      case 4: // User Roles
+
+      case 5: // User Roles
         this.questionnaire.roleType = data.roleType;
         if (data.roleType !== 'single-user') {
           this.questionnaire.roles = data.roles;
         }
         break;
-      
-      case 5: // Integrations
+
+      case 6: // Integrations
         this.questionnaire.integrations = data.integrations;
         break;
-      
-      case 6: // Technical Preferences
+
+      case 7: // Technical Preferences
         this.questionnaire.apiStyle = data.apiStyle;
         this.questionnaire.realtime = data.realtime;
         this.questionnaire.deployment = data.deployment;
@@ -190,22 +199,22 @@ export class ShepLangProjectWizard {
   private handleParseEntities(text: string): void {
     // Simple parsing logic - can be enhanced with AI
     const entities: EntityDefinition[] = [];
-    
+
     // Look for patterns like "customers, orders, products"
     const words = text.toLowerCase().split(/[,\s]+/);
     const uniqueWords = new Set(words);
-    
+
     // Common business entities to prioritize
     const businessEntities = ['user', 'customer', 'order', 'product', 'post', 'comment', 'team', 'member', 'subscription', 'payment'];
-    
+
     for (const word of uniqueWords) {
       if (word.length > 2 && !['and', 'the', 'with', 'for', 'need', 'track', 'my', 'i', 'to'].includes(word)) {
         // Capitalize first letter
         const entityName = word.charAt(0).toUpperCase() + word.slice(1);
-        
+
         // Smart field suggestions based on entity type
         const fields = this.getDefaultFieldsForEntity(entityName);
-        
+
         entities.push({
           name: entityName,
           fields: fields
@@ -230,7 +239,7 @@ export class ShepLangProjectWizard {
    */
   private getDefaultFieldsForEntity(entityName: string): any[] {
     const name = entityName.toLowerCase();
-    
+
     if (name.includes('user') || name.includes('customer')) {
       return [
         { name: 'name', type: 'text', required: true },
@@ -238,7 +247,7 @@ export class ShepLangProjectWizard {
         { name: 'createdAt', type: 'date' }
       ];
     }
-    
+
     if (name.includes('order') || name.includes('payment')) {
       return [
         { name: 'amount', type: 'number', required: true },
@@ -246,7 +255,7 @@ export class ShepLangProjectWizard {
         { name: 'createdAt', type: 'date' }
       ];
     }
-    
+
     if (name.includes('product')) {
       return [
         { name: 'title', type: 'text', required: true },
@@ -254,7 +263,7 @@ export class ShepLangProjectWizard {
         { name: 'description', type: 'text' }
       ];
     }
-    
+
     if (name.includes('post') || name.includes('article')) {
       return [
         { name: 'title', type: 'text', required: true },
@@ -262,14 +271,14 @@ export class ShepLangProjectWizard {
         { name: 'publishedAt', type: 'date' }
       ];
     }
-    
+
     if (name.includes('team') || name.includes('organization')) {
       return [
         { name: 'name', type: 'text', required: true },
         { name: 'description', type: 'text' }
       ];
     }
-    
+
     // Default fields
     return [
       { name: 'name', type: 'text', required: true },
@@ -282,7 +291,7 @@ export class ShepLangProjectWizard {
    */
   private getWizardHtml(step: number): string {
     const progress = Math.round((step / this.totalSteps) * 100);
-    
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -311,7 +320,7 @@ export class ShepLangProjectWizard {
     <!-- Navigation -->
     <div class="navigation">
       ${step > 1 ? '<button class="btn btn-secondary" onclick="previousStep()">← Back</button>' : '<div></div>'}
-      ${step < this.totalSteps 
+      ${step < this.totalSteps
         ? '<button class="btn btn-primary" onclick="nextStep()">Next →</button>'
         : '<button class="btn btn-success" onclick="complete()">Generate Project 🚀</button>'
       }
@@ -342,6 +351,8 @@ export class ShepLangProjectWizard {
         return this.getStep5Content();
       case 6:
         return this.getStep6Content();
+      case 7:
+        return this.getStep7Content();
       default:
         return '';
     }
@@ -353,7 +364,7 @@ export class ShepLangProjectWizard {
   private getStep1Content(): string {
     const projectName = this.questionnaire.projectName || '';
     const selectedType = this.questionnaire.projectType || '';
-    
+
     return `
       <h1>What are you building?</h1>
       <p class="subtitle">Choose the type that best describes your project</p>
@@ -408,7 +419,7 @@ export class ShepLangProjectWizard {
   private getStep2Content(): string {
     const features = this.questionnaire.features || [];
     const placeholders = this.getFeaturePlaceholders(this.questionnaire.projectType);
-    
+
     return `
       <h1>What are the main things users will do?</h1>
       <p class="subtitle">List 3-5 key features (we'll help you build them)</p>
@@ -432,11 +443,35 @@ export class ShepLangProjectWizard {
   }
 
   /**
-   * Step 3: Data Model
+   * Step 3: Design & Accessibility
    */
   private getStep3Content(): string {
+    const notes = this.questionnaire.designNotes || '';
+
+    return `
+      <h1>Design & Accessibility</h1>
+      <p class="subtitle">Did you use Figma or the GitHub Annotation Toolkit?</p>
+
+      <div class="input-group">
+        <label>Design Notes / Annotations</label>
+        <div class="help-text" style="margin-bottom: 10px; font-size: 0.9em; opacity: 0.8;">
+          Paste your specific design notes, accessibility requirements, or Figma annotation text here.
+          <br>Example format:
+          <br>Screen: Dashboard
+          <br>- Button: "Add User" (Opens Modal)
+          <br>A11y: High contrast required
+        </div>
+        <textarea id="designNotes" placeholder="Paste your annotations here..." style="min-height: 200px;">${notes}</textarea>
+      </div>
+    `;
+  }
+
+  /**
+   * Step 4: Data Model
+   */
+  private getStep4Content(): string {
     const entities = this.questionnaire.entities || [];
-    
+
     return `
       <h1>What information will your app store?</h1>
       <p class="subtitle">Tell us about the main things your users create or manage</p>
@@ -479,11 +514,11 @@ export class ShepLangProjectWizard {
   }
 
   /**
-   * Step 4: User Roles
+   * Step 5: User Roles
    */
-  private getStep4Content(): string {
+  private getStep5Content(): string {
     const roleType = this.questionnaire.roleType || 'single-user';
-    
+
     return `
       <h1>Who will use your app?</h1>
       <p class="subtitle">Define user access levels</p>
@@ -524,9 +559,9 @@ export class ShepLangProjectWizard {
   }
 
   /**
-   * Step 5: Integrations
+   * Step 6: Integrations
    */
-  private getStep5Content(): string {
+  private getStep6Content(): string {
     return `
       <h1>Which services will you integrate?</h1>
       <p class="subtitle">Select the external services your app needs</p>
@@ -592,11 +627,11 @@ export class ShepLangProjectWizard {
   }
 
   /**
-   * Step 6: Review & Generate
+   * Step 7: Review & Generate
    */
-  private getStep6Content(): string {
+  private getStep7Content(): string {
     const q = this.questionnaire;
-    
+
     return `
       <h1>Review Your Project</h1>
       <p class="subtitle">Everything look good? Let's generate your ShepLang project!</p>
@@ -621,7 +656,19 @@ export class ShepLangProjectWizard {
       </div>
 
       <div class="review-section">
-        <div class="review-title">Data Model (${q.entities?.length || 0} entities) <a href="#" class="edit-link" onclick="editSection(3)">Edit</a></div>
+        <div class="review-title">Design & Accessibility <a href="#" class="edit-link" onclick="editSection(3)">Edit</a></div>
+        <div class="review-item">
+          <span class="review-label">Screens detected:</span>
+          <span class="review-value">${q.designAnnotation?.screens.length || 0}</span>
+        </div>
+        <div class="review-item">
+            <span class="review-label">A11y Rules:</span>
+            <span class="review-value">${q.designAnnotation?.accessibilityRules.length || 0}</span>
+        </div>
+      </div>
+
+      <div class="review-section">
+        <div class="review-title">Data Model (${q.entities?.length || 0} entities) <a href="#" class="edit-link" onclick="editSection(4)">Edit</a></div>
         ${q.entities?.map(e => `
           <div class="review-item">
             <strong>${e.name}</strong> (${e.fields.length} fields)
@@ -630,14 +677,14 @@ export class ShepLangProjectWizard {
       </div>
 
       <div class="review-section">
-        <div class="review-title">User Roles <a href="#" class="edit-link" onclick="editSection(4)">Edit</a></div>
+        <div class="review-title">User Roles <a href="#" class="edit-link" onclick="editSection(5)">Edit</a></div>
         <div class="review-item">
           <span class="review-value">${this.formatRoleType(q.roleType)}</span>
         </div>
       </div>
 
       <div class="review-section">
-        <div class="review-title">Integrations (${q.integrations?.length || 0}) <a href="#" class="edit-link" onclick="editSection(5)">Edit</a></div>
+        <div class="review-title">Integrations (${q.integrations?.length || 0}) <a href="#" class="edit-link" onclick="editSection(6)">Edit</a></div>
         ${q.integrations?.map(i => `
           <div class="review-item">${i.service}</div>
         `).join('') || '<div class="review-item">No integrations selected</div>'}

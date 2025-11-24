@@ -1,0 +1,13 @@
+app HelloWorld
+
+data Message:
+  fields:
+    text: text
+
+view Dashboard:
+  text "Hello, ShepLang!"
+  button "Click Me" -> ShowMessage
+
+action ShowMessage():
+  add Message with text = "Hello, World!"
+  show Dashboard

@@ -55,7 +55,7 @@ function buildBackendPrompt(appModel: AppModel, shepContent: string): string {
   }).join('\n\n');
   
   const actionList = appModel.actions.map(a => {
-    return `- ${a.name}(${a.parameters.join(', ')})`;
+    return `- ${a.name}(${a.parameters?.join(', ') || ''})`;
   }).join('\n');
   
   return `You are a backend code generator for ShepThon, a declarative backend DSL.

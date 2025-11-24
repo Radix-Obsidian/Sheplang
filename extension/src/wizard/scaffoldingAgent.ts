@@ -35,7 +35,7 @@ export class ScaffoldingAgent {
     progressCallback?: (progress: GenerationProgress) => void
   ): Promise<void> {
     this.progressCallback = progressCallback;
-    
+
     // Initialize progress panel
     this.progressPanel = new ProgressPanel({
       title: `🎯 Generating ${questionnaire.projectName}`,
@@ -43,9 +43,9 @@ export class ScaffoldingAgent {
       showTiming: true,
       autoClose: false
     });
-    
+
     this.progressPanel.show();
-    
+
     // Initialize progress steps
     this.progressPanel.initializeSteps([
       {
@@ -84,12 +84,12 @@ export class ScaffoldingAgent {
         description: 'Finalizing project settings'
       }
     ]);
-    
+
     // Handle panel messages
     this.progressPanel.onDidClose(() => {
       outputChannel.info('Progress panel closed');
     });
-    
+
     try {
       outputChannel.section('Generating ShepLang Project');
       outputChannel.info(`Project: ${questionnaire.projectName}`);
@@ -139,7 +139,7 @@ export class ScaffoldingAgent {
 
       // Success!
       await this.updateProgress('✅ Project generated successfully!', 100);
-      
+
       // Show success message
       vscode.window.showInformationMessage(
         `🎉 ${questionnaire.projectName} generated successfully! Check the folder to get started.`
@@ -153,7 +153,7 @@ export class ScaffoldingAgent {
     } catch (error) {
       outputChannel.error('Project generation failed:', error);
       await this.updateProgress('❌ Generation failed', 0, error as Error);
-      
+
       // Mark current step as failed
       if (this.progressPanel) {
         const currentStep = this.progressPanel['steps']?.find((s: any) => s.status === 'in-progress');
@@ -161,11 +161,11 @@ export class ScaffoldingAgent {
           this.progressPanel.failStep(currentStep.id, error as Error);
         }
       }
-      
+
       vscode.window.showErrorMessage(
         `Project generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
-      
+
       throw error;
     } finally {
       // Close progress panel after a delay
@@ -185,15 +185,15 @@ export class ScaffoldingAgent {
       // Validate syntax for .shep files
       if (filePath.endsWith('.shep')) {
         const validation = await this.syntaxValidator.validate(content, filePath);
-        
+
         if (!validation.isValid) {
           outputChannel.error(`Syntax errors in ${filePath}:`, validation.errors);
-          
+
           // Try auto-fix
           if (validation.fixed) {
             outputChannel.info(`Attempting auto-fix for ${filePath}...`);
             const fixedValidation = await this.syntaxValidator.validate(validation.fixed, filePath);
-            
+
             if (fixedValidation.isValid) {
               await vscode.workspace.fs.writeFile(
                 vscode.Uri.file(filePath),
@@ -203,28 +203,28 @@ export class ScaffoldingAgent {
               return true;
             }
           }
-          
+
           // Show errors to user
           this.syntaxValidator.showValidationErrors(validation.errors, filePath);
-          
+
           // Still write the file with errors so user can fix manually
           await vscode.workspace.fs.writeFile(
             vscode.Uri.file(filePath),
             Buffer.from(content, 'utf8')
           );
-          
+
           return false;
         }
       }
-      
+
       // Write the file
       await vscode.workspace.fs.writeFile(
         vscode.Uri.file(filePath),
         Buffer.from(content, 'utf8')
       );
-      
+
       return true;
-      
+
     } catch (error) {
       outputChannel.error(`Failed to write ${filePath}:`, error);
       return false;
@@ -236,10 +236,10 @@ export class ScaffoldingAgent {
    */
   private async createProjectStructure(questionnaire: ProjectQuestionnaire): Promise<string> {
     const projectPath = path.join(this.workspaceRoot, questionnaire.projectName);
-    
+
     // Create main project folder
     await vscode.workspace.fs.createDirectory(vscode.Uri.file(projectPath));
-    
+
     // Create subdirectories
     const folders = [
       '.sheplang',
@@ -293,13 +293,13 @@ export class ScaffoldingAgent {
     for (const entity of questionnaire.entities) {
       const entityContent = entityGenerator.generateEntity(entity, questionnaire);
       const entityFile = path.join(entitiesPath, `${entity.name}.shep`);
-      
+
       const success = await this.validateAndWriteFile(entityFile, entityContent, 'entity');
-      
+
       if (success) {
         outputChannel.info(`Generated entity: ${entity.name}.shep`);
       } else {
-        outputChannel.warning(`Generated entity with syntax errors: ${entity.name}.shep`);
+        outputChannel.info(`Generated entity with syntax errors: ${entity.name}.shep`);
       }
     }
   }
@@ -314,12 +314,12 @@ export class ScaffoldingAgent {
     // Generate auth flow
     const authFlow = flowGenerator.generateAuthFlow(questionnaire);
     const authPath = path.join(flowsPath, 'auth', 'authentication.shep');
-    
+
     const authSuccess = await this.validateAndWriteFile(authPath, authFlow, 'flow');
     if (authSuccess) {
       outputChannel.info('Generated auth flow: authentication.shep');
     } else {
-      outputChannel.warning('Generated auth flow with syntax errors: authentication.shep');
+      outputChannel.info('Generated auth flow with syntax errors: authentication.shep');
     }
 
     // Generate feature flows
@@ -327,13 +327,13 @@ export class ScaffoldingAgent {
       const featureFlow = flowGenerator.generateFeatureFlow(feature, questionnaire);
       const featureFolder = this.sanitizeFolderName(feature.name);
       const featurePath = path.join(flowsPath, featureFolder, `${featureFolder}.shep`);
-      
+
       const success = await this.validateAndWriteFile(featurePath, featureFlow, 'flow');
-      
+
       if (success) {
         outputChannel.info(`Generated flow: ${featureFolder}.shep`);
       } else {
-        outputChannel.warning(`Generated flow with syntax errors: ${featureFolder}.shep`);
+        outputChannel.info(`Generated flow with syntax errors: ${featureFolder}.shep`);
       }
     }
 
@@ -341,12 +341,12 @@ export class ScaffoldingAgent {
     if (questionnaire.integrations.length > 0) {
       const webhookFlow = flowGenerator.generateWebhookFlow(questionnaire);
       const webhookPath = path.join(flowsPath, 'webhooks', 'integrations.shep');
-      
+
       const webhookSuccess = await this.validateAndWriteFile(webhookPath, webhookFlow, 'flow');
       if (webhookSuccess) {
         outputChannel.info('Generated webhook flow: integrations.shep');
       } else {
-        outputChannel.warning('Generated webhook flow with syntax errors: integrations.shep');
+        outputChannel.info('Generated webhook flow with syntax errors: integrations.shep');
       }
     }
   }
@@ -361,12 +361,12 @@ export class ScaffoldingAgent {
     // Generate dashboard screen
     const dashboardScreen = screenGenerator.generateDashboard(questionnaire);
     const dashboardPath = path.join(screensPath, 'dashboard', 'main.shep');
-    
+
     const dashboardSuccess = await this.validateAndWriteFile(dashboardPath, dashboardScreen, 'screen');
     if (dashboardSuccess) {
       outputChannel.info('Generated screen: dashboard/main.shep');
     } else {
-      outputChannel.warning('Generated screen with syntax errors: dashboard/main.shep');
+      outputChannel.info('Generated screen with syntax errors: dashboard/main.shep');
     }
 
     // Generate entity list screens
@@ -374,25 +374,25 @@ export class ScaffoldingAgent {
       const listScreen = screenGenerator.generateEntityList(entity, questionnaire);
       const entityFolder = entity.name.toLowerCase();
       const listPath = path.join(screensPath, entityFolder, 'list.shep');
-      
+
       const listSuccess = await this.validateAndWriteFile(listPath, listScreen, 'screen');
-      
+
       if (listSuccess) {
         outputChannel.info(`Generated screen: ${entityFolder}/list.shep`);
       } else {
-        outputChannel.warning(`Generated screen with syntax errors: ${entityFolder}/list.shep`);
+        outputChannel.info(`Generated screen with syntax errors: ${entityFolder}/list.shep`);
       }
 
       // Generate detail screen
       const detailScreen = screenGenerator.generateEntityDetail(entity, questionnaire);
       const detailPath = path.join(screensPath, entityFolder, 'detail.shep');
-      
+
       const detailSuccess = await this.validateAndWriteFile(detailPath, detailScreen, 'screen');
-      
+
       if (detailSuccess) {
         outputChannel.info(`Generated screen: ${entityFolder}/detail.shep`);
       } else {
-        outputChannel.warning(`Generated screen with syntax errors: ${entityFolder}/detail.shep`);
+        outputChannel.info(`Generated screen with syntax errors: ${entityFolder}/detail.shep`);
       }
     }
   }
@@ -407,13 +407,13 @@ export class ScaffoldingAgent {
     for (const integration of questionnaire.integrations) {
       const integrationContent = integrationGenerator.generateIntegration(integration, questionnaire);
       const integrationFile = path.join(integrationsPath, `${integration.service.toLowerCase()}.shep`);
-      
+
       const success = await this.validateAndWriteFile(integrationFile, integrationContent, 'integration');
-      
+
       if (success) {
         outputChannel.info(`Generated integration: ${integration.service.toLowerCase()}.shep`);
       } else {
-        outputChannel.warning(`Generated integration with syntax errors: ${integration.service.toLowerCase()}.shep`);
+        outputChannel.info(`Generated integration with syntax errors: ${integration.service.toLowerCase()}.shep`);
       }
     }
   }
@@ -498,6 +498,19 @@ Generated by ShepLang Wizard on ${new Date().toLocaleDateString()}
 
 ${questionnaire.features.map((f, i) => `${i + 1}. ${f.name}`).join('\n')}
 
+## Design & Accessibility
+
+${questionnaire.designAnnotation ? `
+**Screens:**
+${questionnaire.designAnnotation.screens.map(s => `- ${s}`).join('\n')}
+
+**Flows:**
+${questionnaire.designAnnotation.flows.map(f => `- ${f}`).join('\n')}
+
+**Accessibility Rules:**
+${questionnaire.designAnnotation.accessibilityRules.map(r => `- ${r}`).join('\n')}
+` : 'No design annotations provided.'}
+
 ## Data Model
 
 ${questionnaire.entities.map(e => `
@@ -533,9 +546,13 @@ ${questionnaire.integrations.map(i => `- ${i.service} (${i.category})`).join('\n
     const progress: GenerationProgress = {
       message,
       percentage,
-      currentStep: Math.ceil(percentage / 10),
+      currentStep: Math.ceil(percentage / 10).toString(),
       totalSteps: 10,
-      error
+      completedSteps: Math.floor(percentage / 10),
+      currentAction: message,
+      logs: [],
+      errors: error ? [error.message] : [],
+      error: error ? { message: error.message } : undefined
     };
 
     if (this.progressCallback) {

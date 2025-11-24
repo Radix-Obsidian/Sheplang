@@ -1,0 +1,29 @@
+.split-pane {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 56px); /* Subtract header height */
+  position: relative;
+  overflow: hidden;
+}
+
+.split-pane-left, .split-pane-right {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-pane-divider {
+  width: 6px;
+  height: 100%;
+  background-color: var(--divider-color);
+  cursor: col-resize;
+  z-index: 10;
+  position: relative;
+}
+
+.split-pane-divider:hover,
+.split-pane-divider:active {
+  background-color: var(--divider-hover-color);
+}

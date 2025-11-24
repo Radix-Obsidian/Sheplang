@@ -1,0 +1,95 @@
+/* Global styles and theme variables */
+
+:root {
+  /* Light theme variables */
+  --light-bg: #ffffff;
+  --light-text: #213547;
+  --light-header-bg-color: #f9fafb;
+  --light-header-text-color: #111827;
+  --light-border-color: #e5e7eb;
+  --light-divider-color: #e5e7eb;
+  --light-divider-hover-color: #d1d5db;
+  --light-button-bg: #e5e7eb;
+  --light-button-text: #111827;
+  --light-button-hover-bg: #d1d5db;
+  --light-link-color: #3b82f6;
+  --light-link-hover-color: #2563eb;
+  --light-error-color: #dc2626;
+  --light-warning-color: #f59e0b;
+  --light-muted-text: #6b7280;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+}
+
+/* App container */
+.app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Dark theme */
+.app.dark {
+  --bg-color: #1e1e1e;
+  --text-color: #e6e6e6;
+  --header-bg-color: #252526;
+  --header-text-color: #e6e6e6;
+  --border-color: #444444;
+  --divider-color: #444444;
+  --divider-hover-color: #666666;
+  --button-bg: #3c3c3c;
+  --button-text: #e6e6e6;
+  --button-hover-bg: #505050;
+  --link-color: #61dafb;
+  --link-hover-color: #a8e5fb;
+  --error-color: #f87171;
+  --warning-color: #fbbf24;
+  --muted-text: #9ca3af;
+  
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Light theme */
+.app.light {
+  --bg-color: var(--light-bg);
+  --text-color: var(--light-text);
+  --header-bg-color: var(--light-header-bg-color);
+  --header-text-color: var(--light-header-text-color);
+  --border-color: var(--light-border-color);
+  --divider-color: var(--light-divider-color);
+  --divider-hover-color: var(--light-divider-hover-color);
+  --button-bg: var(--light-button-bg);
+  --button-text: var(--light-button-text);
+  --button-hover-bg: var(--light-button-hover-bg);
+  --link-color: var(--light-link-color);
+  --link-hover-color: var(--light-link-hover-color);
+  --error-color: var(--light-error-color);
+  --warning-color: var(--light-warning-color);
+  --muted-text: var(--light-muted-text);
+  
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}

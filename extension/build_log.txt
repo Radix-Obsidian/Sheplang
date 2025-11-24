@@ -1,0 +1,73 @@
+src/commands/testWizard.ts(93,25): error TS2339: Property 'warning' does not exist on type 'OutputChannelManager'.
+src/generators/entityGenerator.ts(147,11): error TS2367: This comparison appears to be unintentional because the types '"number" | "text" | "yes/no" | "image" | "date" | "ref"' and '"email"' have no overlap.
+src/generators/entityGenerator.ts(194,44): error TS2304: Cannot find name 'entity'.
+src/generators/readmeGenerator.ts(181,34): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/generators/readmeGenerator.ts(244,11): error TS2304: Cannot find name 'entityName'.
+src/generators/readmeGenerator.ts(245,13): error TS2304: Cannot find name 'entityName'.
+src/generators/readmeGenerator.ts(246,13): error TS2304: Cannot find name 'entityName'.
+src/generators/readmeGenerator.ts(927,39): error TS2304: Cannot find name 'ProjectFeature'.
+src/test/wizardTestSuite.ts(266,7): error TS2322: Type '"multi-role"' is not assignable to type 'UserRoleType'.
+src/test/wizardTestSuite.ts(267,15): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(267,24): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(267,32): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(269,30): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/test/wizardTestSuite.ts(270,32): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/test/wizardTestSuite.ts(319,7): error TS2322: Type '"multi-role"' is not assignable to type 'UserRoleType'.
+src/test/wizardTestSuite.ts(320,15): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(320,27): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(322,30): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/test/wizardTestSuite.ts(323,32): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/test/wizardTestSuite.ts(362,7): error TS2322: Type '"multi-role"' is not assignable to type 'UserRoleType'.
+src/test/wizardTestSuite.ts(363,15): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(363,25): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(363,35): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(365,32): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/test/wizardTestSuite.ts(369,7): error TS2322: Type '"Netlify"' is not assignable to type '"Vercel" | "AWS" | "Docker" | "Other" | undefined'.
+src/test/wizardTestSuite.ts(444,7): error TS2322: Type '"multi-role"' is not assignable to type 'UserRoleType'.
+src/test/wizardTestSuite.ts(445,15): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(445,24): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(445,35): error TS2322: Type 'string' is not assignable to type 'UserRole'.
+src/test/wizardTestSuite.ts(447,30): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/test/wizardTestSuite.ts(448,30): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/test/wizardTestSuite.ts(449,29): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Integration'.
+src/ui/progressPanel.ts(149,28): error TS2538: Type 'undefined' cannot be used as an index type.
+src/ui/progressPanel.ts(152,31): error TS2345: Argument of type '{ message: string; code?: string | undefined; }' is not assignable to parameter of type 'Error'.
+  Property 'name' is missing in type '{ message: string; code?: string | undefined; }' but required in type 'Error'.
+src/ui/progressPanel.ts(153,18): error TS18048: 'progress.percentage' is possibly 'undefined'.
+src/validation/syntaxValidator.ts(8,41): error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module and cannot be imported with 'require'. Consider writing a dynamic 'import("../../../sheplang/packages/language/src/index.js")' call instead.
+  To convert this file to an ECMAScript module, change its file extension to '.mts', or add the field `"type": "module"` to 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/package.json'.
+src/validation/syntaxValidator.ts(8,41): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/generated/module.ts(7,35): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/generated/ast.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './ast.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/generated/module.ts'
+    Imported via './generated/ast.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts'
+    Imported via './generated/ast.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/mapper.ts'
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/generated/module.ts(8,29): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/generated/grammar.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/index.ts(1,36): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/shep-module.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/index.ts(2,35): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/preprocessor.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './preprocessor.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts'
+    Imported via './preprocessor.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts'
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/index.ts(5,31): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/mapper.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/index.ts(7,57): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/error-formatter.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/index.ts(8,52): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/types/diagnostics.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './types/diagnostics.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts'
+    Imported via './types/diagnostics.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts'
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/mapper.ts(1,31): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/types.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via './types.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/mapper.ts'
+    Imported via './types.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts'
+    Imported via './types.js' from file 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/index.ts'
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"
+../sheplang/packages/language/src/shep-module.ts(3,64): error TS6059: File 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/src/generated/module.ts' is not under 'rootDir' 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/extension/src'. 'rootDir' is expected to contain all source files.
+  File is ECMAScript module because 'C:/Users/autre/OneDrive/Desktop/Projects (Golden Sheep AI)/Sheplang/sheplang/packages/language/package.json' has field "type" with value "module"

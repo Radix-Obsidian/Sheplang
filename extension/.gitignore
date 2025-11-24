@@ -15,6 +15,12 @@ src/ai/config.ts
 # TypeScript
 *.tsbuildinfo
 
+# Demo workspace (generated, not needed in repo)
+demo-workspace/
+
+# Test resources (ExTester artifacts - no longer needed)
+test-resources/
+
 # OS
 .DS_Store
 Thumbs.db

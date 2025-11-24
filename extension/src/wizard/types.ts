@@ -4,7 +4,7 @@
  * Defines the structure for the questionnaire and generated project
  */
 
-export type ProjectType = 
+export type ProjectType =
   | 'mobile-first'
   | 'saas-dashboard'
   | 'ecommerce'
@@ -23,7 +23,7 @@ export interface ProjectFeature {
 
 export interface EntityField {
   name: string;
-  type: 'text' | 'number' | 'date' | 'yes/no' | 'image' | 'ref';
+  type: 'text' | 'number' | 'date' | 'yes/no' | 'image' | 'ref' | 'email';
   required?: boolean;
   unique?: boolean;
   refEntity?: string;
@@ -55,27 +55,37 @@ export interface Integration {
   features?: string[];
 }
 
+export interface DesignAnnotation {
+  screens: string[];
+  flows: string[];
+  accessibilityRules: string[];
+}
+
 export interface ProjectQuestionnaire {
   // Step 1: Project Overview
   projectType: ProjectType;
   projectName: string;
   description?: string;
   customDescription?: string;
-  
+
   // Step 2: Core Features
   features: ProjectFeature[];
-  
-  // Step 3: Data Model
+
+  // Step 3: Design & Accessibility
+  designNotes?: string;
+  designAnnotation?: DesignAnnotation;
+
+  // Step 4: Data Model
   entities: EntityDefinition[];
-  
-  // Step 4: User Roles
+
+  // Step 5: User Roles
   roleType: UserRoleType;
   roles?: UserRole[];
-  
-  // Step 5: Integrations
+
+  // Step 6: Integrations
   integrations: Integration[];
-  
-  // Step 6: Technical Preferences
+
+  // Step 7: Technical Preferences
   apiStyle?: 'REST' | 'GraphQL';
   realtime?: boolean;
   deployment?: 'Vercel' | 'AWS' | 'Docker' | 'Other';
@@ -102,6 +112,12 @@ export interface GenerationProgress {
   currentAction: string;
   logs: string[];
   errors: string[];
+  percentage?: number;
+  message?: string;
+  error?: {
+    message: string;
+    code?: string;
+  };
 }
 
 export interface ProjectStructure {

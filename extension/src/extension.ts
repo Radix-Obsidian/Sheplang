@@ -17,6 +17,9 @@ import { createBackendFileCommand } from './commands/createBackendFile';
 // Next.js/React importer
 import { streamlinedImport } from './commands/streamlinedImport';
 
+// Git Importer
+import { importFromGitHubCommand } from './commands/importFromGitHub';
+
 // ShepLang Project Wizard
 import { startProjectWizard } from './commands/projectWizard';
 import { testWizard, quickTestWizard } from './commands/testWizard';
@@ -26,6 +29,7 @@ import { testWizard, quickTestWizard } from './commands/testWizard';
 import { RuntimeManager } from './services/runtimeManager';
 import { outputChannel } from './services/outputChannel';
 import { showUsageStats, resetUsageForTesting } from './ai/usageTracker';
+import { sendFeedbackCommand } from './commands/sendFeedback';
 
 // Extraordinary features
 import { initializeAutoPreview } from './features/autoPreview';
@@ -40,11 +44,11 @@ let runtimeManager: RuntimeManager;
 export function activate(context: vscode.ExtensionContext) {
   // Initialize output channel
   context.subscriptions.push(outputChannel as any);
-  
+
   outputChannel.section('ShepLang Extension Activated');
   outputChannel.info('Extension version:', context.extension.packageJSON.version);
   outputChannel.info('VS Code version:', vscode.version);
-  
+
   console.log('ShepLang extension is now active');
 
   // Initialize Runtime Manager for ShepThon backend
@@ -69,13 +73,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('sheplang.showOutput', () => showOutputCommand()),
     vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
     vscode.commands.registerCommand('sheplang.importFromNextJS', () => streamlinedImport(context)),
+    vscode.commands.registerCommand('sheplang.importFromGitHub', importFromGitHubCommand),
     vscode.commands.registerCommand('sheplang.startProjectWizard', () => startProjectWizard(context)),
     vscode.commands.registerCommand('sheplang.testWizard', () => testWizard()),
     vscode.commands.registerCommand('sheplang.quickTestWizard', () => quickTestWizard()),
-    
+
     // AI usage management commands
     vscode.commands.registerCommand('sheplang.showAIUsage', () => showUsageStats(context)),
     vscode.commands.registerCommand('sheplang.resetAIUsage', () => resetUsageForTesting(context)),
+    vscode.commands.registerCommand('sheplang.sendFeedback', () => sendFeedbackCommand(context)),
     vscode.commands.registerCommand('sheplang.updateApiKey', async () => {
       const key = await vscode.window.showInputBox({
         prompt: 'Enter your Anthropic API key (for unlimited imports)',
@@ -88,14 +94,14 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage('✓ API key updated! You now have unlimited imports.');
       }
     }),
-    
+
     // Error broadcasting command (used internally for error handling)
     vscode.commands.registerCommand('sheplang.broadcastError', (error: Error | string) => {
       const message = typeof error === 'string' ? error : error.message;
       outputChannel.error(message);
       vscode.window.showErrorMessage(`ShepLang: ${message}`);
     }),
-    
+
     // TODO: Uncomment when Webflow importer is ready
     // vscode.commands.registerCommand('sheplang.importFromWebflow', () => importFromWebflow())
   );
@@ -106,23 +112,23 @@ export function activate(context: vscode.ExtensionContext) {
 
   // ✨ Initialize extraordinary features
   outputChannel.info('Initializing extraordinary features...');
-  
+
   // Auto-start live preview when .shep files are opened
   initializeAutoPreview(context);
   outputChannel.success('✓ Auto-preview enabled');
-  
+
   // Context-aware IntelliSense and hover documentation
   registerIntelliSense(context);
   outputChannel.success('✓ Intelligent completion enabled');
-  
+
   // Quick start system (replaces heavy onboarding)
   registerQuickStart(context);
   outputChannel.success('✓ Quick start ready');
-  
+
   // Comprehensive error diagnostics
   const diagnosticsManager = registerDiagnostics(context);
   outputChannel.success('✓ Error diagnostics enabled');
-  
+
   // Semantic syntax highlighting (beyond basic TextMate)
   registerSemanticHighlighting(context);
   outputChannel.success('✓ Semantic highlighting enabled');
