@@ -122,9 +122,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ code, onInteraction }) => {
     }
   };
 
-  // Sample generated code for the tabs
+  // Sample generated code for the tabs with educational comments
   const getGeneratedReactCode = () => {
-    return `// Generated React Component
+    return `// 🚀 Generated from 5 lines of ShepLang code
+// ⚡ Traditional React: 47 lines | ShepLang: 5 lines | 89% less code
+// 💡 No useState, interfaces, or manual state management needed
+
 import React, { useState } from 'react';
 
 interface MessageData {
@@ -160,7 +163,10 @@ export const Dashboard: React.FC = () => {
   };
   
   const getGeneratedTypeScript = () => {
-    return `// Generated TypeScript Models
+    return `// 🚀 Generated from 5 lines of ShepLang code
+// ⚡ Traditional TypeScript: 32 lines | ShepLang: 5 lines | 84% less code
+// 💡 No manual interface definitions, repositories, or action handlers needed
+
 interface Message {
   id: number;
   text: string;
@@ -261,6 +267,28 @@ export function showMessage(repository: MessageRepository): void {
 
         {activeTab === PreviewTab.ReactCode && (
           <div className="code-preview">
+            {/* Persistent Comparison Banner */}
+            <div className="comparison-banner">
+              <div className="banner-content">
+                <div className="banner-metrics">
+                  <span className="metric">🚀 5 lines ShepLang</span>
+                  <span className="vs">vs</span>
+                  <span className="metric">📝 47 lines React</span>
+                  <span className="savings">⚡ 89% less code</span>
+                </div>
+                <div className="banner-message">
+                  <strong>Why ShepLang?</strong> No useState, interfaces, or manual state management needed.
+                  <a 
+                    href="https://sheplang.lovable.app/docs/comparison" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="learn-more"
+                  >
+                    Learn more →
+                  </a>
+                </div>
+              </div>
+            </div>
             <pre className="code-content hljs">
               <code dangerouslySetInnerHTML={{ 
                 __html: hljs.highlight(getGeneratedReactCode(), { language: 'javascript' }).value 
@@ -271,6 +299,28 @@ export function showMessage(repository: MessageRepository): void {
 
         {activeTab === PreviewTab.TypeScript && (
           <div className="code-preview">
+            {/* Persistent Comparison Banner */}
+            <div className="comparison-banner">
+              <div className="banner-content">
+                <div className="banner-metrics">
+                  <span className="metric">🚀 5 lines ShepLang</span>
+                  <span className="vs">vs</span>
+                  <span className="metric">📝 32 lines TypeScript</span>
+                  <span className="savings">⚡ 84% less code</span>
+                </div>
+                <div className="banner-message">
+                  <strong>Why ShepLang?</strong> No manual interface definitions, repositories, or action handlers needed.
+                  <a 
+                    href="https://sheplang.lovable.app/docs/comparison" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="learn-more"
+                  >
+                    Learn more →
+                  </a>
+                </div>
+              </div>
+            </div>
             <pre className="code-content hljs">
               <code dangerouslySetInnerHTML={{ 
                 __html: hljs.highlight(getGeneratedTypeScript(), { language: 'typescript' }).value 
