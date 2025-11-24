@@ -122,11 +122,11 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ code, onInteraction }) => {
     }
   };
 
-  // Sample generated code for the tabs with educational comments
+  // Sample generated code for the tabs with accurate educational comments
   const getGeneratedReactCode = () => {
-    return `// 🚀 Generated from 5 lines of ShepLang code
-// ⚡ Traditional React: 47 lines | ShepLang: 5 lines | 89% less code
-// 💡 No useState, interfaces, or manual state management needed
+    return `// 🚀 Generated from 31 lines of ShepLang code
+// ⚡ Traditional React: 29 lines | ShepLang: 31 lines | Similar complexity
+// 💡 But ShepLang includes views, actions, and data in one place
 
 import React, { useState } from 'react';
 
@@ -163,9 +163,9 @@ export const Dashboard: React.FC = () => {
   };
   
   const getGeneratedTypeScript = () => {
-    return `// 🚀 Generated from 5 lines of ShepLang code
-// ⚡ Traditional TypeScript: 32 lines | ShepLang: 5 lines | 84% less code
-// 💡 No manual interface definitions, repositories, or action handlers needed
+    return `// 🚀 Generated from 31 lines of ShepLang code
+// ⚡ Traditional TypeScript: 20 lines | ShepLang: 31 lines | More comprehensive
+// 💡 ShepLang includes data models, repositories, and actions together
 
 interface Message {
   id: number;
@@ -271,21 +271,19 @@ export function showMessage(repository: MessageRepository): void {
             <div className="comparison-banner">
               <div className="banner-content">
                 <div className="banner-metrics">
-                  <span className="metric">🚀 5 lines ShepLang</span>
+                  <span className="metric">🚀 31 lines ShepLang</span>
                   <span className="vs">vs</span>
-                  <span className="metric">📝 47 lines React</span>
-                  <span className="savings">⚡ 89% less code</span>
+                  <span className="metric">📝 29 lines React</span>
+                  <span className="savings">🔄 Similar complexity</span>
                 </div>
                 <div className="banner-message">
-                  <strong>Why ShepLang?</strong> No useState, interfaces, or manual state management needed.
-                  <a 
-                    href="https://sheplang.lovable.app/docs/comparison" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="learn-more"
+                  <strong>Why ShepLang?</strong> ShepLang includes views, actions, and data in one place.
+                  <button 
+                    onClick={() => setActiveTab(PreviewTab.Resources)}
+                    className="learn-more-btn"
                   >
-                    Learn more →
-                  </a>
+                    View Resources →
+                  </button>
                 </div>
               </div>
             </div>
@@ -303,21 +301,19 @@ export function showMessage(repository: MessageRepository): void {
             <div className="comparison-banner">
               <div className="banner-content">
                 <div className="banner-metrics">
-                  <span className="metric">🚀 5 lines ShepLang</span>
+                  <span className="metric">🚀 31 lines ShepLang</span>
                   <span className="vs">vs</span>
-                  <span className="metric">📝 32 lines TypeScript</span>
-                  <span className="savings">⚡ 84% less code</span>
+                  <span className="metric">📝 20 lines TypeScript</span>
+                  <span className="savings">📦 More comprehensive</span>
                 </div>
                 <div className="banner-message">
-                  <strong>Why ShepLang?</strong> No manual interface definitions, repositories, or action handlers needed.
-                  <a 
-                    href="https://sheplang.lovable.app/docs/comparison" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="learn-more"
+                  <strong>Why ShepLang?</strong> ShepLang includes data models, repositories, and actions together.
+                  <button 
+                    onClick={() => setActiveTab(PreviewTab.Resources)}
+                    className="learn-more-btn"
                   >
-                    Learn more →
-                  </a>
+                    View Resources →
+                  </button>
                 </div>
               </div>
             </div>
