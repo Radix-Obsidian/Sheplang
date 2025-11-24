@@ -146,14 +146,14 @@ export class ProgressPanel {
       'Saving configuration': 'config'
     };
 
-    const stepId = stepMap[progress.message];
+    const stepId = progress.message ? stepMap[progress.message] : undefined;
     if (stepId) {
       if (progress.error) {
-        this.failStep(stepId, progress.error);
-      } else if (progress.percentage >= 100) {
+        this.failStep(stepId, new Error(progress.error.message));
+      } else if ((progress.percentage || 0) >= 100) {
         this.completeStep(stepId);
       } else {
-        this.startStep(stepId, [`${progress.percentage}% complete`]);
+        this.startStep(stepId, [`${progress.percentage || 0}% complete`]);
       }
     }
 
@@ -180,10 +180,10 @@ export class ProgressPanel {
    */
   private calculateOverallProgress(): number {
     if (this.steps.length === 0) return 0;
-    
+
     const completedSteps = this.steps.filter(s => s.status === 'completed').length;
     const inProgressSteps = this.steps.filter(s => s.status === 'in-progress').length;
-    
+
     return Math.round(((completedSteps + inProgressSteps * 0.5) / this.steps.length) * 100);
   }
 

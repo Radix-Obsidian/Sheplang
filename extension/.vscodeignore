@@ -1,17 +1,55 @@
+# Development files
 .vscode/**
 .vscode-test/**
 src/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
+vscode.proposed.*.d.ts
+
+# Config files
 **/tsconfig.json
 **/.eslintrc.json
+tsconfig.tsbuildinfo
+
+# Source maps (optional - remove if debugging needed)
 **/*.map
+
+# TypeScript source files (keep compiled .js)
 **/*.ts
+!out/**/*.d.ts
+
+# Exclude parent sheplang directory
 ../sheplang/**
-node_modules/@radix-obsidian/sheplang-language/src/**
-node_modules/@radix-obsidian/sheplang-language/test/**
-node_modules/@radix-obsidian/sheplang-language/node_modules/**
+
+# Test files from dependencies
 node_modules/**/test/**
+node_modules/**/tests/**
+node_modules/**/*.test.js
+node_modules/**/*.spec.js
+
+# Source files from language package (keep compiled)
+node_modules/@goldensheepai/sheplang-language/src/**
+node_modules/@goldensheepai/sheplang-language/test/**
+node_modules/@goldensheepai/sheplang-language/tests/**
+# CRITICAL: Do NOT exclude language package dependencies
+# node_modules/@goldensheepai/sheplang-language/node_modules/**
+
+# TypeScript sources in node_modules (keep .js and .d.ts)
 node_modules/**/*.ts
-node_modules/**/*.map
+!node_modules/**/*.d.ts
+
+# Demo and test artifacts
+test-resources/**
+demo-workspace/**
+
+# Environment and secrets
+.env
+src/ai/config.ts
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

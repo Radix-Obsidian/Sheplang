@@ -53,7 +53,7 @@ export class WizardTestSuite {
       console.log(`\n📋 Testing: ${scenario.name}`);
       const result = await this.runScenario(scenario);
       this.testResults.push(result);
-      
+
       console.log(`${result.success ? '✅' : '❌'} ${scenario.name} (${result.duration}ms)`);
       if (!result.success) {
         console.log(`   Errors: ${result.errors.join(', ')}`);
@@ -83,21 +83,21 @@ export class WizardTestSuite {
       // Create unique test directory
       const testName = scenario.name.toLowerCase().replace(/\s+/g, '-');
       const testDir = path.join(this.workspaceRoot, `test-${testName}-${Date.now()}`);
-      
+
       // Clean up any existing test directory
       await this.cleanupDirectory(testDir);
 
       // Run scaffolding agent
       const scaffoldingAgent = new ScaffoldingAgent(this.workspaceRoot);
-      
+
       // Override the project path to use test directory
       const originalCreateProjectStructure = scaffoldingAgent['createProjectStructure'].bind(scaffoldingAgent);
       scaffoldingAgent['createProjectStructure'] = async (questionnaire: ProjectQuestionnaire) => {
         const projectPath = testDir;
-        
+
         // Create main project folder
         await fs.mkdir(projectPath, { recursive: true });
-        
+
         // Create subdirectories
         const folders = ['.sheplang', 'entities', 'flows', 'screens', 'integrations', 'config'];
         for (const folder of folders) {
@@ -263,14 +263,14 @@ export class WizardTestSuite {
           ]
         }
       ],
-      roleType: 'multi-role',
-      roles: ['admin', 'user', 'viewer'],
+      roleType: 'multiple-roles',
+      roles: [{ name: 'admin', permissions: [] }, { name: 'user', permissions: [] }],
       integrations: [
-        { service: 'Stripe', description: 'Payment processing' },
-        { service: 'SendGrid', description: 'Email notifications' }
+        { category: 'payments', service: 'Stripe' },
+        { category: 'email', service: 'SendGrid' }
       ],
       apiStyle: 'REST',
-      realtime: true,
+      realtime: false,
       deployment: 'Vercel'
     };
   }
@@ -316,11 +316,11 @@ export class WizardTestSuite {
           ]
         }
       ],
-      roleType: 'multi-role',
-      roles: ['customer', 'admin'],
+      roleType: 'multiple-roles',
+      roles: [{ name: 'customer', permissions: [] }, { name: 'admin', permissions: [] }],
       integrations: [
-        { service: 'Stripe', description: 'Payment processing' },
-        { service: 'SendGrid', description: 'Order confirmations' }
+        { category: 'payments', service: 'Stripe' },
+        { category: 'email', service: 'SendGrid' }
       ],
       apiStyle: 'REST',
       realtime: false,
@@ -359,14 +359,14 @@ export class WizardTestSuite {
           ]
         }
       ],
-      roleType: 'multi-role',
-      roles: ['author', 'editor', 'reader'],
+      roleType: 'multiple-roles',
+      roles: [{ name: 'author', permissions: [] }, { name: 'editor', permissions: [] }, { name: 'reader', permissions: [] }],
       integrations: [
-        { service: 'SendGrid', description: 'Newsletter notifications' }
+        { category: 'email', service: 'SendGrid' }
       ],
       apiStyle: 'REST',
       realtime: false,
-      deployment: 'Netlify'
+      deployment: 'Other'
     };
   }
 
@@ -441,12 +441,12 @@ export class WizardTestSuite {
           ]
         }
       ],
-      roleType: 'multi-role',
-      roles: ['admin', 'manager', 'member'],
+      roleType: 'multiple-roles',
+      roles: [{ name: 'admin', permissions: [] }, { name: 'manager', permissions: [] }, { name: 'member', permissions: [] }],
       integrations: [
-        { service: 'Stripe', description: 'Premium features' },
-        { service: 'AWS S3', description: 'File storage' },
-        { service: 'Clerk', description: 'Authentication' }
+        { category: 'payments', service: 'Stripe' },
+        { category: 'storage', service: 'AWS S3' },
+        { category: 'auth', service: 'Clerk' }
       ],
       apiStyle: 'REST',
       realtime: true,
@@ -501,18 +501,18 @@ export class WizardTestSuite {
    */
   private async validateGeneratedFiles(testDir: string, result: TestResult): Promise<void> {
     const shepFiles = result.generatedFiles.filter(f => f.endsWith('.shep'));
-    
+
     for (const file of shepFiles) {
       const filePath = path.join(testDir, file);
       try {
         const content = await fs.readFile(filePath, 'utf8');
         const validation = await this.syntaxValidator.validate(content, file);
-        
+
         if (!validation.isValid) {
           result.syntaxErrors[file] = validation.errors;
           result.warnings.push(`Syntax errors in ${file}: ${validation.errors.length} errors`);
         }
-        
+
         if (validation.warnings.length > 0) {
           result.warnings.push(`Warnings in ${file}: ${validation.warnings.length} warnings`);
         }
@@ -539,12 +539,12 @@ export class WizardTestSuite {
    */
   private async generateTestReport(): Promise<void> {
     const reportPath = path.join(this.workspaceRoot, 'wizard-test-report.md');
-    
+
     const totalTests = this.testResults.length;
     const passedTests = this.testResults.filter(r => r.success).length;
     const failedTests = totalTests - passedTests;
     const avgDuration = this.testResults.reduce((sum, r) => sum + r.duration, 0) / totalTests;
-    
+
     let report = `# ShepLang Wizard Test Report\n\n`;
     report += `**Generated:** ${new Date().toISOString()}\n`;
     report += `**Total Tests:** ${totalTests}\n`;
@@ -554,34 +554,34 @@ export class WizardTestSuite {
     report += `**Average Duration:** ${Math.round(avgDuration)}ms\n\n`;
 
     report += `## Test Results\n\n`;
-    
+
     for (const result of this.testResults) {
       report += `### ${result.scenario}\n\n`;
       report += `- **Status:** ${result.success ? '✅ Passed' : '❌ Failed'}\n`;
       report += `- **Duration:** ${result.duration}ms\n`;
       report += `- **Files Generated:** ${result.generatedFiles.length}\n`;
-      
+
       if (result.errors.length > 0) {
         report += `- **Errors:** ${result.errors.length}\n`;
         for (const error of result.errors) {
           report += `  - ${error}\n`;
         }
       }
-      
+
       if (result.warnings.length > 0) {
         report += `- **Warnings:** ${result.warnings.length}\n`;
         for (const warning of result.warnings) {
           report += `  - ${warning}\n`;
         }
       }
-      
+
       if (Object.keys(result.syntaxErrors).length > 0) {
         report += `- **Syntax Errors:** ${Object.keys(result.syntaxErrors).length} files\n`;
         for (const [file, errors] of Object.entries(result.syntaxErrors)) {
           report += `  - ${file}: ${errors.length} errors\n`;
         }
       }
-      
+
       report += `\n`;
     }
 

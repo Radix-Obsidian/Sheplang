@@ -1,14 +1,4 @@
 "use strict";
-/**
- * Send Feedback Command
- *
- * Non-intrusive way for alpha users to provide feedback about the extension.
- * Opens a simple form in default browser.
- *
- * Official VS Code Extension API:
- * - Commands: https://code.visualstudio.com/api/references/vscode-api#commands
- * - External URLs: https://code.visualstudio.com/api/references/vscode-api#env.openExternal
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -43,42 +33,169 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendFeedback = sendFeedback;
-exports.maybePromptFeedback = maybePromptFeedback;
+exports.sendFeedbackCommand = sendFeedbackCommand;
 const vscode = __importStar(require("vscode"));
+const os = __importStar(require("os"));
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
+const outputChannel_1 = require("../services/outputChannel");
 /**
- * Send feedback command handler
- *
- * Opens feedback form in user's default browser.
+ * Categories for user feedback
  */
-async function sendFeedback() {
-    const feedbackUrl = 'https://forms.gle/YOUR_GOOGLE_FORM_ID'; // TODO: Replace with actual form
-    const proceed = await vscode.window.showInformationMessage('Thanks for helping us improve ShepLang! 🐑\n\nYour feedback will open in your browser.', { modal: false }, 'Open Feedback Form', 'Cancel');
-    if (proceed === 'Open Feedback Form') {
-        // Open feedback form in browser
-        await vscode.env.openExternal(vscode.Uri.parse(feedbackUrl));
+var FeedbackCategory;
+(function (FeedbackCategory) {
+    FeedbackCategory["BUG"] = "Bug report";
+    FeedbackCategory["FEATURE"] = "Feature request";
+    FeedbackCategory["IMPROVEMENT"] = "Improvement suggestion";
+    FeedbackCategory["OTHER"] = "Other";
+})(FeedbackCategory || (FeedbackCategory = {}));
+/**
+ * Command to send user feedback through GitHub issues or other channels
+ */
+async function sendFeedbackCommand(context) {
+    // 1. Select feedback type
+    const category = await vscode.window.showQuickPick(Object.values(FeedbackCategory), {
+        placeHolder: 'What kind of feedback would you like to provide?',
+        title: 'ShepLang Feedback'
+    });
+    if (!category) {
+        return; // User cancelled
     }
+    // 2. Get feedback description
+    const description = await vscode.window.showInputBox({
+        prompt: 'Please describe your feedback in detail',
+        placeHolder: category === FeedbackCategory.BUG
+            ? 'Steps to reproduce, expected vs. actual behavior...'
+            : 'Your thoughts and suggestions...',
+        title: `ShepLang Feedback - ${category}`,
+        // VS Code API doesn't support multiline in InputBox yet, but keeping comment for future support
+        ignoreFocusOut: true
+    });
+    if (!description) {
+        return; // User cancelled
+    }
+    // 3. Optional email
+    const emailOptional = await vscode.window.showInputBox({
+        prompt: 'Email address (optional, only if you want to be contacted)',
+        placeHolder: 'email@example.com',
+        title: 'ShepLang Feedback - Contact (Optional)',
+        ignoreFocusOut: true
+    });
+    // 4. Collect diagnostic information
+    const packageJson = context.extension.packageJSON;
+    const diagnostics = {
+        version: packageJson.version,
+        os: `${os.platform()} ${os.release()}`,
+        vscodeVersion: vscode.version,
+        date: new Date().toISOString(),
+        logs: collectRelevantLogs()
+    };
+    // 5. Ask if they want to include diagnostic information
+    const includeDiagnostics = await vscode.window.showQuickPick(['Yes, include diagnostic information', 'No, submit without diagnostics'], {
+        placeHolder: 'Would you like to include diagnostic information?',
+        title: 'ShepLang Feedback - Diagnostics'
+    });
+    if (!includeDiagnostics) {
+        return; // User cancelled
+    }
+    // 6. Show preview and confirm
+    const feedback = {
+        category: category,
+        description,
+        email: emailOptional || undefined,
+        diagnostics: includeDiagnostics.startsWith('Yes') ? diagnostics : {
+            version: packageJson.version,
+            os: `${os.platform()}`,
+            vscodeVersion: vscode.version,
+            date: new Date().toISOString()
+        }
+    };
+    // Preview feedback in an untitled document
+    const previewDocument = await vscode.workspace.openTextDocument({
+        content: formatFeedbackForPreview(feedback),
+        language: 'markdown'
+    });
+    await vscode.window.showTextDocument(previewDocument);
+    // 7. Confirm submission
+    const confirm = await vscode.window.showInformationMessage('Please review your feedback and confirm submission', 'Submit feedback', 'Edit feedback', 'Cancel');
+    if (confirm === 'Submit feedback') {
+        await submitFeedback(feedback);
+        vscode.window.showInformationMessage('Thank you for your feedback!');
+    }
+    else if (confirm === 'Edit feedback') {
+        // Restart the process
+        await sendFeedbackCommand(context);
+    }
+    // Cancel or other = do nothing
 }
 /**
- * Show feedback prompt after successful operations
- *
- * Non-intrusive - only shows occasionally, not every time.
+ * Submit feedback through available channels
  */
-async function maybePromptFeedback(context) {
-    const FEEDBACK_PROMPT_KEY = 'sheplang.lastFeedbackPrompt';
-    const FEEDBACK_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
-    const lastPrompt = context.globalState.get(FEEDBACK_PROMPT_KEY, 0);
-    const now = Date.now();
-    // Only prompt once per week
-    if (now - lastPrompt < FEEDBACK_INTERVAL_MS) {
-        return;
+async function submitFeedback(feedback) {
+    // Store feedback locally for now
+    const feedbacksDir = path.join(os.tmpdir(), 'sheplang-feedback');
+    if (!fs.existsSync(feedbacksDir)) {
+        fs.mkdirSync(feedbacksDir, { recursive: true });
     }
-    // Update last prompt time
-    await context.globalState.update(FEEDBACK_PROMPT_KEY, now);
-    // Show non-modal notification
-    const action = await vscode.window.showInformationMessage('💬 How is your ShepLang experience? We\'d love your feedback!', 'Send Feedback', 'Later');
-    if (action === 'Send Feedback') {
-        await sendFeedback();
-    }
+    const filename = `feedback-${new Date().toISOString().replace(/:/g, '-')}.json`;
+    const filepath = path.join(feedbacksDir, filename);
+    // Save feedback to file
+    fs.writeFileSync(filepath, JSON.stringify(feedback, null, 2));
+    outputChannel_1.outputChannel.info(`Feedback saved to ${filepath}`);
+    // TODO: In production, submit to a feedback endpoint
+    // For now we'll create a GitHub issue URL
+    const issueTitle = encodeURIComponent(`[${feedback.category}] ${feedback.description.slice(0, 50)}${feedback.description.length > 50 ? '...' : ''}`);
+    const issueBody = encodeURIComponent(formatFeedbackForGitHub(feedback));
+    const issueUrl = `https://github.com/Radix-Obsidian/Sheplang/issues/new?title=${issueTitle}&body=${issueBody}&labels=user-feedback`;
+    // Open in browser
+    vscode.env.openExternal(vscode.Uri.parse(issueUrl));
+}
+/**
+ * Format feedback for preview
+ */
+function formatFeedbackForPreview(feedback) {
+    return `# ShepLang Feedback
+
+## Category
+${feedback.category}
+
+## Description
+${feedback.description}
+
+${feedback.email ? `## Contact\n${feedback.email}\n\n` : ''}
+## Diagnostic Information
+- ShepLang version: ${feedback.diagnostics.version}
+- OS: ${feedback.diagnostics.os}
+- VS Code: ${feedback.diagnostics.vscodeVersion}
+- Date: ${new Date(feedback.diagnostics.date).toLocaleString()}
+
+${feedback.diagnostics.logs ? '## Logs\n```\n' + feedback.diagnostics.logs + '\n```' : ''}
+`;
+}
+/**
+ * Format feedback for GitHub issues
+ */
+function formatFeedbackForGitHub(feedback) {
+    return `## Description
+${feedback.description}
+
+${feedback.email ? `## Contact\n${feedback.email}\n\n` : ''}
+## Diagnostic Information
+- ShepLang version: ${feedback.diagnostics.version}
+- OS: ${feedback.diagnostics.os}
+- VS Code: ${feedback.diagnostics.vscodeVersion}
+- Date: ${new Date(feedback.diagnostics.date).toLocaleString()}
+
+${feedback.diagnostics.logs ? '## Logs\n```\n' + feedback.diagnostics.logs + '\n```' : ''}
+
+<!-- This issue was created via the ShepLang VS Code extension feedback tool -->
+`;
+}
+/**
+ * Collect relevant logs for diagnostics
+ */
+function collectRelevantLogs() {
+    // For now, just return a placeholder message
+    return 'To view detailed logs, check the ShepLang output channel in VS Code.';
 }
 //# sourceMappingURL=sendFeedback.js.map

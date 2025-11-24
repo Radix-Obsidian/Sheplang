@@ -4,7 +4,7 @@
  * Generates documentation and README files from questionnaire data
  */
 
-import { ProjectQuestionnaire, EntityDefinition, Integration } from '../wizard/types';
+import { ProjectQuestionnaire, EntityDefinition, Integration, ProjectFeature } from '../wizard/types';
 
 export class ReadmeGenerator {
   /**
@@ -14,7 +14,7 @@ export class ReadmeGenerator {
     const projectType = this.getProjectTypeDescription(questionnaire.projectType);
     const entities = questionnaire.entities;
     const features = questionnaire.features;
-    
+
     return `# ${questionnaire.projectName}
 
 ${projectType} built with ShepLang - the AI-native full-stack programming language.
@@ -53,9 +53,9 @@ ${features.map((f, i) => `${i + 1}. ${f.name}`).join('\n')}
 
 ${entities.map(entity => `
 #### ${entity.name}
-${entity.fields.map(field => 
-  `- **${field.name}**: ${field.type}${field.required ? ' (required)' : ''}`
-).join('\n')}
+${entity.fields.map(field =>
+      `- **${field.name}**: ${field.type}${field.required ? ' (required)' : ''}`
+    ).join('\n')}
 `).join('\n')}
 
 ## 🏗️ Project Structure
@@ -125,12 +125,12 @@ ${this.generateAuthenticationSection(questionnaire)}
 
 ## 🔌 Integrations
 
-${questionnaire.integrations.length > 0 
-  ? questionnaire.integrations.map(i => 
-    `### ${i.service}\n${this.getIntegrationDescription(i.service)}`
-  ).join('\n\n')
-  : 'No external integrations configured.'
-}
+${questionnaire.integrations.length > 0
+        ? questionnaire.integrations.map(i =>
+          `### ${i.service}\n${this.getIntegrationDescription(i.service)}`
+        ).join('\n\n')
+        : 'No external integrations configured.'
+      }
 
 ## 📊 API Documentation
 
@@ -235,15 +235,15 @@ ${questionnaire.entities.map(entity => `
 **Description**: ${this.getEntityDescription(entity)}
 
 **Fields**:
-${entity.fields.map(field => 
-  `- \`${field.name}\`: ${field.type}${field.required ? ' (required)' : ''}`
-).join('\n')}
+${entity.fields.map(field =>
+      `- \`${field.name}\`: ${field.type}${field.required ? ' (required)' : ''}`
+    ).join('\n')}
 
 **Generated Actions**:
 - \`create${entity.name}()\` - Create new ${entity.name.toLowerCase()}
-- \`view${entityName}(id)\` - View ${entity.name.toLowerCase()} details
-- \`update${entityName}(id, ...)\` - Update ${entity.name.toLowerCase()}
-- \`delete${entityName}(id)\` - Delete ${entity.name.toLowerCase()}
+- \`view${entity.name}(id)\` - View ${entity.name.toLowerCase()} details
+- \`update${entity.name}(id, ...)\` - Update ${entity.name.toLowerCase()}
+- \`delete${entity.name}(id)\` - Delete ${entity.name.toLowerCase()}
 
 **Usage Example**:
 \`\`\`sheplang
@@ -488,8 +488,8 @@ Integrations connect your application to external services like payment processo
 
 ## Configured Integrations
 
-${questionnaire.integrations.length > 0 
-  ? questionnaire.integrations.map(integration => `
+${questionnaire.integrations.length > 0
+        ? questionnaire.integrations.map(integration => `
 ### ${integration.service}
 **File**: \`${integration.service.toLowerCase()}.shep\`
 
@@ -506,8 +506,8 @@ ${this.getIntegrationSetup(integration.service)}
 # ${this.getIntegrationExample(integration.service)}
 \`\`\`
 `).join('\n')
-  : 'No external integrations configured yet.'
-}
+        : 'No external integrations configured yet.'
+      }
 
 ## Adding New Integrations
 
@@ -812,119 +812,36 @@ Happy coding! 🚀
     }
   }
 
-  private getIntegrationDescription(service: string): string {
-    const descriptions: Record<string, string> = {
-      'Stripe': 'Payment processing and subscription management',
-      'PayPal': 'Alternative payment processing',
-      'SendGrid': 'Email delivery and templates',
-      'Resend': 'Modern email API',
-      'AWS S3': 'File storage and CDN',
-      'Cloudinary': 'Image optimization and delivery',
-      'Clerk': 'User authentication and management',
-      'Auth0': 'Alternative authentication provider'
-    };
-    return descriptions[service] || 'External service integration';
-  }
-
-  private getIntegrationFeatures(service: string): string {
-    const features: Record<string, string> = {
-      'Stripe': '- Payment processing\n- Subscription management\n- Webhook handling\n- Customer management',
-      'SendGrid': '- Email templates\n- Bulk sending\n- Analytics tracking\n- Webhook events',
-      'AWS S3': '- File uploads\n- Image processing\n- CDN delivery\n- Backup storage',
-      'Clerk': '- User authentication\n- Session management\n- Organization support\n- Social login'
-    };
-    return features[service] || '- Basic API integration\n- Error handling\n- Configuration management';
-  }
-
-  private getIntegrationSetup(service: string): string {
-    const setups: Record<string, string> = {
-      'Stripe': '1. Create Stripe account\n2. Get API keys from dashboard\n3. Configure webhook endpoints\n4. Add STRIPE_API_KEY to .env',
-      'SendGrid': '1. Create SendGrid account\n2. Verify sender domain\n3. Create email templates\n4. Add SENDGRID_API_KEY to .env',
-      'AWS S3': '1. Create S3 bucket\n2. Configure CORS policy\n3. Set up CloudFront CDN\n4. Add AWS credentials to .env',
-      'Clerk': '1. Create Clerk application\n2. Configure authentication methods\n3. Set up webhook URLs\n4. Add Clerk keys to .env'
-    };
-    return setups[service] || '1. Create service account\n2. Get API credentials\n3. Configure webhooks\n4. Add API keys to .env';
-  }
-
-  private getIntegrationExample(service: string): string {
-    const examples: Record<string, string> = {
-      'Stripe': 'Process payment\naction processPayment(amount):\n  payment = createPayment(amount)\n  if payment.success:\n    show OrderConfirmation\n  else:\n    show PaymentError',
-      'SendGrid': 'Send welcome email\naction welcomeUser(email, name):\n  sendWelcomeEmail(email, name)',
-      'AWS S3': 'Upload file\naction uploadUserFile(file):\n  result = uploadFile(file, "user-uploads")\n  return result.url'
-    };
-    return examples[service] || `# Use ${service} integration\naction useService(data):\n  result = call ${service}.method with data\n  return result`;
-  }
-
-  private getRequiredEnvVars(questionnaire: ProjectQuestionnaire): string {
-    const vars: string[] = [];
-    
-    questionnaire.integrations.forEach(integration => {
-      switch (integration.service) {
-        case 'Stripe':
-          vars.push('- STRIPE_API_KEY: Your Stripe secret key');
-          break;
-        case 'SendGrid':
-          vars.push('- SENDGRID_API_KEY: Your SendGrid API key');
-          break;
-        case 'AWS S3':
-          vars.push('- AWS_ACCESS_KEY_ID: AWS access key');
-          vars.push('- AWS_SECRET_ACCESS_KEY: AWS secret key');
-          vars.push('- S3_BUCKET_NAME: Your S3 bucket name');
-          break;
-        case 'Clerk':
-          vars.push('- CLERK_API_KEY: Clerk API key');
-          vars.push('- CLERK_JWT_KEY: Clerk JWT key');
-          break;
-      }
-    });
-
-    return vars.length > 0 ? vars.join('\n') : '- No additional environment variables required';
-  }
-
-  private getDeploymentInstructions(platform: string): string {
-    const instructions: Record<string, string> = {
-      'Vercel': `\`\`\`bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
-\`\`\``,
-      'Netlify': `\`\`\`bash
-# Install Netlify CLI
-npm i -g netlify-cli
-
-# Deploy
-netlify deploy --prod
-\`\`\``,
-      'AWS': `\`\`\`bash
-# Use AWS Amplify or ECS
-# See deployment guide for details
-\`\`\``,
-      'Docker': `\`\`\`bash
-# Build image
-docker build -t my-app .
-
-# Run container
-docker run -p 3000:3000 my-app
-\`\`\``
-    };
-    return instructions[platform] || instructions['Vercel'];
-  }
-
   private getEntityDescription(entity: EntityDefinition): string {
-    const name = entity.name.toLowerCase();
-    
-    if (name.includes('user')) return 'User account and profile information';
-    if (name.includes('order')) return 'Customer orders and purchase history';
-    if (name.includes('product')) return 'Product catalog and inventory';
-    if (name.includes('post')) return 'Blog posts and content';
-    if (name.includes('team')) return 'Team organization and membership';
-    
-    return `${entity.name} data model`;
+    return `Data model for ${entity.name}.`;
   }
 
   private getFlowDescription(feature: ProjectFeature): string {
-    return `Business logic for ${feature.name.toLowerCase()} functionality`;
+    return feature.description || `Business logic for ${feature.name}.`;
+  }
+
+  private getIntegrationDescription(service: string): string {
+    return `Integration with ${service}.`;
+  }
+
+  private getIntegrationFeatures(service: string): string {
+    return `- Connect to ${service} API\n- Handle webhooks\n- Sync data`;
+  }
+
+  private getIntegrationSetup(service: string): string {
+    return `1. Get API keys from ${service} dashboard\n2. Add keys to .env file\n3. Configure webhooks if needed`;
+  }
+
+  private getIntegrationExample(service: string): string {
+    return `call ${service}.doSomething()`;
+  }
+
+  private getRequiredEnvVars(questionnaire: ProjectQuestionnaire): string {
+    return questionnaire.integrations.map(i => `# ${i.service} keys`).join('\n');
+  }
+
+  private getDeploymentInstructions(platform?: string): string {
+    if (!platform) return 'Follow standard deployment procedures.';
+    return `Instructions for deploying to ${platform}.`;
   }
 }

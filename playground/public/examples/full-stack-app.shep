@@ -1,0 +1,31 @@
+app FullStackApp
+
+data User:
+  fields:
+    name: text
+    email: text
+
+view Dashboard:
+  list User
+  button "Add User" -> ShowUserForm
+  button "Refresh" -> LoadUsers
+
+view UserForm:
+  input name as text
+  input email as text
+  button "Save" -> CreateUser(name, email)
+  button "Cancel" -> ShowDashboard
+
+action CreateUser(name, email):
+  call POST "/users" with name, email
+  show Dashboard
+
+action LoadUsers():
+  load GET "/users" into users
+  show Dashboard
+
+action ShowUserForm():
+  show UserForm
+
+action ShowDashboard():
+  show Dashboard

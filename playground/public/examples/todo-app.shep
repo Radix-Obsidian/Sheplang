@@ -1,0 +1,27 @@
+app TodoApp
+
+data Todo:
+  fields:
+    title: text
+    done: yes/no
+
+view Dashboard:
+  list Todo
+  button "Add Task" -> CreateTodo
+
+view CreateTodoForm:
+  text "New Todo"
+  input title as text
+  button "Save" -> CreateTodo(title)
+  button "Cancel" -> ShowDashboard
+
+action CreateTodo(title):
+  add Todo with title, done = false
+  show Dashboard
+
+action MarkDone(todo):
+  update todo with done = true
+  show Dashboard
+
+action ShowDashboard():
+  show Dashboard

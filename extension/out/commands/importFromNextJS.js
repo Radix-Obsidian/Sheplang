@@ -131,6 +131,7 @@ async function importFromNextJS(context) {
                         appModel.entities.push({
                             name: entityName,
                             source: 'user-input',
+                            filePath: '',
                             fields: [
                                 { name: 'id', type: 'text', required: true },
                                 { name: 'name', type: 'text', required: true }
@@ -145,7 +146,9 @@ async function importFromNextJS(context) {
                 const skipWords = ['no', 'none', 'n/a', 'skip', 'nothing'];
                 const shouldSkip = skipWords.some(word => instr === word);
                 if (!shouldSkip) {
-                    appModel.todos.unshift(`Custom instruction: ${wizardInput.customInstructions}`);
+                    if (appModel.todos) {
+                        appModel.todos.unshift(`Custom instruction: ${wizardInput.customInstructions}`);
+                    }
                 }
             }
             // Step 5: Choose architecture approach
@@ -434,8 +437,8 @@ function generateScaffoldReport(appModel, scaffold) {
         report += `\n`;
     }
     // TODOs
-    if (appModel.todos.length > 0) {
-        report += `## TODOs\n\n`;
+    if (appModel.todos && appModel.todos.length > 0) {
+        report += '## TODOs & Notes\n\n';
         for (const todo of appModel.todos) {
             report += `- ${todo}\n`;
         }

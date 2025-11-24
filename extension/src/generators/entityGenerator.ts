@@ -39,11 +39,11 @@ ${this.generateBackgroundJobs(entity, questionnaire)}
    */
   private generateRelationships(entity: EntityDefinition, allEntities: EntityDefinition[]): string {
     const relationships: string[] = [];
-    
+
     // Auto-detect relationships based on field names
     for (const field of entity.fields) {
       const fieldName = field.name.toLowerCase();
-      
+
       // Check if this field references another entity
       for (const otherEntity of allEntities) {
         if (otherEntity.name !== entity.name && fieldName.includes(otherEntity.name.toLowerCase())) {
@@ -61,7 +61,7 @@ ${this.generateBackgroundJobs(entity, questionnaire)}
       relationships.push('    team: reference Team # Team membership');
     }
 
-    return relationships.length > 0 
+    return relationships.length > 0
       ? '\n  # Relationships\n' + relationships.join('\n')
       : '';
   }
@@ -71,10 +71,10 @@ ${this.generateBackgroundJobs(entity, questionnaire)}
    */
   private generateBackgroundJobs(entity: EntityDefinition, questionnaire: ProjectQuestionnaire): string {
     const jobs: string[] = [];
-    
+
     // Common jobs based on entity type
     const entityName = entity.name.toLowerCase();
-    
+
     if (entityName.includes('user') || entityName.includes('customer')) {
       jobs.push(`
 # Send welcome email when user is created
@@ -142,16 +142,16 @@ job notifyFollowers(post):
    */
   public generateValidationRules(entity: EntityDefinition): string {
     const rules: string[] = [];
-    
+
     for (const field of entity.fields) {
       if (field.type === 'email') {
         rules.push(`  validate ${field.name} is email`);
       }
-      
+
       if (field.type === 'number' && field.name.toLowerCase().includes('price')) {
         rules.push(`  validate ${field.name} > 0`);
       }
-      
+
       if (field.required) {
         rules.push(`  validate ${field.name} is required`);
       }
@@ -165,15 +165,15 @@ job notifyFollowers(post):
    */
   public generateSampleData(entity: EntityDefinition): string {
     const samples: string[] = [];
-    
+
     // Generate 2-3 sample records
     const sampleCount = Math.min(3, Math.max(2, entity.fields.length));
-    
+
     for (let i = 1; i <= sampleCount; i++) {
       const sampleFields = entity.fields.map(field => {
-        return this.generateSampleFieldValue(field, i);
+        return this.generateSampleFieldValue(field, i, entity);
       }).join(', ');
-      
+
       samples.push(`  add ${entity.name} with ${sampleFields}`);
     }
 
@@ -183,9 +183,9 @@ job notifyFollowers(post):
   /**
    * Generate sample field value
    */
-  private generateSampleFieldValue(field: any, index: number): string {
+  private generateSampleFieldValue(field: any, index: number, entity: EntityDefinition): string {
     const fieldName = field.name.toLowerCase();
-    
+
     switch (field.type) {
       case 'text':
         if (fieldName.includes('email')) {
@@ -197,7 +197,7 @@ job notifyFollowers(post):
         } else {
           return `${field.name}: "Sample ${field.name} ${index}"`;
         }
-        
+
       case 'number':
         if (fieldName.includes('price')) {
           return `${field.name}: ${index * 9.99}`;
@@ -206,16 +206,16 @@ job notifyFollowers(post):
         } else {
           return `${field.name}: ${index}`;
         }
-        
+
       case 'date':
         return `${field.name}: "${new Date(Date.now() - index * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}"`;
-        
+
       case 'yes/no':
         return `${field.name}: ${index % 2 === 0 ? 'yes' : 'no'}`;
-        
+
       case 'image':
         return `${field.name}: "https://example.com/image${index}.jpg"`;
-        
+
       default:
         return `${field.name}: "Sample value ${index}"`;
     }
@@ -227,7 +227,7 @@ job notifyFollowers(post):
   public generateCrudOperations(entity: EntityDefinition): string {
     const entityName = entity.name;
     const entityNameLower = entityName.toLowerCase();
-    
+
     return `
 # Create ${entityNameLower}
 action create${entityName}(${this.generateActionParams(entity.fields)}):

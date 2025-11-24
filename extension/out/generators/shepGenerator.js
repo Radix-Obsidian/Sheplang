@@ -41,9 +41,9 @@ function generateMainShepFile(appModel) {
     // App declaration
     output += `app ${appModel.appName}\n\n`;
     // High-level TODOs
-    if (appModel.todos.length > 0) {
+    if (appModel.todos && appModel.todos.length > 0) {
         output += `// TODOs from import:\n`;
-        for (const todo of appModel.todos) {
+        for (const todo of appModel.todos || []) {
             output += `// - ${todo}\n`;
         }
         output += `\n`;
@@ -129,13 +129,13 @@ function generateViewBlock(view, entities) {
     output += `// From: ${view.filePath}\n`;
     output += `view ${view.name}:\n`;
     // Widgets
-    if (view.widgets.length === 0) {
+    if (!view.widgets || view.widgets.length === 0) {
         output += `  // TODO: Add widgets for this view\n`;
         output += `  // Example: list EntityName\n`;
         output += `  // Example: button "Click me" -> HandleAction\n`;
     }
     else {
-        for (const widget of view.widgets) {
+        for (const widget of view.widgets || []) {
             if (widget.kind === 'list') {
                 output += `  list ${widget.entityName}\n`;
             }
@@ -161,13 +161,13 @@ function generateActionBlock(action, entities) {
     // Source comment
     output += `// Source: ${action.source}\n`;
     // Parameters
-    const params = action.parameters.length > 0
+    const params = action.parameters && action.parameters.length > 0
         ? action.parameters.join(', ')
         : 'params';
     output += `action ${action.name}(${params}):\n`;
     // Action TODOs
-    if (action.todos.length > 0) {
-        for (const todo of action.todos) {
+    if (action.todos && action.todos.length > 0) {
+        for (const todo of action.todos || []) {
             output += `  // ${todo}\n`;
         }
     }
@@ -176,17 +176,17 @@ function generateActionBlock(action, entities) {
         for (const apiCall of action.apiCalls) {
             if (apiCall.method === 'GET') {
                 // Load data
-                const variable = inferVariableFromPath(apiCall.path);
-                output += `  load ${apiCall.method} "${apiCall.path}" into ${variable}\n`;
+                const variable = inferVariableFromPath(apiCall.path || '');
+                output += `  load ${apiCall.method} "${apiCall.path || ''}" into ${variable}\n`;
             }
             else {
                 // Mutate data
-                const fields = action.parameters.length > 0
+                const fields = action.parameters && action.parameters.length > 0
                     ? ` with ${action.parameters.join(', ')}`
                     : '';
-                output += `  call ${apiCall.method} "${apiCall.path}"${fields}\n`;
+                output += `  call ${apiCall.method} "${apiCall.path || ''}"${fields}\n`;
                 // Reload after mutation
-                const reloadPath = getReloadPath(apiCall.path);
+                const reloadPath = getReloadPath(apiCall.path || '');
                 const reloadVar = inferVariableFromPath(reloadPath);
                 output += `  load GET "${reloadPath}" into ${reloadVar}\n`;
             }
@@ -246,7 +246,8 @@ function inferTargetView(actionName, entities) {
 function createDefaultView(appModel) {
     return {
         name: 'MainView',
-        filePath: appModel.projectRoot,
+        filePath: '',
+        elements: [],
         widgets: []
     };
 }
@@ -265,6 +266,7 @@ function createDashboardView(appModel) {
     return {
         name: 'Dashboard',
         filePath: appModel.projectRoot,
+        elements: [],
         widgets
     };
 }
@@ -294,7 +296,7 @@ function generateImportReport(appModel, files) {
     if (appModel.views.length > 0) {
         report += `## Views\n\n`;
         for (const view of appModel.views) {
-            report += `- **${view.name}** - ${view.widgets.length} widgets\n`;
+            report += `- **${view.name}** - ${view.widgets?.length || 0} widgets\n`;
         }
         report += `\n`;
     }
@@ -307,9 +309,9 @@ function generateImportReport(appModel, files) {
         report += `\n`;
     }
     // TODOs
-    if (appModel.todos.length > 0) {
+    if (appModel.todos && appModel.todos.length > 0) {
         report += `## TODOs\n\n`;
-        for (const todo of appModel.todos) {
+        for (const todo of appModel.todos || []) {
             report += `- ${todo}\n`;
         }
         report += `\n`;

@@ -2,7 +2,7 @@
   "name": "sheplang-vscode",
   "displayName": "ShepLang - AI-Native Verified Programming",
   "description": "The first AI-native programming language with built-in verification. Write in English, ship verified code.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "GoldenSheepAI",
   "icon": "media/icon.png",
   "engines": {
@@ -236,7 +236,7 @@
     "watch": "npm run prebuild && tsc -watch -p ./",
     "package": "npm run compile && vsce package",
     "publish": "npm run compile && vsce publish",
-    "test": "npm run compile && node ./out/test/runTest.js",
+    "test": "npm run compile && vscode-test",
     "test:production": "node scripts/test-production.js",
     "demo:setup": "node scripts/demo-setup.js",
     "demo:open": "code --disable-extensions --extensionDevelopmentPath=. demo-workspace/sheplang-demo.code-workspace",
@@ -244,7 +244,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.0",
-    "@goldensheepai/sheplang-language": "file:../sheplang/packages/language",
+    "@goldensheepai/sheplang-language": "^0.1.4",
     "express": "^4.18.2",
     "langium": "^3.0.0",
     "simple-git": "^3.30.0",
@@ -261,12 +261,13 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.x",
     "@types/vscode": "^1.85.0",
+    "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
-    "chalk": "^4.1.2",
-    "rimraf": "^5.0.5",
     "@vscode/vsce": "^2.22.0",
+    "chalk": "^4.1.2",
     "glob": "^13.0.0",
     "mocha": "^11.7.5",
+    "rimraf": "^5.0.5",
     "typescript": "^5.3.0"
   },
   "repository": {

@@ -5,7 +5,15 @@
  */
 
 import * as vscode from 'vscode';
-import { parseShep, ParsedResult } from '../../../sheplang/packages/language/src/index.js';
+// import type { ParsedResult } from '@goldensheepai/sheplang-language';
+interface ParsedResult {
+  diagnostics: {
+    severity: 'error' | 'warning' | 'info' | 'hint';
+    message: string;
+    start: { line: number; column: number };
+    code?: string;
+  }[];
+}
 import { outputChannel } from '../services/outputChannel';
 
 export interface ValidationResult {
@@ -32,7 +40,7 @@ export interface ValidationWarning {
 
 export class SyntaxValidator {
   private static instance: SyntaxValidator;
-  
+
   public static getInstance(): SyntaxValidator {
     if (!SyntaxValidator.instance) {
       SyntaxValidator.instance = new SyntaxValidator();
@@ -46,8 +54,9 @@ export class SyntaxValidator {
   public async validate(source: string, filePath = 'generated.shep'): Promise<ValidationResult> {
     try {
       // Parse the source code
+      const { parseShep } = await import('@goldensheepai/sheplang-language');
       const result: ParsedResult = await parseShep(source, filePath);
-      
+
       const errors: ValidationError[] = [];
       const warnings: ValidationWarning[] = [];
 
@@ -83,7 +92,7 @@ export class SyntaxValidator {
 
     } catch (error) {
       outputChannel.error('Syntax validation failed:', error);
-      
+
       return {
         isValid: false,
         errors: [{
@@ -102,11 +111,11 @@ export class SyntaxValidator {
    */
   public async validateFiles(files: { path: string; content: string }[]): Promise<{ [path: string]: ValidationResult }> {
     const results: { [path: string]: ValidationResult } = {};
-    
+
     for (const file of files) {
       results[file.path] = await this.validate(file.content, file.path);
     }
-    
+
     return results;
   }
 
@@ -115,49 +124,49 @@ export class SyntaxValidator {
    */
   private getSuggestion(message: string, code?: string): string | undefined {
     const lowerMessage = message.toLowerCase();
-    
+
     // Common syntax issues
     if (lowerMessage.includes('unexpected token')) {
       return 'Check for missing commas, brackets, or incorrect indentation';
     }
-    
+
     if (lowerMessage.includes('unexpected end of input')) {
       return 'Missing closing brace or incomplete statement';
     }
-    
+
     if (lowerMessage.includes('unexpected identifier')) {
       return 'Check if this is a reserved keyword or needs quotes';
     }
-    
+
     if (lowerMessage.includes('missing colon')) {
       return 'Add a colon after the property name';
     }
-    
+
     if (lowerMessage.includes('expected')) {
       return 'Review the syntax structure and add missing elements';
     }
-    
+
     // Specific to ShepLang constructs
     if (lowerMessage.includes('data') && lowerMessage.includes('expected')) {
       return 'Ensure data declaration follows: data EntityName: fields: ...';
     }
-    
+
     if (lowerMessage.includes('view') && lowerMessage.includes('expected')) {
       return 'Ensure view declaration follows: view ViewName: header: ...';
     }
-    
+
     if (lowerMessage.includes('action') && lowerMessage.includes('expected')) {
       return 'Ensure action declaration follows: action actionName(): ...';
     }
-    
+
     if (lowerMessage.includes('flow') && lowerMessage.includes('expected')) {
       return 'Ensure flow declaration follows: flow FlowName: steps: ...';
     }
-    
+
     if (lowerMessage.includes('integration') && lowerMessage.includes('expected')) {
       return 'Ensure integration declaration follows: integration ServiceName: config: ...';
     }
-    
+
     return undefined;
   }
 
@@ -166,29 +175,29 @@ export class SyntaxValidator {
    */
   private attemptAutoFix(source: string, errors: ValidationError[]): string {
     let fixed = source;
-    
+
     for (const error of errors) {
       // Fix missing colons in property declarations
       if (error.message.toLowerCase().includes('missing colon')) {
         fixed = this.fixMissingColons(fixed);
       }
-      
+
       // Fix missing commas in lists
       if (error.message.toLowerCase().includes('missing comma')) {
         fixed = this.fixMissingCommas(fixed);
       }
-      
+
       // Fix indentation issues
       if (error.message.toLowerCase().includes('indentation')) {
         fixed = this.fixIndentation(fixed);
       }
-      
+
       // Fix missing braces
       if (error.message.toLowerCase().includes('missing') && error.message.toLowerCase().includes('brace')) {
         fixed = this.fixMissingBraces(fixed);
       }
     }
-    
+
     return fixed;
   }
 
@@ -218,29 +227,29 @@ export class SyntaxValidator {
     const lines = source.split('\n');
     const fixed: string[] = [];
     let indentLevel = 0;
-    
+
     for (const line of lines) {
       const trimmed = line.trim();
-      
+
       if (trimmed === '') {
         fixed.push('');
         continue;
       }
-      
+
       // Decrease indent for closing braces
       if (trimmed.startsWith('}')) {
         indentLevel = Math.max(0, indentLevel - 1);
       }
-      
+
       // Apply current indent
       fixed.push('  '.repeat(indentLevel) + trimmed);
-      
+
       // Increase indent for opening braces
       if (trimmed.endsWith('{')) {
         indentLevel++;
       }
     }
-    
+
     return fixed.join('\n');
   }
 
@@ -251,18 +260,18 @@ export class SyntaxValidator {
     const lines = source.split('\n');
     const stack: number[] = [];
     const fixed: string[] = [];
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmed = line.trim();
-      
+
       fixed.push(line);
-      
+
       // Track opening braces
       if (trimmed.endsWith('{')) {
         stack.push(i);
       }
-      
+
       // Track closing braces
       if (trimmed.startsWith('}')) {
         if (stack.length > 0) {
@@ -270,13 +279,13 @@ export class SyntaxValidator {
         }
       }
     }
-    
+
     // Add missing closing braces
     while (stack.length > 0) {
       fixed.push('}');
       stack.pop();
     }
-    
+
     return fixed.join('\n');
   }
 
@@ -289,7 +298,7 @@ export class SyntaxValidator {
 data ${entityName}:
   ${entityCode.trim()}
 `;
-    
+
     return this.validate(wrappedCode, `${entityName}.shep`);
   }
 
@@ -302,7 +311,7 @@ data ${entityName}:
 flow ${flowName}:
   ${flowCode.trim()}
 `;
-    
+
     return this.validate(wrappedCode, `${flowName}.shep`);
   }
 
@@ -315,7 +324,7 @@ flow ${flowName}:
 view ${screenName}:
   ${screenCode.trim()}
 `;
-    
+
     return this.validate(wrappedCode, `${screenName}.shep`);
   }
 
@@ -328,7 +337,7 @@ view ${screenName}:
 integration ${serviceName}:
   ${integrationCode.trim()}
 `;
-    
+
     return this.validate(wrappedCode, `${serviceName}.shep`);
   }
 
@@ -337,9 +346,9 @@ integration ${serviceName}:
    */
   public showValidationErrors(errors: ValidationError[], filePath: string): void {
     if (errors.length === 0) return;
-    
+
     const message = `Found ${errors.length} syntax error${errors.length > 1 ? 's' : ''} in ${filePath}`;
-    
+
     vscode.window.showErrorMessage(
       message,
       'View Errors',
@@ -348,10 +357,10 @@ integration ${serviceName}:
     ).then(selection => {
       if (selection === 'View Errors') {
         // Show detailed error list
-        const errorList = errors.map(e => 
+        const errorList = errors.map(e =>
           `Line ${e.line}: ${e.message}${e.suggestion ? `\n  Suggestion: ${e.suggestion}` : ''}`
         ).join('\n\n');
-        
+
         vscode.window.showInformationMessage(
           'Syntax Errors:\n\n' + errorList,
           'OK'
@@ -373,23 +382,23 @@ integration ${serviceName}:
     if (result.isValid) {
       return `✅ ${filePath}: Valid syntax`;
     }
-    
+
     let message = `❌ ${filePath}: ${result.errors.length} error${result.errors.length > 1 ? 's' : ''}`;
-    
+
     for (const error of result.errors) {
       message += `\n  Line ${error.line}: ${error.message}`;
       if (error.suggestion) {
         message += `\n    💡 ${error.suggestion}`;
       }
     }
-    
+
     if (result.warnings.length > 0) {
       message += `\n⚠️  ${result.warnings.length} warning${result.warnings.length > 1 ? 's' : ''}`;
       for (const warning of result.warnings) {
         message += `\n  Line ${warning.line}: ${warning.message}`;
       }
     }
-    
+
     return message;
   }
 }

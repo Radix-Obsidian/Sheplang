@@ -1,0 +1,188 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+  height: 56px;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+}
+
+.header-left, .header-right, .header-middle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.header-middle {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-lite {
+  color: var(--header-text-color);
+  font-weight: 700;
+}
+
+.tagline {
+  font-size: 0.75rem;
+  color: var(--muted-text);
+  font-weight: normal;
+}
+
+.theme-toggle-btn, .header-link, .vs-code-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.theme-toggle-btn, .vs-code-btn {
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  border: none;
+}
+
+.vs-code-btn {
+  background-color: #0078d4;
+  color: white;
+}
+
+.vs-code-btn:hover {
+  background-color: #006cbe;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--button-hover-bg);
+}
+
+.header-link {
+  color: var(--link-color);
+}
+
+.header-link:hover {
+  color: var(--link-hover-color);
+}
+
+.diagnostics {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  align-items: center;
+}
+
+.errors {
+  color: var(--error-color);
+}
+
+.warnings {
+  color: var(--warning-color);
+}
+
+.parse-time {
+  color: var(--muted-text);
+}
+
+.extension-upsell {
+  background-color: var(--bg-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-top: 4px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.upsell-content {
+  padding: 1.5rem;
+}
+
+.upsell-content h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  color: var(--text-color);
+}
+
+.upsell-content p {
+  margin-bottom: 0.75rem;
+  color: var(--text-color);
+}
+
+.upsell-content ul {
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.upsell-content li {
+  margin-bottom: 0.25rem;
+}
+
+.upsell-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.button-primary, .button-secondary {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.button-primary {
+  background-color: #0078d4;
+  color: white;
+  border: none;
+  text-decoration: none;
+}
+
+.button-primary:hover {
+  background-color: #006cbe;
+}
+
+.button-secondary {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.button-secondary:hover {
+  background-color: var(--button-bg);
+}
