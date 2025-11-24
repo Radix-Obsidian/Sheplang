@@ -11,6 +11,11 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Split pane divider colors */
+  --divider-color: #e0e0e0;
+  --divider-hover-color: #ff6600;
+  --divider-active-color: #ff8533;
 }
 
 a {
@@ -58,6 +63,11 @@ button:focus-visible {
   :root {
     color: #213547;
     background-color: #ffffff;
+    
+    /* Light theme divider colors */
+    --divider-color: #d0d0d0;
+    --divider-hover-color: #ff6600;
+    --divider-active-color: #ff8533;
   }
   a:hover {
     color: #747bff;

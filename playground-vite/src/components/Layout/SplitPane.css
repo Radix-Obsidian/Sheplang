@@ -4,26 +4,49 @@
   height: calc(100vh - 56px); /* Subtract header height */
   position: relative;
   overflow: hidden;
+  contain: layout style paint; /* Optimize layout performance */
 }
 
-.split-pane-left, .split-pane-right {
+.split-pane-left,
+.split-pane-right {
   height: 100%;
   overflow: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0; /* Prevent flex items from shrinking */
+  will-change: width; /* Hint for GPU acceleration */
 }
 
 .split-pane-divider {
   width: 6px;
   height: 100%;
-  background-color: var(--divider-color);
+  background-color: var(--divider-color, #e0e0e0);
   cursor: col-resize;
   z-index: 10;
   position: relative;
+  flex-shrink: 0; /* Prevent divider from shrinking */
+  transition: background-color 0.15s ease;
+  user-select: none; /* Prevent text selection during drag */
 }
 
-.split-pane-divider:hover,
-.split-pane-divider:active {
-  background-color: var(--divider-hover-color);
+.split-pane-divider:hover {
+  background-color: var(--divider-hover-color, #ff6600);
+}
+
+.split-pane-divider.dragging {
+  background-color: var(--divider-active-color, #ff6600);
+  cursor: col-resize;
+}
+
+/* Prevent text selection during drag */
+.split-pane.dragging,
+.split-pane.dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  pointer-events: none; /* Disable pointer events during drag except for divider */
+}
+
+.split-pane-divider.dragging {
+  pointer-events: auto; /* Re-enable for divider only */
 }
