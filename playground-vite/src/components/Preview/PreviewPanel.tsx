@@ -6,6 +6,12 @@ import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import 'highlight.js/styles/github-dark.css';
 import './PreviewPanel.css';
+import '@/components/overlays/Overlay.css';
+import '@/components/resources/ResourcesTab.css';
+import ReactOverlay from '@/components/overlays/ReactOverlay';
+import TypeScriptOverlay from '@/components/overlays/TypeScriptOverlay';
+import ResourcesTab from '@/components/resources/ResourcesTab';
+import { useOverlay } from '@/hooks/useOverlay';
 
 // Register languages
 hljs.registerLanguage('javascript', javascript);
@@ -21,7 +27,8 @@ interface PreviewPanelProps {
 enum PreviewTab {
   Preview = 'preview',
   ReactCode = 'reactCode',
-  TypeScript = 'typescript'
+  TypeScript = 'typescript',
+  Resources = 'resources'
 }
 
 const PreviewPanel: React.FC<PreviewPanelProps> = ({ code, onInteraction }) => {
@@ -32,6 +39,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ code, onInteraction }) => {
   const [showShareOptions, setShowShareOptions] = useState<boolean>(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const previewTimeoutRef = useRef<number | null>(null);
+
+  // Overlay hooks for React and TypeScript tabs
+  const reactOverlay = useOverlay('react');
+  const typescriptOverlay = useOverlay('typescript');
 
   useEffect(() => {
     if (previewTimeoutRef.current) {
@@ -76,6 +87,26 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ code, onInteraction }) => {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [onInteraction]);
+
+  // Handle tab clicks with overlay logic
+  const handleTabChange = (tab: PreviewTab) => {
+    setActiveTab(tab);
+    
+    // Show overlays for React and TypeScript tabs (if not dismissed)
+    if (tab === PreviewTab.ReactCode) {
+      // Debug: Reset overlay for testing in development
+      if (import.meta.env.DEV) {
+        reactOverlay.resetOverlay();
+      }
+      reactOverlay.showOverlay();
+    } else if (tab === PreviewTab.TypeScript) {
+      // Debug: Reset overlay for testing in development
+      if (import.meta.env.DEV) {
+        typescriptOverlay.resetOverlay();
+      }
+      typescriptOverlay.showOverlay();
+    }
+  };
 
   const handleCopyShareLink = () => {
     try {
@@ -165,21 +196,27 @@ export function showMessage(repository: MessageRepository): void {
         <div className="preview-tabs">
           <button 
             className={`tab-button ${activeTab === PreviewTab.Preview ? 'active' : ''}`}
-            onClick={() => setActiveTab(PreviewTab.Preview)}
+            onClick={() => handleTabChange(PreviewTab.Preview)}
           >
             Preview
           </button>
           <button 
             className={`tab-button ${activeTab === PreviewTab.ReactCode ? 'active' : ''}`}
-            onClick={() => setActiveTab(PreviewTab.ReactCode)}
+            onClick={() => handleTabChange(PreviewTab.ReactCode)}
           >
             React
           </button>
           <button 
             className={`tab-button ${activeTab === PreviewTab.TypeScript ? 'active' : ''}`}
-            onClick={() => setActiveTab(PreviewTab.TypeScript)}
+            onClick={() => handleTabChange(PreviewTab.TypeScript)}
           >
             TypeScript
+          </button>
+          <button 
+            className={`tab-button ${activeTab === PreviewTab.Resources ? 'active' : ''}`}
+            onClick={() => handleTabChange(PreviewTab.Resources)}
+          >
+            📚 Resources
           </button>
         </div>
         <div className="preview-actions">
@@ -241,7 +278,22 @@ export function showMessage(repository: MessageRepository): void {
             </pre>
           </div>
         )}
+
+        {activeTab === PreviewTab.Resources && (
+          <ResourcesTab />
+        )}
       </div>
+      
+      {/* Overlays */}
+      <ReactOverlay 
+        isVisible={reactOverlay.isVisible}
+        onClose={(permanent?: boolean) => reactOverlay.hideOverlay(permanent || false)}
+      />
+      
+      <TypeScriptOverlay 
+        isVisible={typescriptOverlay.isVisible}
+        onClose={(permanent?: boolean) => typescriptOverlay.hideOverlay(permanent || false)}
+      />
     </div>
   );
 };
