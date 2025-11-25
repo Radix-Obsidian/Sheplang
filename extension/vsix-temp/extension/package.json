@@ -1,0 +1,288 @@
+{
+  "name": "sheplang-vscode",
+  "displayName": "ShepLang - AI-Native Verified Programming",
+  "description": "The first AI-native programming language with built-in verification. Write in English, ship verified code.",
+  "version": "1.0.2",
+  "publisher": "GoldenSheepAI",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "sheplang",
+    "ai",
+    "verification",
+    "full-stack",
+    "shepthon",
+    "verified",
+    "type-safe"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*.shep",
+    "workspaceContains:**/*.shepthon"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "sheplang",
+        "aliases": [
+          "ShepLang",
+          "sheplang"
+        ],
+        "extensions": [
+          ".shep"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/sheplang-light.svg",
+          "dark": "./icons/sheplang-dark.svg"
+        }
+      },
+      {
+        "id": "shepthon",
+        "aliases": [
+          "ShepThon",
+          "shepthon"
+        ],
+        "extensions": [
+          ".shepthon"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sheplang",
+        "scopeName": "source.sheplang",
+        "path": "./syntaxes/sheplang.tmLanguage.json"
+      },
+      {
+        "language": "shepthon",
+        "scopeName": "source.shepthon",
+        "path": "./syntaxes/shepthon.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "sheplang.sendFeedback",
+        "title": "ShepLang: Send Feedback",
+        "category": "ShepLang"
+      },
+      {
+        "command": "sheplang.showPreview",
+        "title": "ShepLang: Show Preview",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "sheplang.newProject",
+        "title": "ShepLang: New Project"
+      },
+      {
+        "command": "sheplang.restartBackend",
+        "title": "ShepLang: Restart Backend"
+      },
+      {
+        "command": "sheplang.importFromGitHub",
+        "title": "ShepLang: Import from Git Repository",
+        "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "sheplang.importFromNextJS",
+        "title": "ShepLang: Import from Next.js/React Project",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "sheplang.importFromWebflow",
+        "title": "ShepLang: Import from Webflow Export",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "sheplang.showAIUsage",
+        "title": "ShepLang: Show AI Import Usage",
+        "icon": "$(info)"
+      },
+      {
+        "command": "sheplang.resetAIUsage",
+        "title": "ShepLang: Reset AI Usage (Testing)",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "sheplang.updateApiKey",
+        "title": "ShepLang: Update Anthropic API Key",
+        "icon": "$(key)"
+      },
+      {
+        "command": "sheplang.showPreviewInBrowser",
+        "title": "ShepLang: Show Preview in Browser",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "sheplang.stopPreviewServer",
+        "title": "ShepLang: Stop Preview Server",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "sheplang.quickStart",
+        "title": "ShepLang: Quick Start",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "sheplang.openExamples",
+        "title": "ShepLang: Open Example Project",
+        "icon": "$(book)"
+      },
+      {
+        "command": "sheplang.startProjectWizard",
+        "title": "ShepLang: Start Project Wizard",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "sheplang.quickCreateProject",
+        "title": "ShepLang: Quick Create Project",
+        "icon": "$(add)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceLangId == sheplang",
+          "command": "sheplang.showPreview",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "sheplang.quickStart",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "!editorFocus || editorLangId == sheplang"
+      },
+      {
+        "command": "sheplang.showPreview",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorLangId == sheplang"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "ShepLang Configuration",
+      "properties": {
+        "sheplang.autoPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open preview when opening .shep files",
+          "scope": "window"
+        },
+        "sheplang.preview.port": {
+          "type": "number",
+          "default": 3000,
+          "description": "Port for browser-based live preview server",
+          "scope": "window"
+        },
+        "sheplang.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        },
+        "sheplang.figmaAccessToken": {
+          "type": "string",
+          "default": "",
+          "description": "Figma Personal Access Token for importing designs. Get one at figma.com/settings → Security → Generate new token",
+          "scope": "application"
+        },
+        "sheplang.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Optional: Your Anthropic API key for unlimited AI-powered imports. Leave empty to use free tier (5 imports/month). Get a key at console.anthropic.com",
+          "scope": "application"
+        },
+        "sheplang.debugBypassLimits": {
+          "type": "boolean",
+          "default": false,
+          "description": "Debug: Bypass import limits for testing AI functionality. Do not enable in production.",
+          "scope": "application"
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "sheplang",
+        "path": "./snippets/sheplang.json"
+      },
+      {
+        "language": "shepthon",
+        "path": "./snippets/shepthon.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "prebuild": "node scripts/build-config.js",
+    "compile": "npm run prebuild && tsc -p ./",
+    "watch": "npm run prebuild && tsc -watch -p ./",
+    "package": "npm run compile && vsce package",
+    "publish": "npm run compile && vsce publish",
+    "test": "npm run compile && vscode-test",
+    "test:production": "node scripts/test-production.js",
+    "demo:setup": "node scripts/demo-setup.js",
+    "demo:open": "code --disable-extensions --extensionDevelopmentPath=. demo-workspace/sheplang-demo.code-workspace",
+    "production:build": "node scripts/production-build.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "@goldensheepai/sheplang-language": "^0.1.4",
+    "express": "^4.18.2",
+    "langium": "^3.0.0",
+    "simple-git": "^3.30.0",
+    "socket.io": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "vscode-uri": "^3.0.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^2.22.0",
+    "chalk": "^4.1.2",
+    "glob": "^13.0.0",
+    "mocha": "^11.7.5",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript.git",
+    "directory": "extension"
+  },
+  "bugs": {
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript/issues"
+  },
+  "homepage": "https://github.com/Radix-Obsidian/Sheplang-BobaScript#readme",
+  "license": "MIT",
+  "qna": "marketplace",
+  "galleryBanner": {
+    "color": "#4B5563",
+    "theme": "dark"
+  }
+}

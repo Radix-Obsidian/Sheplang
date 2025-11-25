@@ -1,6 +1,23 @@
 {
   "name": "@goldensheepai/sheplang-language",
-  "version": "0.1.5",
+  "version": "0.1.7",
+  "description": "The first AI-native programming language parser with built-in verification",
+  "keywords": [
+    "sheplang",
+    "ai-native",
+    "programming-language",
+    "parser",
+    "langium",
+    "type-safe",
+    "full-stack",
+    "compiler"
+  ],
+  "author": "Golden Sheep AI",
+  "license": "MIT",
+  "homepage": "https://sheplang.lovable.app",
+  "bugs": {
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript/issues"
+  },
   "private": false,
   "type": "module",
   "main": "dist/index.js",
@@ -12,7 +29,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": false,
   "repository": {

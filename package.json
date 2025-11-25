@@ -12,6 +12,8 @@
     "test:integration": "cd sheplang && pnpm -w -r run test:integration",
     "test:e2e": "cd sheplang && pnpm -w -r run test:e2e",
     "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
+    "test:importer": "vitest run test/importer",
+    "test:react-parser": "vitest run test/importer/reactParser.test.ts",
     "typecheck": "cd sheplang && pnpm -w -r run typecheck",
     "lint": "cd sheplang && pnpm -w -r run lint",
     "prepare:production": "node scripts/prepare-production.js",
@@ -22,5 +24,9 @@
     "dev:playground-vite": "cd playground-vite && pnpm dev",
     "build:playground-vite": "cd playground-vite && pnpm build",
     "preview:playground-vite": "cd playground-vite && pnpm preview"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "vitest": "^4.0.13"
   }
 }

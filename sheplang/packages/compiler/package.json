@@ -1,10 +1,45 @@
 {
   "name": "@goldensheepai/sheplang-compiler",
-  "version": "0.1.1",
+  "version": "0.1.2",
+  "description": "The AI-native compiler that transforms ShepLang into production-ready React, TypeScript, and API code",
+  "keywords": [
+    "sheplang",
+    "compiler",
+    "transpiler",
+    "code-generation",
+    "ai-native",
+    "react",
+    "typescript",
+    "api",
+    "handlebars",
+    "full-stack"
+  ],
+  "author": "Golden Sheep AI",
+  "license": "MIT",
+  "homepage": "https://sheplang.lovable.app",
+  "bugs": {
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Radix-Obsidian/Sheplang-BobaScript.git",
+    "directory": "sheplang/packages/compiler"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

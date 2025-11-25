@@ -1,0 +1,116 @@
+{
+  "App Definition": {
+    "prefix": "app",
+    "body": [
+      "app ${1:MyApp} {",
+      "  ${2:// Define models, views, actions}",
+      "}"
+    ],
+    "description": "Create a new ShepLang app"
+  },
+  "Model Definition": {
+    "prefix": "model",
+    "body": [
+      "model ${1:Item} {",
+      "  ${2:name}: string",
+      "  ${3:// Add more fields}",
+      "}"
+    ],
+    "description": "Define a data model"
+  },
+  "View Definition": {
+    "prefix": "view",
+    "body": [
+      "view ${1:Home}:",
+      "  show \"${2:Welcome}\"",
+      "  ${3:// Add buttons, lists, etc.}"
+    ],
+    "description": "Create a UI view"
+  },
+  "Action Definition": {
+    "prefix": "action",
+    "body": [
+      "action ${1:DoSomething}:",
+      "  ${2:// Add logic here}"
+    ],
+    "description": "Define an action"
+  },
+  "Button": {
+    "prefix": "button",
+    "body": [
+      "button \"${1:Click Me}\" -> ${2:ActionName}"
+    ],
+    "description": "Add a button"
+  },
+  "List": {
+    "prefix": "list",
+    "body": [
+      "list ${1:ModelName}"
+    ],
+    "description": "Display a list of items"
+  },
+  "Show Text": {
+    "prefix": "show",
+    "body": [
+      "show \"${1:Text to display}\""
+    ],
+    "description": "Display text"
+  },
+  "Add Item": {
+    "prefix": "add",
+    "body": [
+      "add ${1:Model} { ${2:field}: ${3:value} }"
+    ],
+    "description": "Add item to state"
+  },
+  "Set Value": {
+    "prefix": "set",
+    "body": [
+      "set ${1:variable} = ${2:value}"
+    ],
+    "description": "Update a value"
+  },
+  "Call Backend POST": {
+    "prefix": "call-post",
+    "body": [
+      "call POST \"${1:/path}\" {",
+      "  ${2:field}: ${3:value}",
+      "}"
+    ],
+    "description": "Call backend POST endpoint"
+  },
+  "Load from Backend": {
+    "prefix": "load",
+    "body": [
+      "load GET \"${1:/path}\""
+    ],
+    "description": "Load data from backend"
+  },
+  "When Event": {
+    "prefix": "when",
+    "body": [
+      "when ${1:InitApp} -> ${2:ActionName}"
+    ],
+    "description": "Trigger action on event"
+  },
+  "If Statement": {
+    "prefix": "if",
+    "body": [
+      "if ${1:condition} {",
+      "  ${2:// then}",
+      "} else {",
+      "  ${3:// else}",
+      "}"
+    ],
+    "description": "Conditional statement"
+  },
+  "For Loop": {
+    "prefix": "for",
+    "body": [
+      "for ${1:item} in ${2:collection} {",
+      "  ${3:// loop body}",
+      "}"
+    ],
+    "description": "Loop over collection"
+  }
+}

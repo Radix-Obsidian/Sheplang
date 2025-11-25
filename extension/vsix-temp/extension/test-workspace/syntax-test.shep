@@ -1,0 +1,16 @@
+// Test file for syntax highlighting and parsing
+app TestApp
+
+data Message:
+  fields:
+    text: text
+    priority: text
+
+view Dashboard:
+  text "Welcome to ShepLang!"
+  button "Click Me" -> ShowMessage
+  list Message
+
+action ShowMessage():
+  add Message with text = "Hello, World!", priority = "High"
+  show Dashboard

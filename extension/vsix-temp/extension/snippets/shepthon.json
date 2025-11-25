@@ -1,0 +1,141 @@
+{
+  "App Definition": {
+    "prefix": "app",
+    "body": [
+      "app ${1:MyAPI} {",
+      "  ${2:// Define models, endpoints, jobs}",
+      "}"
+    ],
+    "description": "Create a new ShepThon app"
+  },
+  "Model Definition": {
+    "prefix": "model",
+    "body": [
+      "model ${1:Item} {",
+      "  id: id",
+      "  ${2:name}: string",
+      "  ${3:// Add more fields}",
+      "}"
+    ],
+    "description": "Define a database model"
+  },
+  "GET Endpoint": {
+    "prefix": "endpoint-get",
+    "body": [
+      "endpoint GET \"${1:/path}\" -> [${2:Model}] {",
+      "  return db.${2:Model}.findAll()",
+      "}"
+    ],
+    "description": "Create GET endpoint"
+  },
+  "GET One Endpoint": {
+    "prefix": "endpoint-get-one",
+    "body": [
+      "endpoint GET \"${1:/path}/:id\" (id: id) -> ${2:Model} {",
+      "  return db.${2:Model}.find({ id })",
+      "}"
+    ],
+    "description": "Create GET endpoint for single item"
+  },
+  "POST Endpoint": {
+    "prefix": "endpoint-post",
+    "body": [
+      "endpoint POST \"${1:/path}\" (${2:param}: ${3:string}) -> ${4:Model} {",
+      "  let item = db.${4:Model}.create({ ${2:param} })",
+      "  return item",
+      "}"
+    ],
+    "description": "Create POST endpoint"
+  },
+  "PUT Endpoint": {
+    "prefix": "endpoint-put",
+    "body": [
+      "endpoint PUT \"${1:/path}/:id\" (id: id, ${2:param}: ${3:string}) -> ${4:Model} {",
+      "  let item = db.${4:Model}.update({ id }, { ${2:param} })",
+      "  return item",
+      "}"
+    ],
+    "description": "Create PUT endpoint"
+  },
+  "DELETE Endpoint": {
+    "prefix": "endpoint-delete",
+    "body": [
+      "endpoint DELETE \"${1:/path}/:id\" (id: id) -> bool {",
+      "  db.${2:Model}.delete({ id })",
+      "  return true",
+      "}"
+    ],
+    "description": "Create DELETE endpoint"
+  },
+  "Job Definition": {
+    "prefix": "job",
+    "body": [
+      "job \"${1:task-name}\" every ${2:5} ${3|minutes,hours,days|} {",
+      "  ${4:// Job logic}",
+      "}"
+    ],
+    "description": "Create scheduled job"
+  },
+  "Database Find": {
+    "prefix": "find",
+    "body": [
+      "let ${1:item} = db.${2:Model}.find({ ${3:field}: ${4:value} })"
+    ],
+    "description": "Find one record"
+  },
+  "Database FindAll": {
+    "prefix": "findAll",
+    "body": [
+      "let ${1:items} = db.${2:Model}.findAll()"
+    ],
+    "description": "Find all records"
+  },
+  "Database Create": {
+    "prefix": "create",
+    "body": [
+      "let ${1:item} = db.${2:Model}.create({ ${3:field}: ${4:value} })"
+    ],
+    "description": "Create new record"
+  },
+  "Database Update": {
+    "prefix": "update",
+    "body": [
+      "db.${1:Model}.update({ ${2:idField}: ${3:id} }, { ${4:field}: ${5:value} })"
+    ],
+    "description": "Update record"
+  },
+  "Database Delete": {
+    "prefix": "delete",
+    "body": [
+      "db.${1:Model}.delete({ ${2:field}: ${3:value} })"
+    ],
+    "description": "Delete record"
+  },
+  "If Statement": {
+    "prefix": "if",
+    "body": [
+      "if ${1:condition} {",
+      "  ${2:// then}",
+      "} else {",
+      "  ${3:// else}",
+      "}"
+    ],
+    "description": "Conditional statement"
+  },
+  "For Loop": {
+    "prefix": "for",
+    "body": [
+      "for ${1:item} in ${2:collection} {",
+      "  ${3:// loop body}",
+      "}"
+    ],
+    "description": "Loop over collection"
+  },
+  "Let Variable": {
+    "prefix": "let",
+    "body": [
+      "let ${1:variable} = ${2:value}"
+    ],
+    "description": "Declare variable"
+  }
+}
