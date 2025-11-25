@@ -73,13 +73,17 @@ export interface ActionOperation {
 
 /**
  * A ShepLang action
+ * Phase 3: Now includes translated statements for faithful code preservation
  */
 export interface ShepLangAction {
   name: string;
   trigger: 'click' | 'submit' | 'change' | 'load' | 'custom';
   params: ActionParam[];
   operations: ActionOperation[];
-  sourceHandler?: string;    // Original handler function name
+  sourceHandler?: string;      // Original handler function name
+  functionBody?: string;       // Phase 1: Original JS/TS code body
+  translatedCode?: string;     // Phase 3: Faithfully translated ShepLang code
+  translationConfidence?: number; // Phase 3: How well we translated (0-1)
 }
 
 /**

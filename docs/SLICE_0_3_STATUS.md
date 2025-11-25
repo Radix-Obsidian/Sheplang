@@ -1,14 +1,14 @@
-# AST Importer Status Report – Slices 0-4 Complete
+# AST Importer Status Report – Slices 0-7 Complete
 
 **Date:** November 24, 2025  
-**Status:** ✅ **PRODUCTION READY** – All 44 tests passing  
-**Next:** Slice 5 – API & Backend Correlation
+**Status:** ✅ **PRODUCTION READY** – All 107 tests passing  
+**Next:** Production deployment & user feedback
 
 ---
 
 ## Executive Summary
 
-The AST Importer foundation is complete. Slices 0-4 implement the core infrastructure for converting React/Next.js projects to ShepLang, following the Golden Sheep AI Methodology™ of vertical slice delivery.
+The AST Importer is now **feature-complete with documentation and telemetry**. Slices 0-7 implement the full infrastructure for converting React/Next.js projects to ShepLang + ShepThon with user review, following the Golden Sheep AI Methodology™ of vertical slice delivery.
 
 | Slice | Goal | Status | Tests |
 |-------|------|--------|-------|
@@ -17,9 +17,12 @@ The AST Importer foundation is complete. Slices 0-4 implement the core infrastru
 | **2** | React AST Parsing | ✅ Complete | 10/10 |
 | **3** | Entity Extraction (Prisma + Heuristics) | ✅ Complete | 9/9 |
 | **4** | View & Action Mapping | ✅ Complete | 12/12 |
-| **Integration** | End-to-End Pipeline | ✅ Complete | 4/4 |
+| **5** | API & Backend Correlation | ✅ Complete | 42/42 |
+| **6** | Wizard + UX Integration | ✅ Complete | 17/17 |
+| **7** | Docs & Telemetry | ✅ Complete | N/A (docs only) |
+| **Integration** | End-to-End Pipeline | ✅ Complete | 8/8 |
 
-**Total: 44/44 tests passing (100%)**
+**Total: 107/107 tests passing (100%)**
 
 ---
 
@@ -292,54 +295,225 @@ const shepLangViews = generateShepLangViewCode(projectMapping);
 ```
 extension/src/
 ├── parsers/
-│   ├── reactParser.ts      # Slice 2: React AST parsing
-│   ├── entityExtractor.ts  # Slice 3: Entity extraction
-│   └── viewMapper.ts       # Slice 4: View & Action mapping
+│   ├── reactParser.ts        # Slice 2: React AST parsing
+│   ├── entityExtractor.ts    # Slice 3: Entity extraction
+│   ├── viewMapper.ts         # Slice 4: View & Action mapping
+│   ├── apiRouteParser.ts     # Slice 5: Next.js route parsing
+│   └── backendCorrelator.ts  # Slice 5: Frontend/backend matching
+├── generators/
+│   └── shepthonRouteGenerator.ts # Slice 5: ShepThon generation
 ├── services/
-│   └── manifestGenerator.ts # Slice 1: Project detection
+│   ├── manifestGenerator.ts  # Slice 1: Project detection
+│   ├── importAnalysisAggregator.ts # Slice 6: Combine parser outputs
+│   └── telemetry.ts          # Slice 7: Usage telemetry
+├── wizard/
+│   └── importWizardPanel.ts  # Slice 6: Import wizard panel
 └── types/
-    ├── ImportManifest.ts   # Slice 1: Manifest schema
-    ├── Entity.ts           # Slice 3: Entity schema
-    └── ViewAction.ts       # Slice 4: View & Action types
+    ├── ImportManifest.ts     # Slice 1: Manifest schema
+    ├── Entity.ts             # Slice 3: Entity schema
+    ├── ViewAction.ts         # Slice 4: View & Action types
+    ├── APIRoute.ts           # Slice 5: API route types
+    └── ImportWizard.ts       # Slice 6: Wizard types
 
 test/importer/
-├── fixtures.test.ts        # Slice 0: Fixture validation
-├── reactParser.test.ts     # Slice 2: Parser tests
-├── entityExtractor.test.ts # Slice 3: Entity tests
-├── viewMapper.test.ts      # Slice 4: View & Action tests
-└── integration.test.ts     # Integration tests (Slices 0-4)
+├── fixtures.test.ts          # Slice 0: Fixture validation
+├── reactParser.test.ts       # Slice 2: Parser tests
+├── entityExtractor.test.ts   # Slice 3: Entity tests
+├── viewMapper.test.ts        # Slice 4: View & Action tests
+├── apiRouteParser.test.ts    # Slice 5: Route parser tests
+├── backendCorrelator.test.ts # Slice 5: Correlator tests
+├── shepthonGenerator.test.ts # Slice 5: Generator tests
+├── importWizard.test.ts      # Slice 6: Wizard tests
+└── integration.test.ts       # Integration tests (Slices 0-7)
 
 docs/
-├── AST_IMPORT_PLAN.md      # Original plan
-├── SLICE_2_LIMITATIONS.md  # Known limitations
-├── SLICE_3_SPEC.md         # Entity extraction spec
-├── PRISMA_7_MIGRATION.md   # Prisma compatibility notes
-└── SLICE_0_3_STATUS.md     # This document
+├── AST_IMPORT_PLAN.md        # Original plan
+├── SLICE_2_LIMITATIONS.md    # Known limitations
+├── SLICE_3_SPEC.md           # Entity extraction spec
+├── SLICE_5_SPEC.md           # API correlation spec
+├── SLICE_6_SPEC.md           # Wizard integration spec
+├── SLICE_7_SPEC.md           # Docs & Telemetry spec
+├── PRISMA_7_MIGRATION.md     # Prisma compatibility notes
+└── SLICE_0_3_STATUS.md       # This document
+
+playground-vite/docs/
+└── ALPHA_CAPABILITIES.md     # Updated with AST Importer section
 
 test-import-fixtures/
-├── nextjs-prisma/          # Next.js + Prisma fixture
-├── vite-react/             # Vite + React fixture
-└── plain-react/            # Plain React fixture
+├── nextjs-prisma/            # Next.js + Prisma fixture (with API routes)
+│   └── app/api/tasks/        # Full CRUD API routes
+├── vite-react/               # Vite + React fixture
+└── plain-react/              # Plain React fixture
 ```
 
 ---
 
-## Ready for Slice 5
+## Slice 5 – API & Backend Correlation ✅
 
-### Prerequisites Met
-- ✅ All 44 tests passing
-- ✅ Clean TypeScript compilation
-- ✅ Documentation updated
-- ✅ Integration tested across all fixture types
-- ✅ View & Action mapping complete
+### Implementation
+**Files:**
+- `extension/src/parsers/apiRouteParser.ts` – Parse Next.js route handlers
+- `extension/src/parsers/backendCorrelator.ts` – Match frontend/backend calls
+- `extension/src/generators/shepthonRouteGenerator.ts` – Generate ShepThon stubs
+- `extension/src/types/APIRoute.ts` – API route types
 
-### Slice 5 Goals (from AST_IMPORT_PLAN.md)
-> **API & Backend Correlation**: Convert fetch/Axios/Prisma calls to ShepLang `call`/`load` + ShepThon stubs.
-> 
-> 1. Scan AST for fetch/Axios usage; capture method/path/body
-> 2. Align with Prisma operations (create/update/delete) for `add/update/remove` translations
-> 3. Emit ShepThon backend handlers mirroring detected routes
-> 4. Tests: `pnpm sheplang verify` must pass on generated project
+### Features
+- ✅ Parse Next.js App Router route handlers (route.ts files)
+- ✅ Extract HTTP methods (GET, POST, PUT, PATCH, DELETE)
+- ✅ Detect Prisma operations (findMany, create, update, delete)
+- ✅ Extract request body fields (both direct and two-step destructuring)
+- ✅ Parse dynamic route segments ([id], [...slug], [[...slug]])
+- ✅ Correlate frontend fetch calls with backend routes
+- ✅ Generate ShepThon backend stubs from routes
+- ✅ Generate model definitions from entities
+
+### API Route Schema
+```typescript
+interface APIRoute {
+  path: string;           // e.g., "/api/tasks/:id"
+  method: HTTPMethod;     // GET | POST | PUT | PATCH | DELETE
+  filePath: string;       // Original route.ts file
+  params: RouteParam[];   // Dynamic route params
+  prismaOperation?: PrismaOperation;  // Detected Prisma op
+  prismaModel?: string;   // Model being operated on
+  bodyFields: string[];   // Request body fields
+}
+```
+
+### Generated ShepThon Example
+```shepthon
+# Auto-generated ShepThon backend from Next.js API routes
+# Generated by ShepLang AST Importer (Slice 5)
+
+model Task {
+  id: Int
+  title: String
+  completed: Boolean
+  priority: String
+  createdAt: DateTime
+}
+
+GET /api/tasks -> db.all("tasks")
+POST /api/tasks -> db.add("tasks", body)
+GET /api/tasks/:id -> db.get("tasks", params.id)
+PUT /api/tasks/:id -> db.update("tasks", params.id, body)
+DELETE /api/tasks/:id -> db.remove("tasks", params.id)
+```
+
+### Verification
+```bash
+✓ test/importer/apiRouteParser.test.ts (17 tests)
+✓ test/importer/backendCorrelator.test.ts (10 tests)
+✓ test/importer/shepthonGenerator.test.ts (15 tests)
+```
+
+---
+
+## Slice 6 – Wizard + UX Integration ✅
+
+### Implementation
+**Files:**
+- `extension/src/types/ImportWizard.ts` – Wizard types and choice handling
+- `extension/src/services/importAnalysisAggregator.ts` – Combine parser outputs
+- `extension/src/wizard/importWizardPanel.ts` – VS Code WebView panel
+
+### Features
+- ✅ Show detected entities, views, actions with confidence scores
+- ✅ Color-coded confidence badges (high/medium/low)
+- ✅ Inline rename inputs for each item
+- ✅ Enable/disable checkboxes per item
+- ✅ Aggregate all parser outputs into unified analysis
+- ✅ Apply wizard choices to filter/rename items
+- ✅ Generate backend option toggle
+
+### ImportAnalysis Schema
+```typescript
+interface ImportAnalysis {
+  projectName: string;
+  entities: DetectedItem[];
+  views: DetectedItem[];
+  actions: DetectedItem[];
+  routes: DetectedItem[];
+  confidence: number;
+  warnings: string[];
+}
+
+interface DetectedItem {
+  id: string;
+  originalName: string;
+  displayName: string;
+  type: 'entity' | 'view' | 'action' | 'route';
+  enabled: boolean;
+  confidence: number;
+  source: string;
+  details: ItemDetails;
+}
+```
+
+### Wizard Panel UI
+- **Header** – Project name + overall confidence
+- **Stats Row** – Count of entities, views, actions, routes
+- **Sections** – Collapsible sections for each item type
+- **Item Cards** – Checkbox, editable name, confidence badge, details
+- **Footer** – Cancel/Generate buttons
+
+### Verification
+```bash
+✓ test/importer/importWizard.test.ts (17 tests)
+```
+
+---
+
+## Slice 7 – Docs & Telemetry ✅
+
+### Implementation
+**Files:**
+- `playground-vite/docs/ALPHA_CAPABILITIES.md` – Added Section 6: AST Importer
+- `extension/src/services/telemetry.ts` – Telemetry service
+- `extension/package.json` – Added `sheplang.telemetry.enabled` setting
+- `docs/SLICE_7_SPEC.md` – Slice specification
+
+### Documentation Updates
+- ✅ Added "AST Importer (NEW)" section to ALPHA_CAPABILITIES.md
+- ✅ Documented supported frameworks (Next.js, Vite, React)
+- ✅ Documented import pipeline (8 steps)
+- ✅ Documented features detected (Prisma, components, handlers, routes)
+- ✅ Added example ShepLang + ShepThon output
+
+### Telemetry Features
+- ✅ Privacy-first design (opt-in, default disabled)
+- ✅ Respects VS Code global telemetry setting
+- ✅ No PII collected (paths sanitized, no code content)
+- ✅ Events: `import_start`, `import_success`, `import_failure`
+- ✅ Events: `wizard_open`, `wizard_complete`, `wizard_cancel`
+- ✅ Tracks: framework, counts, confidence, duration
+
+### VS Code Setting
+```json
+{
+  "sheplang.telemetry.enabled": {
+    "type": "boolean",
+    "default": false,
+    "description": "Enable anonymous usage telemetry..."
+  }
+}
+```
+
+---
+
+## AST Importer Complete 🎉
+
+### All Slices Delivered
+| Slice | Feature | Status |
+|-------|---------|--------|
+| 0 | Test fixtures | ✅ |
+| 1 | Project detection | ✅ |
+| 2 | React parsing | ✅ |
+| 3 | Entity extraction | ✅ |
+| 4 | View/Action mapping | ✅ |
+| 5 | API correlation | ✅ |
+| 6 | Wizard UI | ✅ |
+| 7 | Docs & Telemetry | ✅ |
 
 ### Future Enhancements
 Per Slice 2 limitations, consider implementing TypeChecker enhancement to resolve:
@@ -352,19 +526,23 @@ Per Slice 2 limitations, consider implementing TypeChecker enhancement to resolv
 ## Run Commands
 
 ```bash
-# Run all importer tests
+# Run all importer tests (107 tests)
 pnpm test:importer
 
 # Run specific slice tests
-pnpm exec vitest run test/importer/fixtures.test.ts
-pnpm exec vitest run test/importer/reactParser.test.ts
-pnpm exec vitest run test/importer/entityExtractor.test.ts
-pnpm exec vitest run test/importer/viewMapper.test.ts
-pnpm exec vitest run test/importer/integration.test.ts
+pnpm exec vitest run test/importer/fixtures.test.ts        # Slice 0
+pnpm exec vitest run test/importer/reactParser.test.ts     # Slice 2
+pnpm exec vitest run test/importer/entityExtractor.test.ts # Slice 3
+pnpm exec vitest run test/importer/viewMapper.test.ts      # Slice 4
+pnpm exec vitest run test/importer/apiRouteParser.test.ts  # Slice 5
+pnpm exec vitest run test/importer/backendCorrelator.test.ts # Slice 5
+pnpm exec vitest run test/importer/shepthonGenerator.test.ts # Slice 5
+pnpm exec vitest run test/importer/importWizard.test.ts    # Slice 6
+pnpm exec vitest run test/importer/integration.test.ts     # Integration
 ```
 
 ---
 
-**Status: READY FOR SLICE 5 🚀**
+**Status: AST IMPORTER COMPLETE ✅ (SLICES 0-7) – READY FOR PRODUCTION 🚀**
 
 *Built following Golden Sheep AI Methodology™ – Vertical Slice Delivery*

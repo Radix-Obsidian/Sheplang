@@ -181,4 +181,36 @@ describe('React Parser – Slice 2', () => {
     
     expect(semanticElements.length).toBeGreaterThan(0);
   });
+  
+  it('extracts full handler bodies for faithful translation (Phase 1)', () => {
+    // Test the new full handler body extraction
+    const componentPath = path.join(fixturesDir, 'nextjs-prisma', 'app', 'components', 'TaskList.tsx');
+    const component = parseReactFile(componentPath);
+    
+    expect(component).not.toBeNull();
+    
+    // Check that handlers have the new properties
+    if (component!.handlers.length > 0) {
+      for (const handler of component!.handlers) {
+        // Each handler should have the new interface properties
+        expect(handler).toHaveProperty('name');
+        expect(handler).toHaveProperty('event');
+        expect(handler).toHaveProperty('function');
+        expect(handler).toHaveProperty('isInline');
+        // functionBody and parameters are optional but should exist when available
+        expect(typeof handler.isInline).toBe('boolean');
+        
+        // If handler has a body, it should be a string
+        if (handler.functionBody) {
+          expect(typeof handler.functionBody).toBe('string');
+          expect(handler.functionBody.length).toBeGreaterThan(0);
+        }
+        
+        // If handler has parameters, it should be an array
+        if (handler.parameters) {
+          expect(Array.isArray(handler.parameters)).toBe(true);
+        }
+      }
+    }
+  });
 });

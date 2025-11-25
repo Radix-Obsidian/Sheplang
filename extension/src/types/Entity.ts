@@ -23,6 +23,7 @@ export interface Entity {
   fields: EntityField[];
   relations: EntityRelation[];
   enums: string[];
+  isEnum?: boolean; // True if this entity represents a Prisma enum
 }
 
 export interface EntityExtractionResult {

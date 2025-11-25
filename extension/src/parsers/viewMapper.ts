@@ -5,6 +5,8 @@
  * - JSX elements → ShepLang widgets (button, form, list, etc.)
  * - Event handlers → ShepLang actions
  * - API calls → call/load operations
+ * 
+ * Phase 3: Now uses codeTranslator for FAITHFUL translation
  */
 
 import {
@@ -18,6 +20,7 @@ import {
 } from '../types/ViewAction';
 import { ReactComponent, JSXElement, EventHandler, APICall } from './reactParser';
 import { Entity } from '../types/Entity';
+import { translateFunctionBody, generateShepLangCode, SkippedItem } from './codeTranslator';
 
 /**
  * Map a React component to ShepLang view and actions
@@ -372,15 +375,48 @@ function inferActionName(
  * Format a handler name as a ShepLang action name
  */
 function formatActionName(name: string): string {
+  // CRITICAL: Extract function name from complex signatures
+  // e.g., "(event) => void handleUserCreate(event as AddUserFormEvent, setError)" -> "handleUserCreate"
+  // e.g., "handleUserCreate" -> "handleUserCreate"
+  // e.g., "() => handleClick()" -> "handleClick"
+  
+  let actionName = name;
+  
+  // Try to extract function name from arrow function or complex signature
+  // Pattern 1: Look for a named function call like "handleSomething("
+  const funcCallMatch = name.match(/\b(handle\w+|on\w+|\w+Handler)\s*\(/i);
+  if (funcCallMatch) {
+    actionName = funcCallMatch[1];
+  } else {
+    // Pattern 2: Look for standalone identifier (not arrow function syntax)
+    const identifierMatch = name.match(/^(\w+)$/);
+    if (identifierMatch) {
+      actionName = identifierMatch[1];
+    } else {
+      // Pattern 3: Extract any reasonable identifier from the mess
+      const anyIdentifierMatch = name.match(/\b([a-zA-Z_][a-zA-Z0-9_]*(?:Handler|Action|Submit|Click|Create|Update|Delete|Save|Load|Fetch))\b/i);
+      if (anyIdentifierMatch) {
+        actionName = anyIdentifierMatch[1];
+      } else {
+        // Last resort: just get the first word-like thing
+        const firstWordMatch = name.match(/\b([a-zA-Z_][a-zA-Z0-9_]{2,})\b/);
+        actionName = firstWordMatch ? firstWordMatch[1] : 'Action';
+      }
+    }
+  }
+  
   // Remove common prefixes
-  let actionName = name
-    .replace(/^handle/, '')
-    .replace(/^on/, '');
+  actionName = actionName
+    .replace(/^handle/i, '')
+    .replace(/^on/i, '');
   
   // Ensure PascalCase
   if (actionName.length > 0) {
     actionName = actionName.charAt(0).toUpperCase() + actionName.slice(1);
   }
+  
+  // Sanitize: only allow alphanumeric and underscore
+  actionName = actionName.replace(/[^a-zA-Z0-9_]/g, '');
   
   return actionName || 'Action';
 }
@@ -485,6 +521,7 @@ function mapHandlersToActions(
 
 /**
  * Map a single handler to a ShepLang action
+ * Phase 3: Now includes FAITHFUL translation of handler body
  */
 function mapHandlerToAction(
   handler: EventHandler,
@@ -510,12 +547,33 @@ function mapHandlerToAction(
     }
   }
 
+  // Phase 3: FAITHFUL TRANSLATION using codeTranslator
+  let translatedCode: string | undefined;
+  let translationConfidence: number | undefined;
+  
+  if (handler.functionBody) {
+    try {
+      const translation = translateFunctionBody(handler.functionBody);
+      if (translation.statements.length > 0 || translation.skipped.length > 0) {
+        // Pass skipped items for transparency summary
+        translatedCode = generateShepLangCode(translation.statements, 1, translation.skipped);
+        translationConfidence = translation.confidence;
+      }
+    } catch (error) {
+      // Fallback to operations-based generation if translation fails
+      console.warn(`[ViewMapper] Translation failed for ${handler.function}:`, error);
+    }
+  }
+
   return {
     name: formatActionName(handler.function),
     trigger: mapEventToTrigger(handler.event),
-    params: [],
+    params: handler.parameters?.map(p => ({ name: p, type: 'any', required: true })) || [],
     operations,
-    sourceHandler: handler.function
+    sourceHandler: handler.function,
+    functionBody: handler.functionBody,
+    translatedCode,
+    translationConfidence
   };
 }
 
@@ -777,6 +835,7 @@ function generateWidgetCode(widget: ShepLangWidget, indent: number): string {
 
 /**
  * Generate ShepLang code for an action
+ * Phase 3: Now uses FAITHFULLY TRANSLATED code when available
  */
 function generateActionCode(action: ShepLangAction): string {
   const lines: string[] = [];
@@ -785,7 +844,18 @@ function generateActionCode(action: ShepLangAction): string {
   const params = action.params.map(p => p.name).join(', ');
   lines.push(`action ${action.name}(${params}):`);
   
-  // Operations
+  // PHASE 3: If we have faithfully translated code, USE IT
+  if (action.translatedCode) {
+    // Add confidence comment if not perfect
+    if (action.translationConfidence !== undefined && action.translationConfidence < 1) {
+      lines.push(`  // Translation confidence: ${Math.round(action.translationConfidence * 100)}%`);
+    }
+    // Add the translated code (already indented by generateShepLangCode)
+    lines.push(action.translatedCode);
+    return lines.join('\n');
+  }
+  
+  // Fallback: Operations-based generation (old method)
   for (const op of action.operations) {
     const opLine = generateOperationCode(op);
     if (opLine) {
@@ -795,7 +865,7 @@ function generateActionCode(action: ShepLangAction): string {
   
   // Default show if no operations
   if (action.operations.length === 0) {
-    lines.push(`  # No operations detected`);
+    lines.push(`  // TODO: Implement action logic`);
   }
   
   return lines.join('\n');

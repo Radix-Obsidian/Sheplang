@@ -1,5 +1,5 @@
 /**
- * Integration Tests – AST Importer Slices 0-4
+ * Integration Tests – AST Importer Slices 0-5
  * 
  * End-to-end testing of the complete importer pipeline
  */
@@ -9,6 +9,9 @@ import { generateManifest } from '../../extension/src/services/manifestGenerator
 import { parseReactFile } from '../../extension/src/parsers/reactParser';
 import { extractEntities, generateShepLangData } from '../../extension/src/parsers/entityExtractor';
 import { mapProjectToShepLang, generateShepLangViewCode } from '../../extension/src/parsers/viewMapper';
+import { parseAPIRoutes } from '../../extension/src/parsers/apiRouteParser';
+import { correlateAPICalls, FrontendCall } from '../../extension/src/parsers/backendCorrelator';
+import { generateShepThonFromRoutes } from '../../extension/src/generators/shepthonRouteGenerator';
 import * as path from 'path';
 
 describe('Integration Tests – Slices 0-4', () => {
@@ -119,5 +122,128 @@ describe('Integration Tests – Slices 0-4', () => {
       const shepLangData = generateShepLangData(entityResult.entities);
       expect(typeof shepLangData).toBe('string');
     }
+  });
+});
+
+describe('Integration Tests – Slice 5: API & Backend Correlation', () => {
+  const fixturesDir = path.join(__dirname, '../../test-import-fixtures');
+  
+  it('parses API routes and correlates with frontend calls in Next.js project', async () => {
+    const projectRoot = path.join(fixturesDir, 'nextjs-prisma');
+    
+    // Parse all API routes
+    const routeResult = parseAPIRoutes(projectRoot);
+    expect(routeResult.errors).toHaveLength(0);
+    expect(routeResult.routes.length).toBeGreaterThanOrEqual(5);
+    
+    // Verify we have all expected HTTP methods
+    const methods = routeResult.routes.map(r => r.method);
+    expect(methods).toContain('GET');
+    expect(methods).toContain('POST');
+    expect(methods).toContain('PUT');
+    expect(methods).toContain('DELETE');
+    
+    // Parse frontend component with API calls
+    const componentPath = path.join(projectRoot, 'app', 'components', 'TaskList.tsx');
+    const component = parseReactFile(componentPath);
+    expect(component).not.toBeNull();
+    
+    // Component should have API calls detected
+    expect(component!.apiCalls.length).toBeGreaterThan(0);
+  });
+  
+  it('correlates frontend API calls with backend routes', async () => {
+    const projectRoot = path.join(fixturesDir, 'nextjs-prisma');
+    
+    // Parse API routes
+    const routeResult = parseAPIRoutes(projectRoot);
+    
+    // Create frontend calls matching the TaskList component patterns
+    const frontendCalls: FrontendCall[] = [
+      { url: '/api/tasks', method: 'GET', sourceComponent: 'TaskList', sourceHandler: 'handleRefresh' },
+      { url: '/api/tasks', method: 'POST', sourceComponent: 'TaskList', sourceHandler: 'handleAddTask' },
+      { url: '/api/tasks/1', method: 'PUT', sourceComponent: 'TaskList', sourceHandler: 'handleToggleComplete' },
+      { url: '/api/tasks/1', method: 'DELETE', sourceComponent: 'TaskList', sourceHandler: 'handleDeleteTask' }
+    ];
+    
+    // Correlate
+    const correlation = correlateAPICalls(frontendCalls, routeResult.routes);
+    
+    // All 4 calls should match
+    expect(correlation.matches).toHaveLength(4);
+    expect(correlation.unmatchedFrontend).toHaveLength(0);
+    expect(correlation.confidence).toBeGreaterThan(0.7);
+  });
+  
+  it('generates ShepThon backend from parsed routes', async () => {
+    const projectRoot = path.join(fixturesDir, 'nextjs-prisma');
+    
+    // Parse routes
+    const routeResult = parseAPIRoutes(projectRoot);
+    
+    // Extract entities for model generation
+    const entityResult = await extractEntities(projectRoot);
+    
+    // Generate ShepThon
+    const shepthon = generateShepThonFromRoutes(routeResult.routes, entityResult.entities);
+    
+    // Verify output structure
+    expect(shepthon.filename).toBe('backend.shepthon');
+    expect(shepthon.content).toContain('# Auto-generated ShepThon backend');
+    expect(shepthon.content).toContain('model Task {');
+    expect(shepthon.content).toContain('GET /api/tasks');
+    expect(shepthon.content).toContain('POST /api/tasks');
+    expect(shepthon.content).toContain('PUT /api/tasks/:id');
+    expect(shepthon.content).toContain('DELETE /api/tasks/:id');
+    
+    // Verify endpoints mapped correctly
+    expect(shepthon.endpoints.length).toBeGreaterThanOrEqual(5);
+    expect(shepthon.models).toContain('tasks');
+  });
+  
+  it('complete Slice 5 pipeline from fixture to ShepThon', async () => {
+    const projectRoot = path.join(fixturesDir, 'nextjs-prisma');
+    
+    // STEP 1: Parse project (Slices 0-2)
+    const manifest = await generateManifest(projectRoot);
+    expect(manifest.framework.type).toBe('nextjs');
+    
+    const componentPath = path.join(projectRoot, 'app', 'components', 'TaskList.tsx');
+    const component = parseReactFile(componentPath);
+    expect(component).not.toBeNull();
+    
+    // STEP 2: Extract entities (Slice 3)
+    const entityResult = await extractEntities(projectRoot, [component!]);
+    expect(entityResult.entities.length).toBeGreaterThan(0);
+    
+    // STEP 3: Map views/actions (Slice 4)
+    const projectMapping = mapProjectToShepLang([component!], entityResult.entities);
+    expect(projectMapping.views.length).toBeGreaterThan(0);
+    
+    // STEP 4: Parse API routes (Slice 5)
+    const routeResult = parseAPIRoutes(projectRoot);
+    expect(routeResult.routes.length).toBeGreaterThan(0);
+    
+    // STEP 5: Generate ShepThon (Slice 5)
+    const shepthon = generateShepThonFromRoutes(routeResult.routes, entityResult.entities);
+    expect(shepthon.content).toBeTruthy();
+    
+    // Verify complete output
+    const shepLangData = generateShepLangData(entityResult.entities);
+    const shepLangViews = generateShepLangViewCode(projectMapping);
+    
+    // All three artifacts should be generated
+    expect(shepLangData).toContain('data Task:');
+    expect(shepLangViews).toContain('view TaskList:');
+    expect(shepthon.content).toContain('GET /api/tasks');
+    
+    // Combined output represents a complete full-stack app
+    console.log('\n=== Complete Full-Stack ShepLang Output ===');
+    console.log('\n--- ShepLang Data Models ---');
+    console.log(shepLangData.substring(0, 200) + '...');
+    console.log('\n--- ShepLang Views ---');
+    console.log(shepLangViews.substring(0, 200) + '...');
+    console.log('\n--- ShepThon Backend ---');
+    console.log(shepthon.content.substring(0, 300) + '...');
   });
 });

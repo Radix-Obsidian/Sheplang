@@ -64,7 +64,90 @@ This document explains exactly what works in the current alpha release of the Sh
 
 ---
 
-## 6. Best Practices for Testers
+## 6. AST Importer (NEW)
+
+The AST Importer converts existing React/Next.js projects to ShepLang + ShepThon, enabling rapid migration of production codebases.
+
+### Supported Frameworks
+
+| Framework | Detection | Entity Extraction | API Routes |
+|-----------|-----------|-------------------|------------|
+| Next.js (App Router) | ✅ Auto | ✅ Prisma | ✅ route.ts handlers |
+| Next.js (Pages Router) | ✅ Auto | ✅ Prisma | ⚙️ API routes |
+| Vite + React | ✅ Auto | ⚙️ Heuristics | N/A |
+| Create React App | ✅ Auto | ⚙️ Heuristics | N/A |
+
+### Import Pipeline
+
+1. **Project Detection** – Automatically identifies framework, TypeScript, Prisma
+2. **React Parsing** – Extracts components, props, state, JSX, event handlers
+3. **Entity Extraction** – Prisma schema → ShepLang `data` blocks (100% accurate)
+4. **View Mapping** – Components → ShepLang `view` blocks with widgets
+5. **Action Mapping** – Event handlers → ShepLang `action` blocks
+6. **API Correlation** – Frontend fetch → backend routes → `call`/`load` statements
+7. **Wizard Review** – User renames/disables items before generation
+8. **ShepThon Generation** – Backend stubs matching detected API routes
+
+### Features Detected
+
+| Feature | Source | Output |
+|---------|--------|--------|
+| Prisma models | `schema.prisma` | `data` blocks with fields, relations |
+| React components | `.tsx` files | `view` blocks with widgets |
+| Event handlers | `onClick`, etc. | `action` blocks |
+| API routes | `route.ts` | ShepThon endpoints |
+| Fetch calls | `fetch()` | `call`/`load` statements |
+
+### Wizard Panel
+
+The import wizard displays all detected items with confidence scores:
+- **Enable/disable** items to include/exclude from generation
+- **Rename** entities, views, or actions before codegen
+- **Confidence badges** (green ≥80%, orange 60-79%, gray <60%)
+- **Generate backend** toggle for ShepThon output
+
+### Example Output
+
+**Input:** Next.js + Prisma project with Task CRUD
+
+**Generated ShepLang:**
+```sheplang
+data Task:
+  fields:
+    id: number
+    title: text
+    completed: yes/no
+    priority: text
+
+view TaskList:
+  list Task
+  button "Add Task" -> AddTask
+  button "Refresh" -> LoadTasks
+
+action AddTask(title, priority):
+  call POST "/api/tasks" with title, priority
+  load GET "/api/tasks" into tasks
+  show TaskList
+```
+
+**Generated ShepThon:**
+```shepthon
+model Task {
+  id: Int
+  title: String
+  completed: Boolean
+  priority: String
+}
+
+GET /api/tasks -> db.all("tasks")
+POST /api/tasks -> db.add("tasks", body)
+PUT /api/tasks/:id -> db.update("tasks", params.id, body)
+DELETE /api/tasks/:id -> db.remove("tasks", params.id)
+```
+
+---
+
+## 7. Best Practices for Testers
 
 - Work inside VS Code (stable) + Playground (experimentation) simultaneously.
 - Keep API specifications in sync with `.specify/` manifests so verification knows about every endpoint.

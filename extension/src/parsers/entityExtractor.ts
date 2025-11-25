@@ -2,13 +2,16 @@
  * Entity Extractor for Slice 3
  * 
  * Extracts ShepLang data models from React projects using:
- * 1. Primary path: Prisma schema parsing via @prisma/internals
+ * 1. Primary path: Prisma schema parsing (pure JS - no WASM required)
  * 2. Fallback path: Component state heuristics from React AST
+ * 
+ * Note: We use a simple regex-based parser instead of @prisma/internals
+ * because the WASM files required by @prisma/internals don't bundle
+ * correctly with esbuild for VS Code extensions.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { getDMMF } from '@prisma/internals';
 import { Entity, EntityExtractionResult, mapPrismaTypeToShepLang } from '../types/Entity';
 import { ReactComponent } from './reactParser';
 
@@ -77,67 +80,288 @@ export async function extractEntities(
 
 /**
  * Find Prisma schema file in project
+ * Searches multiple common locations
  */
 function findPrismaSchema(projectRoot: string): string | null {
-  const schemaPath = path.join(projectRoot, 'prisma', 'schema.prisma');
-  return fs.existsSync(schemaPath) ? schemaPath : null;
+  // Common Prisma schema locations
+  const searchPaths = [
+    path.join(projectRoot, 'prisma', 'schema.prisma'),           // Standard: ./prisma/schema.prisma
+    path.join(projectRoot, 'src', 'prisma', 'schema.prisma'),    // Alt: ./src/prisma/schema.prisma
+    path.join(projectRoot, 'schema.prisma'),                      // Root: ./schema.prisma
+    path.join(projectRoot, 'db', 'schema.prisma'),                // Alt: ./db/schema.prisma
+    path.join(projectRoot, 'database', 'schema.prisma'),          // Alt: ./database/schema.prisma
+  ];
+  
+  for (const schemaPath of searchPaths) {
+    if (fs.existsSync(schemaPath)) {
+      console.log(`[EntityExtractor] Found Prisma schema at: ${schemaPath}`);
+      return schemaPath;
+    }
+  }
+  
+  // Deep search: recursively find schema.prisma anywhere in project
+  const deepSearch = findFileRecursive(projectRoot, 'schema.prisma', 4);
+  if (deepSearch) {
+    console.log(`[EntityExtractor] Found Prisma schema via deep search: ${deepSearch}`);
+    return deepSearch;
+  }
+  
+  console.log('[EntityExtractor] No Prisma schema found');
+  return null;
+}
+
+/**
+ * Recursively search for a file up to maxDepth levels
+ */
+function findFileRecursive(dir: string, filename: string, maxDepth: number): string | null {
+  if (maxDepth <= 0) return null;
+  
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      
+      if (entry.isFile() && entry.name === filename) {
+        return fullPath;
+      }
+      
+      if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+        const found = findFileRecursive(fullPath, filename, maxDepth - 1);
+        if (found) return found;
+      }
+    }
+  } catch (e) {
+    // Ignore permission errors
+  }
+  
+  return null;
 }
 
 /**
  * Parse Prisma schema to extract entities
+ * 
+ * Pure JavaScript implementation - no WASM required.
+ * Parses Prisma schema syntax using regex patterns.
  */
 async function parsePrismaSchema(schemaPath: string): Promise<Entity[]> {
   const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
+  const entities: Entity[] = [];
   
   try {
-    const dmmf = await getDMMF({ datamodel: schemaContent });
+    // Parse model blocks: model ModelName { ... }
+    // Use a more robust approach: find all model declarations
+    const models = extractPrismaModels(schemaContent);
     
-    // Check different possible locations for models (Prisma 7.0 compatibility)
-    const models = dmmf.models || dmmf.datamodel?.models || [];
-    
-    const entities: Entity[] = [];
-
-    // Extract models
-    for (const model of models) {
+    for (const { name: modelName, body: modelBody } of models) {
+      
       const entity: Entity = {
-        name: model.name,
+        name: modelName,
         fields: [],
         relations: [],
         enums: []
       };
-
-      // Extract fields
-      if (model.fields && Array.isArray(model.fields)) {
-        for (const field of model.fields) {
-          // Skip relation fields for now, handle separately
-          if (field.kind === 'object') {
-            const relation: Entity['relations'][0] = {
-              name: field.name,
-              target: field.type,
-              type: field.isList ? 'hasMany' : 'belongsTo'
-            };
-            entity.relations.push(relation);
-            continue;
+      
+      // Parse fields within the model body
+      const lines = modelBody.split('\n');
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        
+        // Skip empty lines, comments, and @@ directives
+        if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('@@')) {
+          continue;
+        }
+        
+        // Parse field: fieldName Type modifiers
+        // Examples:
+        //   id        Int      @id @default(autoincrement())
+        //   name      String
+        //   email     String?
+        //   posts     Post[]
+        //   author    User     @relation(...)
+        const fieldRegex = /^(\w+)\s+(\w+)(\[\])?(\?)?\s*(.*)?$/;
+        const fieldMatch = trimmed.match(fieldRegex);
+        
+        if (fieldMatch) {
+          const [, fieldName, fieldType, isArray, isOptional, modifiers = ''] = fieldMatch;
+          
+          // Check if this is a relation (type is another model, not a Prisma scalar)
+          const prismaScalars = ['Int', 'String', 'Boolean', 'DateTime', 'Float', 'Decimal', 'Json', 'BigInt', 'Bytes'];
+          const isRelation = !prismaScalars.includes(fieldType);
+          
+          if (isRelation) {
+            // This is a relation field
+            entity.relations.push({
+              name: fieldName,
+              target: fieldType,
+              type: isArray ? 'hasMany' : 'belongsTo'
+            });
+          } else {
+            // This is a regular field
+            entity.fields.push({
+              name: fieldName,
+              type: mapPrismaTypeToShepLang(fieldType),
+              required: !isOptional,
+              default: extractDefaultValue(modifiers)
+            });
           }
-
-          const entityField = {
-            name: field.name,
-            type: mapPrismaTypeToShepLang(field.type),
-            required: field.isRequired || !field.isOptional,
-            default: field.default
-          };
-
-          entity.fields.push(entityField);
         }
       }
-
+      
       entities.push(entity);
     }
-
+    
+    // Also parse enums
+    const enums = extractPrismaEnums(schemaContent);
+    
+    for (const { name: enumName, values } of enums) {
+      // Store enum as a virtual entity
+      if (values.length > 0) {
+        entities.push({
+          name: enumName,
+          fields: values.map(v => ({
+            name: v,
+            type: 'text' as const,
+            required: true
+          })),
+          relations: [],
+          enums: values,
+          isEnum: true
+        });
+      }
+    }
+    
     return entities;
   } catch (error) {
     throw new Error(`Failed to parse Prisma schema: ${error}`);
   }
+}
+
+/**
+ * Extract all model blocks from Prisma schema using balanced brace matching
+ */
+function extractPrismaModels(schema: string): Array<{ name: string; body: string }> {
+  const models: Array<{ name: string; body: string }> = [];
+  const lines = schema.split('\n');
+  
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    const modelMatch = line.match(/^model\s+(\w+)\s*\{/);
+    
+    if (modelMatch) {
+      const modelName = modelMatch[1];
+      let braceCount = 1;
+      let bodyLines: string[] = [];
+      i++;
+      
+      // Find matching closing brace
+      while (i < lines.length && braceCount > 0) {
+        const currentLine = lines[i];
+        bodyLines.push(currentLine);
+        
+        // Count braces in this line
+        for (const char of currentLine) {
+          if (char === '{') braceCount++;
+          if (char === '}') braceCount--;
+        }
+        
+        i++;
+      }
+      
+      // Remove the last line's closing brace
+      const body = bodyLines.slice(0, -1).join('\n');
+      models.push({ name: modelName, body });
+    } else {
+      i++;
+    }
+  }
+  
+  return models;
+}
+
+/**
+ * Extract all enum blocks from Prisma schema
+ */
+function extractPrismaEnums(schema: string): Array<{ name: string; values: string[] }> {
+  const enums: Array<{ name: string; values: string[] }> = [];
+  const lines = schema.split('\n');
+  
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    const enumMatch = line.match(/^enum\s+(\w+)\s*\{/);
+    
+    if (enumMatch) {
+      const enumName = enumMatch[1];
+      let braceCount = 1;
+      let values: string[] = [];
+      i++;
+      
+      // Find matching closing brace
+      while (i < lines.length && braceCount > 0) {
+        const currentLine = lines[i].trim();
+        
+        // Count braces
+        for (const char of currentLine) {
+          if (char === '{') braceCount++;
+          if (char === '}') braceCount--;
+        }
+        
+        // Add value if it's not empty and not a comment
+        if (braceCount > 0 && currentLine && !currentLine.startsWith('//')) {
+          values.push(currentLine);
+        }
+        
+        i++;
+      }
+      
+      enums.push({ name: enumName, values });
+    } else {
+      i++;
+    }
+  }
+  
+  return enums;
+}
+
+/**
+ * Extract default value from Prisma field modifiers
+ * FIX: Handle nested parentheses like @default(autoincrement())
+ */
+function extractDefaultValue(modifiers: string): any {
+  // FIX: Use balanced parentheses matching for nested functions like autoincrement()
+  const defaultMatch = modifiers.match(/@default\(((?:[^()]+|\([^)]*\))+)\)/);
+  if (!defaultMatch) return undefined;
+  
+  const defaultValue = defaultMatch[1];
+  
+  // Handle common default functions - return structured objects for functions
+  if (defaultValue === 'autoincrement()') {
+    return { name: 'autoincrement', args: [] };
+  }
+  if (defaultValue === 'now()') {
+    return { name: 'now', args: [] };
+  }
+  if (defaultValue === 'uuid()') {
+    return { name: 'uuid', args: [] };
+  }
+  if (defaultValue === 'cuid()') {
+    return { name: 'cuid', args: [] };
+  }
+  if (defaultValue === 'true') return true;
+  if (defaultValue === 'false') return false;
+  
+  // Handle string literals
+  const stringMatch = defaultValue.match(/^"([^"]*)"$/);
+  if (stringMatch) return stringMatch[1];
+  
+  // Handle numbers
+  const numValue = parseFloat(defaultValue);
+  if (!isNaN(numValue)) return numValue;
+  
+  return defaultValue;
 }
 
 /**

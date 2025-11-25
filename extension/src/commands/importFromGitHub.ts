@@ -1,16 +1,94 @@
+/**
+ * ALPHA: Import from GitHub
+ * 
+ * Clone a GitHub repository and convert it to ShepLang.
+ * Uses the same conversion pipeline as local import for consistency.
+ */
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { GitService } from '../services/gitService';
-import { ProjectAnalyzer } from '../features/importer/analyzer';
-import { ScaffoldGenerator } from '../features/importer/scaffoldGenerator';
-import { ProgressTracker } from '../services/progressTracker';
 import { outputChannel } from '../services/outputChannel';
+import { extractEntities } from '../parsers/entityExtractor';
+import { parseReactFile, ReactComponent } from '../parsers/reactParser';
+import { mapProjectToShepLang } from '../parsers/viewMapper';
+import { generateFromPlan } from '../generators/intelligentScaffold';
+// AppModel interface for import
+interface AppModel {
+    appName: string;
+    projectRoot: string;
+    entities: any[];
+    views: any[];
+    actions: any[];
+    todos: any[];
+}
+
+/**
+ * Parse all React/TSX files in a project
+ */
+function parseReactProject(projectRoot: string): ReactComponent[] {
+    const components: ReactComponent[] = [];
+    
+    const scanDirs = [
+        path.join(projectRoot, 'src'),
+        path.join(projectRoot, 'app'),
+        path.join(projectRoot, 'pages'),
+        path.join(projectRoot, 'components'),
+        path.join(projectRoot, 'src', 'components'),
+        path.join(projectRoot, 'src', 'app'),
+        path.join(projectRoot, 'src', 'pages')
+    ];
+    
+    for (const dir of scanDirs) {
+        if (fs.existsSync(dir)) {
+            const files = findReactFiles(dir);
+            for (const file of files) {
+                try {
+                    const component = parseReactFile(file);
+                    if (component) {
+                        components.push(component);
+                    }
+                } catch (error) {
+                    outputChannel.warn(`Failed to parse ${file}: ${error}`);
+                }
+            }
+        }
+    }
+    
+    return components;
+}
+
+/**
+ * Recursively find all React/TSX files in a directory
+ */
+function findReactFiles(dir: string): string[] {
+    const files: string[] = [];
+    
+    try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            
+            if (entry.name.startsWith('.') || entry.name === 'node_modules') {
+                continue;
+            }
+            
+            if (entry.isDirectory()) {
+                files.push(...findReactFiles(fullPath));
+            } else if (/\.(tsx?|jsx?)$/.test(entry.name)) {
+                files.push(fullPath);
+            }
+        }
+    } catch (error) {
+        // Ignore permission errors
+    }
+    
+    return files;
+}
 
 export async function importFromGitHubCommand() {
     const gitService = new GitService();
-    const analyzer = new ProjectAnalyzer();
-    const generator = new ScaffoldGenerator();
 
     // 1. Check Git Installation
     if (!await gitService.isGitInstalled()) {
@@ -18,120 +96,122 @@ export async function importFromGitHubCommand() {
         return;
     }
 
-    // 2. Prompt for URL
+    // 2. Prompt for GitHub URL
     const repoUrl = await vscode.window.showInputBox({
-        prompt: 'Enter Git repository URL (e.g. https://github.com/user/repo)',
-        placeHolder: 'https://github.com/vercel/next.js',
-        ignoreFocusOut: true
+        prompt: 'Enter GitHub repository URL',
+        placeHolder: 'https://github.com/user/repo',
+        ignoreFocusOut: true,
+        validateInput: (value) => {
+            if (!value) return 'Please enter a URL';
+            if (!value.includes('github.com')) return 'Please enter a valid GitHub URL';
+            return null;
+        }
     });
 
     if (!repoUrl) return;
 
-    // 3. Determine Target Path
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    let targetPath: string;
-
-    if (!workspaceFolders) {
-        vscode.window.showErrorMessage('Please open a folder or workspace before importing.');
-        return;
-    }
-
-    const rootPath = workspaceFolders[0].uri.fsPath;
-    // Extract repo name from URL
-    const repoName = repoUrl.split('/').pop()?.replace('.git', '') || 'imported-project';
-    targetPath = path.join(rootPath, '.sheplang-imports', repoName);
-
-    // 4. Execute Import Flow with enhanced progress tracking
-    outputChannel.section(`Importing Git Repository: ${repoName}`);
-    
-    const progressTracker = new ProgressTracker(`ShepLang: Importing ${repoName}...`)
-        .setSteps([
-            { name: 'Init', description: 'Preparing workspace...', percentage: 5 },
-            { name: 'Clone', description: 'Cloning repository...', percentage: 15 },
-            { name: 'Detect', description: 'Detecting project structure...', percentage: 10 },
-            { name: 'Analyze', description: 'Analyzing codebase...', percentage: 30 },
-            { name: 'Generate', description: 'Generating ShepLang code...', percentage: 30 },
-            { name: 'Finalize', description: 'Setting up project...', percentage: 10 }
-        ]);
-
-    await progressTracker.start(async (tracker) => {
-        try {
-            // Step 1: Init
-            tracker.nextStep('Preparing workspace...');
-            if (fs.existsSync(targetPath)) {
-                tracker.detail(`Directory exists: ${targetPath}`);
-                const isConfirmed = await vscode.window.showWarningMessage(
-                    `Target directory already exists: ${targetPath}. Continue and overwrite?`,
-                    { modal: true },
-                    'Continue', 'Cancel'
-                ) === 'Continue';
-                
-                if (!isConfirmed) {
-                    tracker.detail('Import cancelled by user');
-                    return;
-                }
-                
-                // Ensure directory is empty
-                tracker.detail('Clearing existing directory...');
-                fs.rmSync(targetPath, { recursive: true, force: true });
-                fs.mkdirSync(targetPath, { recursive: true });
-            } else {
-                tracker.detail('Creating target directory...');
-                fs.mkdirSync(targetPath, { recursive: true });
-            }
-            
-            // Step 2: Clone repo
-            tracker.nextStep('Cloning repository...');
-            tracker.detail(`Source: ${repoUrl}`);
-            tracker.detail(`Destination: ${targetPath}`);
-            await gitService.cloneRepo(repoUrl, targetPath);
-            
-            // Step 3: Detect project type
-            tracker.nextStep('Detecting project structure...');
-            const fileCount = fs.readdirSync(targetPath).length;
-            tracker.detail(`Found ${fileCount} items in repository root`);
-
-            // Step 4: Deep analysis
-            tracker.nextStep('Analyzing codebase...');
-            const analysis = await analyzer.analyze(targetPath);
-            tracker.detail(`Detected framework: ${analysis.framework}`);
-            if (analysis.entities?.length) {
-                tracker.detail(`Found ${analysis.entities.length} potential entities`);
-            }
-            
-            // Step 5: Generate scaffold
-            tracker.nextStep('Generating ShepLang code...');
-            await generator.generate(analysis, targetPath);
-            
-            // Step 6: Finalize
-            tracker.nextStep('Setting up project...');
-            tracker.detail('Writing metadata and configuration files');
-            
-            const action = await vscode.window.showInformationMessage(
-                `Successfully imported ${repoName}. Detected framework: ${analysis.framework}`,
-                'Open Project Brief',
-                'Open Entities'
-            );
-
-            if (action === 'Open Project Brief') {
-                const briefPath = path.join(targetPath, '.specify', 'wizard', 'project-brief.md');
-                const doc = await vscode.workspace.openTextDocument(briefPath);
-                await vscode.window.showTextDocument(doc);
-            } else if (action === 'Open Entities') {
-                // Try to open the first entity file found
-                const entitiesDir = path.join(targetPath, 'app', 'entities');
-                if (fs.existsSync(entitiesDir)) {
-                    const files = fs.readdirSync(entitiesDir);
-                    if (files.length > 0) {
-                        const doc = await vscode.workspace.openTextDocument(path.join(entitiesDir, files[0]));
-                        await vscode.window.showTextDocument(doc);
-                    }
-                }
-            }
-
-        } catch (error: any) {
-            vscode.window.showErrorMessage(`Import failed: ${error.message}`);
-            // Clean up if clone was partial? Maybe keep for debugging.
-        }
+    // 3. Ask where to save
+    const saveLocation = await vscode.window.showSaveDialog({
+        title: 'Choose location for your ShepLang project',
+        defaultUri: vscode.Uri.file(path.join(
+            process.env.USERPROFILE || process.env.HOME || '',
+            'Desktop',
+            repoUrl.split('/').pop()?.replace('.git', '') || 'sheplang-project'
+        )),
+        filters: { 'All Files': ['*'] }
     });
+
+    if (!saveLocation) return;
+
+    const outputFolder = saveLocation.fsPath;
+    const projectName = path.basename(outputFolder).replace(/-/g, '');
+
+    // 4. Clone and Convert
+    outputChannel.section(`🐑 Importing from GitHub: ${projectName}`);
+
+    await vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: '🐑 ShepLang Import',
+            cancellable: false
+        },
+        async (progress) => {
+            try {
+                // Step 1: Create temp directory for clone
+                progress.report({ message: '🐙 Cloning repository...', increment: 10 });
+                
+                const tempCloneDir = path.join(outputFolder, '.sheplang-source');
+                if (fs.existsSync(tempCloneDir)) {
+                    fs.rmSync(tempCloneDir, { recursive: true, force: true });
+                }
+                fs.mkdirSync(tempCloneDir, { recursive: true });
+
+                outputChannel.info(`Cloning ${repoUrl} to ${tempCloneDir}`);
+                await gitService.cloneRepo(repoUrl, tempCloneDir);
+                outputChannel.success('Repository cloned successfully');
+
+                progress.report({ message: '🔍 Analyzing project...', increment: 20 });
+
+                // Step 2: Extract entities (Prisma, TypeScript types, etc.)
+                const entityResult = await extractEntities(tempCloneDir);
+                outputChannel.info(`Found ${entityResult.entities.length} entities from ${entityResult.source}`);
+
+                progress.report({ message: '🐑 Parsing React components...', increment: 20 });
+
+                // Parse React components
+                const components = parseReactProject(tempCloneDir);
+                outputChannel.info(`Found ${components.length} React components`);
+
+                progress.report({ message: '🔄 Converting to ShepLang...', increment: 20 });
+
+                // Map to ShepLang views and actions
+                const projectMapping = mapProjectToShepLang(components, entityResult.entities);
+                outputChannel.info(`Mapped ${projectMapping.views.length} views, ${projectMapping.actions.length} actions`);
+
+                // Build proper AppModel
+                const appModel: AppModel = {
+                    appName: projectName,
+                    projectRoot: tempCloneDir,
+                    entities: entityResult.entities,
+                    views: projectMapping.views,
+                    actions: projectMapping.actions,
+                    todos: []
+                };
+
+                // Create simple architecture plan
+                const plan = {
+                    projectType: 'imported-github',
+                    structure: 'layer-based',
+                    folders: [],
+                    conventions: {
+                        naming: 'PascalCase for components',
+                        fileOrganization: 'By type',
+                        importStrategy: 'Relative'
+                    },
+                    reasoning: `Imported from GitHub: ${repoUrl}`
+                };
+
+                progress.report({ message: '📝 Generating ShepLang files...', increment: 20 });
+
+                // Generate ShepLang project
+                const project = await generateFromPlan(appModel, plan as any, outputFolder);
+                outputChannel.success(`Generated ${project.files.length} ShepLang files`);
+
+                progress.report({ message: '✨ Opening your new project!', increment: 10 });
+
+                // Open the project
+                await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(outputFolder), {
+                    forceReuseWindow: true
+                });
+
+                vscode.window.showInformationMessage(
+                    `🐑 Successfully imported ${projectName}! ${entityResult.entities.length} entities, ${projectMapping.views.length} views converted.`
+                );
+
+            } catch (error: any) {
+                outputChannel.error(`Import failed: ${error.message}`);
+                vscode.window.showErrorMessage(`🐑 Import failed: ${error.message}`);
+            }
+        }
+    );
 }

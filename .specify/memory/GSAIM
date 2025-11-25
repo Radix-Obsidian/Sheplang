@@ -25,7 +25,7 @@ With them, you can build production applications in weeks that would normally ta
 
 ---
 
-## **The Three Pillars**
+## **The Four Pillars**
 
 ### **1. Vertical Slice Delivery**
 
@@ -128,11 +128,74 @@ Because we build AI-native applications, we test for issues that traditional QA 
 
 ---
 
-### **3. Verification-First Architecture**
+### **3. Integration-First Verification**
+
+**"If it compiles, it works. If it's wired, it ships."**
+
+This is the pillar that makes everything else possible — and the one most teams skip.
+
+**The hidden failure mode in software:** Code that works in isolation but fails when connected.
+
+Most development catches bugs at two extremes:
+- **Unit tests** — Does this function return the right value?
+- **Production monitoring** — Why is the app crashing?
+
+The gap between them is where the worst bugs hide: components that pass all tests individually but break when wired together.
+
+**We close this gap with two mandatory practices:**
+
+#### **Integration Build Verification**
+
+Before any slice ships, we verify that front-end and back-end components are **connected correctly and work together as a system**, not just in isolation.
+
+```bash
+# Wrong: Test components separately
+$ npm test src/components/UserForm.test.tsx  ✅
+$ npm test src/api/users.test.ts  ✅
+# Ship it! (Hope they talk to each other...)
+
+# Right: Test the wiring
+$ shep verify --integration
+✓ UserForm → POST /api/users → Database (connected)
+✓ UserList → GET /api/users → Database (connected)
+✓ DeleteButton → DELETE /api/users/:id → Database (connected)
+# Now ship it.
+```
+
+#### **End-to-End Reality Testing**
+
+Before any slice deploys, we run realistic user flows to confirm the UI, API, and database are all **wired and behaving properly** across a full slice of the stack.
+
+```bash
+$ shep test:e2e signup-flow
+✓ User visits /signup
+✓ Form renders with validation
+✓ Submit calls POST /api/auth/register
+✓ API creates user in database
+✓ API sends verification email via SendGrid
+✓ User receives email (checked via test inbox)
+✓ Click link activates account
+✓ Redirect to dashboard works
+✓ User data displays correctly
+```
+
+**Why this matters:**
+
+Every wiring bug we've ever shipped came from the same root cause: testing components in isolation and assuming they'd work together. They don't.
+
+- The button works. The API works. But the button calls the wrong endpoint.
+- The form validates. The schema validates. But the field names don't match.
+- The parser works. The generator works. But the output never reaches the generator.
+
+**Integration verification catches these before users do.**
+
+---
+
+### **4. Verification-First Architecture**
 
 **"If it compiles, it works. If it's verified, it's safe."**
 
-This is the pillar that makes everything else possible.
+This pillar enforces correctness at the language level.
 
 Traditional development:
 ```
@@ -621,7 +684,8 @@ The Golden Sheep AI Methodology is how we build AI-native software:
 
 1. **Vertical Slice Delivery** — Build one complete feature at a time
 2. **Full-Stack Reality Testing** — Test with real services, real data, real deployments
-3. **Verification-First Architecture** — Catch errors at compile time, not runtime
+3. **Integration-First Verification** — Verify wiring before shipping, not after
+4. **Verification-First Architecture** — Catch errors at compile time, not runtime
 
 This is only possible because of the technology we built:
 - **ShepLang** (verification-first language)
@@ -647,6 +711,53 @@ Want to go deeper?
 - [ShepLang Spec Coding RFC v0] still needs wrote.(#)
 - [AIVP Stack Technical Architecture](#) still needs wrote.
 - [ShepVerify: How Real-Time Verification Works](#) still needs wrote.
+
+---
+
+## **Appendix: Lessons from ShepLang Extension Development**
+
+### **Extension Bundling & Dependencies**
+
+**Problem:** Language server crashed with "Cannot find module 'vscode-languageserver/node'" in production.
+
+**Root cause:** Language server runs as separate Node process and needs its dependencies bundled.
+
+**Solution:**
+- Bundle BOTH extension.ts AND server.ts with esbuild
+- Point extension to `dist/server.js` (bundled) not `out/server/server.js` (unbundled)
+- Verify `.vscodeignore` doesn't exclude `dist/**`
+
+**References:**
+- [VS Code: Bundling Extensions](https://code.visualstudio.com/api/working-with-extensions/bundling-extension)
+- [Stack Overflow: Language Server + esbuild](https://stackoverflow.com/questions/75579409)
+
+---
+
+### **Generated File Validation**
+
+**Problem:** Generated .shep files failed with "Every ShepLang file needs an app name."
+
+**Root cause:** Diagnostics require `app AppName` on line 1, but generators put comments first.
+
+**Fix:** Always put `app` declaration on first line of ALL generated files.
+
+**Lesson:** Test generated files against the same rules as hand-written code (integration testing).
+
+---
+
+### **Prisma Schema Parser Bug**
+
+**Problem:** Only parsed 1 of 3 models, missed enums/optional fields/relations.
+
+**Root cause:** Simple regex didn't handle nested braces in `@relation()` decorators.
+
+**Fix:** Implemented balanced-brace parser to find exact model/enum boundaries.
+
+**Now captures:**
+- All models (User, Batch, Supplier)
+- Enums (Role)
+- Optional fields (String?)
+- Relations (Batch[], User)
 
 ---
 
