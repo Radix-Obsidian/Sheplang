@@ -778,60 +778,142 @@ function generateFallbackBackend(appModel: AppModel, fileSpec: any): string {
 }
 
 /**
+ * Map field types to valid ShepLang types
+ */
+function mapFieldType(type: string): string {
+  const typeMap: Record<string, string> = {
+    'string': 'text',
+    'String': 'text',
+    'text': 'text',
+    'number': 'number',
+    'Number': 'number',
+    'int': 'number',
+    'Int': 'number',
+    'integer': 'number',
+    'float': 'number',
+    'Float': 'number',
+    'boolean': 'yes/no',
+    'Boolean': 'yes/no',
+    'bool': 'yes/no',
+    'date': 'date',
+    'Date': 'date',
+    'DateTime': 'date',
+    'datetime': 'date',
+    'email': 'email',
+    'Email': 'email',
+    'money': 'money',
+    'Money': 'money',
+    'decimal': 'money',
+    'Decimal': 'money',
+    'image': 'image',
+    'Image': 'image',
+    'file': 'file',
+    'File': 'file',
+    'id': 'id',
+    'Id': 'id',
+    'ID': 'id'
+  };
+  return typeMap[type] || 'text';
+}
+
+/**
  * Generate app configuration file
- * FIX: Deduplicate imports to prevent duplicate import statements
- * FIX: Use paths WITHOUT 'src/' prefix to match generateEssentialFiles
+ * FIXED: Generate VALID ShepLang syntax with brace-based declarations
+ * This file can be previewed in the browser
  */
 function generateAppConfig(appModel: AppModel, plan: ArchitecturePlan): string {
-  // CRITICAL: app declaration MUST be on line 1 for diagnostics
-  let content = `app ${appModel.appName}\n`;
-  content += `// ${appModel.appName} - Main Application Configuration\n`;
-  content += `// Generated with ${plan.structure} architecture\n\n`;
-  
   // Deduplicate entities, views, and actions by name
   const uniqueEntities = deduplicateByName(appModel.entities);
   const uniqueViews = deduplicateByName(appModel.views);
   const uniqueActions = deduplicateByName(appModel.actions);
   
-  // Import models with REAL paths (no src/ prefix to avoid duplication)
-  if (uniqueEntities.length > 0) {
-    content += `// Data Models\n`;
-    for (const entity of uniqueEntities) {
+  // Start app block - VALID ShepLang syntax
+  let content = `app ${appModel.appName} {\n`;
+  content += `  // ${appModel.appName} - Main Application\n`;
+  content += `  // Generated with ${plan.structure} architecture\n`;
+  content += `  // Source: ${plan.projectType}\n\n`;
+  
+  // Generate data declarations (up to 5 main entities for preview)
+  const previewEntities = uniqueEntities.slice(0, 5);
+  if (previewEntities.length > 0) {
+    content += `  // === Data Models ===\n`;
+    for (const entity of previewEntities) {
       const safeName = sanitizeFilename(entity.name);
       if (safeName) {
-        content += `import ${safeName} from "models/${safeName}.shep"\n`;
+        content += `  data ${safeName} {\n`;
+        content += `    fields: {\n`;
+        // Add up to 5 fields per entity
+        const fields = (entity.fields || []).slice(0, 5);
+        for (const field of fields) {
+          const fieldType = mapFieldType(field.type);
+          content += `      ${field.name}: ${fieldType}\n`;
+        }
+        if ((entity.fields || []).length > 5) {
+          content += `      // ... ${entity.fields.length - 5} more fields\n`;
+        }
+        content += `    }\n`;
+        content += `  }\n\n`;
       }
     }
-    content += `\n`;
+    if (uniqueEntities.length > 5) {
+      content += `  // ... ${uniqueEntities.length - 5} more data models in models/ folder\n\n`;
+    }
   }
   
-  // Import views with REAL paths (no src/ prefix)
-  if (uniqueViews.length > 0) {
-    content += `// Views\n`;
-    for (const view of uniqueViews) {
+  // Generate view declarations (up to 3 for preview)
+  const previewViews = uniqueViews.slice(0, 3);
+  if (previewViews.length > 0) {
+    content += `  // === Views ===\n`;
+    for (const view of previewViews) {
       const safeName = sanitizeFilename(view.name);
       if (safeName) {
-        content += `import ${safeName} from "views/${safeName}.shep"\n`;
+        content += `  view ${safeName} {\n`;
+        // Reference a data entity if available
+        if (previewEntities.length > 0) {
+          content += `    list ${previewEntities[0].name}\n`;
+        }
+        // Add a sample button
+        if (uniqueActions.length > 0) {
+          const action = uniqueActions[0];
+          const actionName = sanitizeFilename(action.name);
+          if (actionName) {
+            content += `    button "Action" -> ${actionName}\n`;
+          }
+        }
+        content += `  }\n\n`;
       }
     }
-    content += `\n`;
+    if (uniqueViews.length > 3) {
+      content += `  // ... ${uniqueViews.length - 3} more views in views/ folder\n\n`;
+    }
   }
   
-  // Import actions with REAL paths (no src/ prefix)
-  if (uniqueActions.length > 0) {
-    content += `// Actions\n`;
-    for (const action of uniqueActions) {
+  // Generate action declarations (up to 3 for preview)
+  const previewActions = uniqueActions.slice(0, 3);
+  if (previewActions.length > 0) {
+    content += `  // === Actions ===\n`;
+    for (const action of previewActions) {
       const safeName = sanitizeFilename(action.name);
       if (safeName) {
-        content += `import ${safeName} from "actions/${safeName}.shep"\n`;
+        content += `  action ${safeName}(params) {\n`;
+        if (previewEntities.length > 0) {
+          content += `    add ${previewEntities[0].name} with params\n`;
+        }
+        if (previewViews.length > 0) {
+          content += `    show ${previewViews[0].name}\n`;
+        } else {
+          content += `    show Dashboard\n`;
+        }
+        content += `  }\n\n`;
       }
     }
-    content += `\n`;
+    if (uniqueActions.length > 3) {
+      content += `  // ... ${uniqueActions.length - 3} more actions in actions/ folder\n`;
+    }
   }
   
-  const firstView = uniqueViews[0]?.name ? sanitizeFilename(uniqueViews[0].name) : 'Dashboard';
-  content += `// App entry point\n`;
-  content += `view ${firstView || 'Dashboard'}\n`;
+  // Close app block
+  content += `}\n`;
   
   return content;
 }
