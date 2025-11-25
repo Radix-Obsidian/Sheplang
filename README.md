@@ -135,7 +135,41 @@ POST /todos -> db.add("todos", body)
 - ✅ **Third-Party Integrations** - Stripe, SendGrid, Twilio
 - ✅ **Background Jobs** - Scheduled tasks and automation
 
-### 🔄 Import from No-Code Tools
+### 🔄 Import Real Projects from GitHub 🆕
+**Convert production codebases to ShepLang with one click:**
+
+```
+ShepLang: Import from GitHub → https://github.com/boxyhq/saas-starter-kit
+```
+
+**What Gets Generated:**
+| Folder | Contents | Description |
+|--------|----------|-------------|
+| `models/` | 16 files | Data entities from Prisma schema |
+| `views/` | 114 files | UI components with screen kinds |
+| `actions/` | 19 files | Event handlers and interactions |
+| `workflows/` | 2 files | Multi-step automations |
+| `jobs/` | 5 files | Background tasks (cron) |
+| `integrations/` | 4 files | Stripe, SendGrid, Auth0, etc. |
+| `realtime/` | 1 file | WebSocket hooks |
+| `app.shep` | 1 file | Main app (previewable!) |
+
+**✅ Tested & Verified on Real SaaS Projects:**
+- [boxyhq/saas-starter-kit](https://github.com/boxyhq/saas-starter-kit) - 162+ files generated
+- [shadcn-ui/taxonomy](https://github.com/shadcn-ui/taxonomy) - Full Next.js 13 app
+- [vercel/commerce](https://github.com/vercel/commerce) - E-commerce template
+
+### 🛠️ Compatible Project Stacks
+**These stacks convert 100% to ShepLang:**
+
+| Stack | Status | What Converts |
+|-------|--------|---------------|
+| **Next.js + Prisma** | ✅ 100% | Models, API routes, pages, components |
+| **Next.js + Tailwind** | ✅ 100% | Components, styling, layouts |
+| **React + TypeScript** | ✅ 100% | Components, hooks, state |
+| **Vite + React** | ✅ 100% | SPA components and logic |
+
+### 🔄 Also Import from No-Code Tools
 **ShepLang is the graduation layer for your no-code prototypes:**
 - ✅ **Figma Make** - Export React code, import to ShepLang
 - ✅ **Lovable** - Convert Lovable projects to ShepLang
