@@ -96,6 +96,13 @@ export function activate(context: vscode.ExtensionContext) {
         await vscode.workspace.getConfiguration('sheplang').update('anthropicApiKey', key, vscode.ConfigurationTarget.Global);
         vscode.window.showInformationMessage('✓ API key updated! You now have unlimited imports.');
       }
+    }),
+    
+    // Error broadcasting (used by diagnostics)
+    vscode.commands.registerCommand('sheplang.broadcastError', (error: Error | string) => {
+      // Log errors for debugging - preview server handles display
+      const msg = error instanceof Error ? error.message : String(error);
+      outputChannel.error('Broadcast error:', msg);
     })
   );
   outputChannel.success('ALPHA commands registered');
