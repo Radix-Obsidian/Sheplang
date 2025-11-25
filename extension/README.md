@@ -87,6 +87,29 @@ Compile ShepLang to TypeScript with a single command.
 ### 📦 **Production Ready**
 Generates clean, maintainable TypeScript code ready for deployment.
 
+### 🔄 **Import from GitHub** 🆕
+**Convert real production codebases to ShepLang with one click:**
+
+```
+Ctrl+Shift+P → ShepLang: Import from GitHub → Paste URL
+```
+
+**Tested & Verified on Real Projects:**
+- ✅ [boxyhq/saas-starter-kit](https://github.com/boxyhq/saas-starter-kit) → 162+ ShepLang files
+- ✅ [shadcn-ui/taxonomy](https://github.com/shadcn-ui/taxonomy) → Full Next.js 13 app
+- ✅ Next.js + Prisma + Tailwind stacks → 100% conversion
+
+**What Gets Generated:**
+| Folder | Files | Description |
+|--------|-------|-------------|
+| `models/` | ✅ | Data entities from Prisma |
+| `views/` | ✅ | UI components with screen kinds |
+| `actions/` | ✅ | Event handlers |
+| `workflows/` | ✅ | Multi-step automations |
+| `jobs/` | ✅ | Background tasks (cron) |
+| `integrations/` | ✅ | Stripe, SendGrid, Auth0 |
+| `realtime/` | ✅ | WebSocket hooks |
+
 ---
 
 ## 🚀 Getting Started
@@ -254,7 +277,15 @@ app MyTodos {
 
 Access via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 
+### Import Commands 🆕
+- **ShepLang: Import from GitHub** - Convert any GitHub repo to ShepLang
+- **ShepLang: Import from Local Project** - Convert local codebase to ShepLang
+
+### Project Commands
 - **ShepLang: New Project** - Create a new ShepLang project from template
+- **ShepLang: Project Wizard** - Guided project setup with AI scaffolding
+
+### Development Commands
 - **ShepLang: Preview** - Open live preview of your app
 - **ShepLang: Compile File** - Compile current file to TypeScript
 - **ShepLang: Show Output** - View compiler output
