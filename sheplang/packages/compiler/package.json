@@ -1,6 +1,6 @@
 {
   "name": "@goldensheepai/sheplang-compiler",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "The AI-native compiler that transforms ShepLang into production-ready React, TypeScript, and API code",
   "keywords": [
     "sheplang",

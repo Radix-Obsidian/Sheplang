@@ -5,6 +5,48 @@ All notable changes to the ShepLang VSCode extension will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-11-25
+
+### ✨ Major Features
+- **GitHub Import (One-Click Conversion)**: Convert production codebases to ShepLang in 60 seconds
+  - Verified on boxyhq/saas-starter-kit (165+ files generated)
+  - Verified on shadcn/taxonomy (Full Next.js 13 app)
+  - Supports Next.js + Prisma + TypeScript + Tailwind
+- **Preview UX Overhaul**: 
+  - Sample data automatically populated (no more "No data yet")
+  - Toast notifications instead of blocking alerts
+  - Context-aware realistic samples based on entity type (Users, Accounts, Teams, etc.)
+  - Non-technical founder friendly - looks like a working app immediately
+- **ShepUI Screen Kind Detection**: Automatically detects and generates form, dashboard, feed, detail, and inbox screens
+- **ShepAPI Full-Stack Generation**: Generates workflows, background jobs, integrations, and real-time hooks
+
+### 🐛 Bug Fixes
+- **Reserved Field Names**: Fields like `id`, `email`, `date` now handled correctly (renamed to `idField`, `emailField`, etc.)
+- **Valid ShepLang Syntax**: All generated files now conform to proper ShepLang grammar
+- **broadcastError Command**: Registered missing command to fix console warnings
+
+### 📊 Backend Support
+- **Prisma ORM**: 90% confidence - full schema extraction with relations
+- **React Component State**: 50% confidence - heuristic analysis as fallback
+- **Combined Approach**: 70% confidence - Prisma + component state hybrid
+
+### 📚 Documentation
+- **TEST_RESULTS.md**: Added comprehensive test results documentation (173/173 tests passing)
+- **Backend Support Matrix**: Documented supported backends and confidence levels
+- **Feature Clarification**: Updated README to clarify all active syntax features
+
+### 🎯 Stats
+- ✅ 173/173 tests passing (100% pass rate)
+- ✅ 165+ files generated from saas-starter-kit
+- ✅ Full backend support matrix documented
+- ✅ Sample data for 7+ entity types
+
+### 📦 Package Updates
+- Updated @goldensheepai/sheplang-language to v0.1.8
+- Updated @goldensheepai/sheplang-compiler to v0.1.3
+
+---
+
 ## [1.0.2] - 2025-11-24
 
 ### ✨ New Features
