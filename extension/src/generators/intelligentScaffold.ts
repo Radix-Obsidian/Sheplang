@@ -253,18 +253,25 @@ function sanitizeFilename(name: string): string | null {
 
 /**
  * Generate entity model file with proper structure
+ * FIXED: Generate VALID ShepLang syntax
  */
 function generateEntityModelFile(entity: any, appModel: AppModel): string {
-  let content = `app ${appModel.appName}\n`;
-  content += `// ${entity.name} Data Model\n`;
-  content += `// Source: ${entity.source || 'imported'}\n\n`;
-  content += `data ${entity.name}:\n`;
-  content += `  fields:\n`;
+  // Generate VALID ShepLang syntax
+  let content = `app ${appModel.appName} {\n`;
+  content += `  // ${entity.name} Data Model\n`;
+  content += `  // Source: ${entity.source || 'imported'}\n\n`;
+  content += `  data ${entity.name} {\n`;
+  content += `    fields: {\n`;
   
   for (const field of entity.fields || []) {
-    const optional = field.required ? '' : ' // optional';
-    content += `    ${field.name}: ${field.type}${optional}\n`;
+    const fieldName = sanitizeFieldName(field.name);
+    const fieldType = mapFieldType(field.type);
+    content += `      ${fieldName}: ${fieldType}\n`;
   }
+  
+  content += `    }\n`;
+  content += `  }\n`;
+  content += `}\n`;
   
   return content;
 }
@@ -331,132 +338,104 @@ function findRelatedEntity(view: any, appModel: AppModel): string | null {
 
 /**
  * Generate view file from appModel view
- * Enhanced with ShepUI screen kind detection and rich widget generation
+ * FIXED: Generate VALID ShepLang syntax (not YAML-like)
+ * ShepUI screen kind is embedded in comments for preview to parse
  */
 function generateViewFileFromModel(view: any, appModel: AppModel): string {
   const screenKind = detectScreenKind(view, appModel);
   const relatedEntity = findRelatedEntity(view, appModel);
+  const firstAction = appModel.actions[0]?.name || 'HandleAction';
   
-  let content = `app ${appModel.appName}\n`;
-  content += `// ${view.name} Screen\n`;
-  content += `// Kind: ${screenKind}\n`;
-  content += `// From: ${view.filePath || 'imported'}\n\n`;
-  content += `view ${view.name}:\n`;
-  content += `  kind: "${screenKind}"\n`;
+  // Generate VALID ShepLang syntax
+  let content = `app ${appModel.appName} {\n`;
+  content += `  // ${view.name} Screen\n`;
+  content += `  // @shepui-kind: ${screenKind}\n`;
+  content += `  // @shepui-entity: ${relatedEntity || 'none'}\n`;
+  content += `  // From: ${view.filePath || 'imported'}\n\n`;
   
-  if (relatedEntity) {
-    content += `  entity: ${relatedEntity}\n`;
-  }
+  content += `  view ${view.name} {\n`;
   
-  content += `  layout:\n`;
-  
-  // Generate layout based on screen kind
+  // Generate content based on screen kind
   switch (screenKind) {
-    case 'feed':
-      content += `    - "Header with search bar"\n`;
-      content += `    - "Filter panel"\n`;
-      if (relatedEntity) {
-        content += `    - "Grid of ${relatedEntity}s with infinite scroll"\n`;
-      }
-      content += `    - "Loading indicator"\n`;
-      break;
-      
-    case 'detail':
-      content += `    - "Back navigation"\n`;
-      if (relatedEntity) {
-        content += `    - "Image gallery for ${relatedEntity}"\n`;
-        content += `    - "Title and description"\n`;
-        content += `    - "Details section"\n`;
-      }
-      content += `    - "Action buttons"\n`;
-      break;
-      
     case 'form':
-      content += `    - "Form header"\n`;
+      // Form screens get entity list and submit button
       if (relatedEntity) {
-        // Add fields from entity
-        const entity = appModel.entities.find(e => e.name === relatedEntity);
-        if (entity?.fields) {
-          for (const field of entity.fields.slice(0, 5)) {
-            content += `    - "Field '${field.name}' (${field.type})"\n`;
-          }
-        }
+        content += `    list ${relatedEntity}\n`;
       }
-      content += `    - "Submit button"\n`;
-      content += `    - "Cancel button"\n`;
+      content += `    button "Submit" -> ${firstAction}\n`;
+      content += `    button "Cancel" -> ${firstAction}\n`;
       break;
       
     case 'dashboard':
-      content += `    - "Stats cards row"\n`;
-      content += `    - "Charts section"\n`;
-      content += `    - "Recent activity table"\n`;
-      content += `    - "Quick actions"\n`;
+      // Dashboard screens get multiple entity lists
+      if (relatedEntity) {
+        content += `    list ${relatedEntity}\n`;
+      }
+      content += `    button "Refresh" -> ${firstAction}\n`;
+      content += `    button "Settings" -> ${firstAction}\n`;
+      break;
+      
+    case 'detail':
+      // Detail screens get single entity reference
+      if (relatedEntity) {
+        content += `    list ${relatedEntity}\n`;
+      }
+      content += `    button "Edit" -> ${firstAction}\n`;
+      content += `    button "Delete" -> ${firstAction}\n`;
       break;
       
     case 'inbox':
-      content += `    - "Conversation list"\n`;
-      content += `    - "Message thread"\n`;
-      content += `    - "Message composer"\n`;
+      // Inbox screens get list and compose button
+      if (relatedEntity) {
+        content += `    list ${relatedEntity}\n`;
+      }
+      content += `    button "Compose" -> ${firstAction}\n`;
+      break;
+      
+    case 'feed':
+      // Feed screens get list with load more
+      if (relatedEntity) {
+        content += `    list ${relatedEntity}\n`;
+      }
+      content += `    button "Load More" -> ${firstAction}\n`;
       break;
       
     default:
-      // Generate from widgets if available
-      if (view.widgets && view.widgets.length > 0) {
-        for (const widget of view.widgets) {
-          if (widget.kind === 'list') {
-            content += `    - "List of ${widget.entityName || 'items'}"\n`;
-          } else if (widget.kind === 'button') {
-            content += `    - "Button '${widget.label || 'Action'}' -> ${widget.actionName || 'HandleClick'}"\n`;
-          } else if (widget.kind === 'input') {
-            content += `    - "Input field"\n`;
-          } else if (widget.kind === 'text') {
-            content += `    - "Text content"\n`;
-          } else {
-            content += `    - "${widget.kind || 'Component'}"\n`;
-          }
-        }
-      } else {
-        content += `    - "Content section"\n`;
+      // Basic screens
+      if (relatedEntity) {
+        content += `    list ${relatedEntity}\n`;
       }
+      content += `    button "Action" -> ${firstAction}\n`;
   }
   
-  // Add actions if available
-  if (view.actions && view.actions.length > 0) {
-    content += `\n  actions:\n`;
-    for (const action of view.actions) {
-      content += `    - "${action.name}" -> ${action.target || 'Handle' + action.name}\n`;
-    }
-  }
+  // Close view and app blocks
+  content += `  }\n`;
+  content += `}\n`;
   
   return content;
 }
 
 /**
  * Generate action file from appModel action
+ * FIXED: Generate VALID ShepLang syntax
  */
 function generateActionFileFromModel(action: any, appModel: AppModel): string {
   const params = (action.parameters && action.parameters.length > 0)
     ? action.parameters.join(', ')
     : 'params';
   
-  let content = `app ${appModel.appName}\n`;
-  content += `// ${action.name} Action\n`;
-  content += `// Source: ${action.source || 'imported'}\n\n`;
-  content += `action ${action.name}(${params}):\n`;
+  const firstEntity = appModel.entities[0]?.name || 'Data';
+  const firstView = appModel.views[0]?.name || 'Dashboard';
   
-  if (action.apiCalls && action.apiCalls.length > 0) {
-    for (const apiCall of action.apiCalls) {
-      if (apiCall.method === 'GET') {
-        content += `  load ${apiCall.method} "${apiCall.path}" into data\n`;
-      } else {
-        content += `  call ${apiCall.method} "${apiCall.path}"\n`;
-      }
-    }
-  } else {
-    content += `  // TODO: Implement business logic\n`;
-  }
-  
-  content += `  show Dashboard\n`;
+  // Generate VALID ShepLang syntax
+  let content = `app ${appModel.appName} {\n`;
+  content += `  // ${action.name} Action\n`;
+  content += `  // Source: ${action.source || 'imported'}\n\n`;
+  content += `  action ${action.name}(${params}) {\n`;
+  content += `    add ${firstEntity} with ${params}\n`;
+  content += `    show ${firstView}\n`;
+  content += `  }\n`;
+  content += `}\n`;
   
   return content;
 }
