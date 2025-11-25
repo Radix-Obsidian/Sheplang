@@ -368,6 +368,58 @@ export class PreviewServer {
       }, 1500);
     });
     
+    // Generate sample data for preview based on entity name
+    function generateSampleData(entityName) {
+      const name = (entityName || '').toLowerCase();
+      
+      // Common entity patterns with sample data
+      const samples = {
+        user: [
+          { title: 'John Smith', subtitle: 'john@example.com • Active' },
+          { title: 'Sarah Johnson', subtitle: 'sarah@example.com • Active' },
+          { title: 'Mike Wilson', subtitle: 'mike@example.com • Pending' }
+        ],
+        account: [
+          { title: 'Primary Account', subtitle: 'ID: acc_12345 • Active' },
+          { title: 'Team Account', subtitle: 'ID: acc_67890 • Active' }
+        ],
+        team: [
+          { title: 'Engineering Team', subtitle: '12 members • Premium Plan' },
+          { title: 'Marketing Team', subtitle: '8 members • Basic Plan' }
+        ],
+        session: [
+          { title: 'Current Session', subtitle: 'Chrome • Started 2 hours ago' },
+          { title: 'Mobile Session', subtitle: 'iOS App • Started yesterday' }
+        ],
+        subscription: [
+          { title: 'Pro Plan', subtitle: '$29/month • Renews Dec 1' },
+          { title: 'Team Add-on', subtitle: '$10/month • Active' }
+        ],
+        invitation: [
+          { title: 'jane@example.com', subtitle: 'Pending • Sent 2 days ago' },
+          { title: 'bob@example.com', subtitle: 'Accepted • Joined team' }
+        ],
+        apikey: [
+          { title: 'Production Key', subtitle: 'sk_live_*** • Created Oct 15' },
+          { title: 'Test Key', subtitle: 'sk_test_*** • Created Nov 1' }
+        ],
+        default: [
+          { title: 'Sample Item 1', subtitle: 'Created just now • Ready' },
+          { title: 'Sample Item 2', subtitle: 'Created yesterday • Active' },
+          { title: 'Sample Item 3', subtitle: 'Created last week • Completed' }
+        ]
+      };
+      
+      // Find matching sample data
+      for (const [key, data] of Object.entries(samples)) {
+        if (key !== 'default' && name.includes(key)) {
+          return data;
+        }
+      }
+      
+      return samples.default;
+    }
+    
     function renderApp(ast) {
       currentAST = ast;
       const appDiv = document.getElementById('app');
@@ -405,7 +457,12 @@ export class PreviewServer {
             button.textContent = btn.label;
             button.onclick = () => {
               console.log('Button clicked:', btn.label, '-> action:', btn.action);
-              alert(\`Action "\${btn.action}" triggered!\\n\\n(Connect a .shepthon backend to make this functional)\`);
+              // Show friendly success message
+              const toast = document.createElement('div');
+              toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; animation: slideIn 0.3s ease;';
+              toast.innerHTML = \`<strong>✓ Action "\${btn.action}" triggered!</strong><br><small>This will update data when backend is connected.</small>\`;
+              document.body.appendChild(toast);
+              setTimeout(() => toast.remove(), 3000);
             };
             buttonsDiv.appendChild(button);
           });
@@ -413,11 +470,40 @@ export class PreviewServer {
           viewDiv.appendChild(buttonsDiv);
         }
         
-        // List
+        // List - Show sample data for better UX
         if (view.list) {
           const listDiv = document.createElement('div');
           listDiv.className = 'list';
-          listDiv.innerHTML = '<div class="list-empty">No data yet. Add a .shepthon backend and click actions to populate.</div>';
+          
+          // Generate sample data based on the entity name
+          const entityName = view.list;
+          const sampleData = generateSampleData(entityName);
+          
+          if (sampleData.length > 0) {
+            sampleData.forEach((item, index) => {
+              const itemDiv = document.createElement('div');
+              itemDiv.className = 'list-item';
+              itemDiv.innerHTML = \`
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong>\${item.title}</strong>
+                    <div style="color: #6c757d; font-size: 12px; margin-top: 4px;">\${item.subtitle}</div>
+                  </div>
+                  <span style="color: #28a745; font-size: 12px;">✓ Sample</span>
+                </div>
+              \`;
+              listDiv.appendChild(itemDiv);
+            });
+            
+            // Add note about sample data
+            const noteDiv = document.createElement('div');
+            noteDiv.style.cssText = 'text-align: center; padding: 12px; color: #6c757d; font-size: 12px; border-top: 1px solid #3e3e42; margin-top: 12px;';
+            noteDiv.innerHTML = '↑ Sample data for preview • Connect backend for live data';
+            listDiv.appendChild(noteDiv);
+          } else {
+            listDiv.innerHTML = '<div class="list-empty">Ready for data! Click actions above to interact.</div>';
+          }
+          
           viewDiv.appendChild(listDiv);
         }
         
