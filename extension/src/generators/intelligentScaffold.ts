@@ -208,28 +208,162 @@ function generateEntityModelFile(entity: any, appModel: AppModel): string {
 }
 
 /**
+ * Detect screen type based on view characteristics
+ * ShepUI screen kinds: feed, detail, form, list, dashboard, inbox
+ */
+function detectScreenKind(view: any, appModel: AppModel): string {
+  const name = view.name?.toLowerCase() || '';
+  const widgets = view.widgets || [];
+  
+  // Check for form indicators
+  if (name.includes('create') || name.includes('edit') || name.includes('new') || 
+      name.includes('add') || name.includes('form') || name.includes('signup') ||
+      name.includes('login') || name.includes('register')) {
+    return 'form';
+  }
+  
+  // Check for detail/single item indicators
+  if (name.includes('detail') || name.includes('view') || name.includes('profile') ||
+      name.includes('single') || name.endsWith('page')) {
+    return 'detail';
+  }
+  
+  // Check for dashboard indicators
+  if (name.includes('dashboard') || name.includes('admin') || name.includes('stats') ||
+      name.includes('analytics') || name.includes('overview')) {
+    return 'dashboard';
+  }
+  
+  // Check for inbox/messaging indicators
+  if (name.includes('inbox') || name.includes('message') || name.includes('chat') ||
+      name.includes('notification')) {
+    return 'inbox';
+  }
+  
+  // Check for list/feed based on widgets
+  const hasList = widgets.some((w: any) => w.kind === 'list');
+  if (hasList || name.includes('list') || name.includes('feed') || name.endsWith('s')) {
+    return 'feed';
+  }
+  
+  return 'basic';
+}
+
+/**
+ * Find related entity for a view
+ */
+function findRelatedEntity(view: any, appModel: AppModel): string | null {
+  const name = view.name?.toLowerCase() || '';
+  
+  // Try to match view name with entity
+  for (const entity of appModel.entities) {
+    const entityLower = entity.name.toLowerCase();
+    if (name.includes(entityLower) || entityLower.includes(name.replace(/list|feed|detail|form|create|edit/gi, ''))) {
+      return entity.name;
+    }
+  }
+  
+  // Return first entity as fallback
+  return appModel.entities[0]?.name || null;
+}
+
+/**
  * Generate view file from appModel view
+ * Enhanced with ShepUI screen kind detection and rich widget generation
  */
 function generateViewFileFromModel(view: any, appModel: AppModel): string {
+  const screenKind = detectScreenKind(view, appModel);
+  const relatedEntity = findRelatedEntity(view, appModel);
+  
   let content = `app ${appModel.appName}\n`;
   content += `// ${view.name} Screen\n`;
+  content += `// Kind: ${screenKind}\n`;
   content += `// From: ${view.filePath || 'imported'}\n\n`;
   content += `view ${view.name}:\n`;
+  content += `  kind: "${screenKind}"\n`;
   
-  if (view.widgets && view.widgets.length > 0) {
-    for (const widget of view.widgets) {
-      if (widget.kind === 'list') {
-        content += `  list ${widget.entityName}\n`;
-      } else if (widget.kind === 'button') {
-        content += `  button "${widget.label || 'Click'}" -> ${widget.actionName || 'HandleClick'}\n`;
-      } else {
-        content += `  // TODO: Add ${widget.kind} widget\n`;
+  if (relatedEntity) {
+    content += `  entity: ${relatedEntity}\n`;
+  }
+  
+  content += `  layout:\n`;
+  
+  // Generate layout based on screen kind
+  switch (screenKind) {
+    case 'feed':
+      content += `    - "Header with search bar"\n`;
+      content += `    - "Filter panel"\n`;
+      if (relatedEntity) {
+        content += `    - "Grid of ${relatedEntity}s with infinite scroll"\n`;
       }
+      content += `    - "Loading indicator"\n`;
+      break;
+      
+    case 'detail':
+      content += `    - "Back navigation"\n`;
+      if (relatedEntity) {
+        content += `    - "Image gallery for ${relatedEntity}"\n`;
+        content += `    - "Title and description"\n`;
+        content += `    - "Details section"\n`;
+      }
+      content += `    - "Action buttons"\n`;
+      break;
+      
+    case 'form':
+      content += `    - "Form header"\n`;
+      if (relatedEntity) {
+        // Add fields from entity
+        const entity = appModel.entities.find(e => e.name === relatedEntity);
+        if (entity?.fields) {
+          for (const field of entity.fields.slice(0, 5)) {
+            content += `    - "Field '${field.name}' (${field.type})"\n`;
+          }
+        }
+      }
+      content += `    - "Submit button"\n`;
+      content += `    - "Cancel button"\n`;
+      break;
+      
+    case 'dashboard':
+      content += `    - "Stats cards row"\n`;
+      content += `    - "Charts section"\n`;
+      content += `    - "Recent activity table"\n`;
+      content += `    - "Quick actions"\n`;
+      break;
+      
+    case 'inbox':
+      content += `    - "Conversation list"\n`;
+      content += `    - "Message thread"\n`;
+      content += `    - "Message composer"\n`;
+      break;
+      
+    default:
+      // Generate from widgets if available
+      if (view.widgets && view.widgets.length > 0) {
+        for (const widget of view.widgets) {
+          if (widget.kind === 'list') {
+            content += `    - "List of ${widget.entityName || 'items'}"\n`;
+          } else if (widget.kind === 'button') {
+            content += `    - "Button '${widget.label || 'Action'}' -> ${widget.actionName || 'HandleClick'}"\n`;
+          } else if (widget.kind === 'input') {
+            content += `    - "Input field"\n`;
+          } else if (widget.kind === 'text') {
+            content += `    - "Text content"\n`;
+          } else {
+            content += `    - "${widget.kind || 'Component'}"\n`;
+          }
+        }
+      } else {
+        content += `    - "Content section"\n`;
+      }
+  }
+  
+  // Add actions if available
+  if (view.actions && view.actions.length > 0) {
+    content += `\n  actions:\n`;
+    for (const action of view.actions) {
+      content += `    - "${action.name}" -> ${action.target || 'Handle' + action.name}\n`;
     }
-  } else {
-    content += `  // TODO: Add widgets for this view\n`;
-    content += `  // Example: list EntityName\n`;
-    content += `  // Example: button "Click me" -> ActionName\n`;
   }
   
   return content;
