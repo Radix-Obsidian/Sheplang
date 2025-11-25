@@ -1,6 +1,18 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# Check for exposed secrets first
+echo "🔍 Scanning for exposed secrets..."
+if [ -f "./extension/scripts/check-secrets.js" ]; then
+  node ./extension/scripts/check-secrets.js
+  SECRETS_RESULT=$?
+  if [ $SECRETS_RESULT -ne 0 ]; then
+    echo "❌ SECRET SCAN FAILED — commit aborted."
+    echo "   Remove exposed secrets before committing!"
+    exit 1
+  fi
+fi
+
 echo "Running ShepLang VERIFY..."
 powershell -ExecutionPolicy Bypass -File ./scripts/verify.ps1
 RESULT=$?
@@ -9,4 +21,4 @@ if [ $RESULT -ne 0 ]; then
   exit 1
 fi
 
-echo "✅ VERIFY passed."
+echo "✅ All checks passed."
