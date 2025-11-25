@@ -1,0 +1,28 @@
+{
+  "projectName": "plain-react-fixture",
+  "projectRoot": "C:\\Users\\autre\\OneDrive\\Desktop\\Projects (Golden Sheep AI)\\Sheplang\\test-import-fixtures\\plain-react",
+  "framework": {
+    "type": "react",
+    "version": "18.2.0",
+    "router": "custom",
+    "confidence": 0.8
+  },
+  "typescript": {
+    "enabled": true,
+    "configPath": "tsconfig.json"
+  },
+  "prisma": {
+    "enabled": false
+  },
+  "sourcePaths": {},
+  "apiPaths": {},
+  "confidence": {
+    "framework": 0.8,
+    "typescript": 0.9,
+    "prisma": 0.5,
+    "overall": 0.7333333333333334
+  },
+  "unsupported": [],
+  "detectedAt": "2025-11-25T01:04:16.859Z",
+  "shepLangVersion": "1.0.0"
+}

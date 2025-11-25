@@ -1,0 +1,31 @@
+{
+  "projectName": "vite-react-fixture",
+  "projectRoot": "C:\\Users\\autre\\OneDrive\\Desktop\\Projects (Golden Sheep AI)\\Sheplang\\test-import-fixtures\\vite-react",
+  "framework": {
+    "type": "vite",
+    "version": "5.0.8",
+    "router": "custom",
+    "confidence": 0.9
+  },
+  "typescript": {
+    "enabled": true,
+    "configPath": "tsconfig.json"
+  },
+  "prisma": {
+    "enabled": false
+  },
+  "sourcePaths": {
+    "src": "src",
+    "components": "src/components"
+  },
+  "apiPaths": {},
+  "confidence": {
+    "framework": 0.9,
+    "typescript": 0.9,
+    "prisma": 0.5,
+    "overall": 0.7666666666666666
+  },
+  "unsupported": [],
+  "detectedAt": "2025-11-25T01:04:16.855Z",
+  "shepLangVersion": "1.0.0"
+}
