@@ -78,11 +78,15 @@ Language Server Protocol integration provides instant error detection and helpfu
 Compile ShepLang to TypeScript with a single command.
 
 ### 🛠️ **Full Tooling Support**
-- Autocomplete
-- Go to Definition
-- Hover information
-- Document symbols
-- Workspace symbols
+- ✅ **IntelliSense** - Context-aware code completion
+- ✅ **Hover Documentation** - Instant help on symbols
+- ✅ **Go to Definition** - Jump to declarations
+- ✅ **Error Diagnostics** - Real-time syntax checking
+- ✅ **Semantic Highlighting** - Advanced syntax coloring
+- ✅ **Document Symbols** - Quick file navigation
+- ✅ **Workspace Symbols** - Project-wide search
+
+**All features are active!** [View Test Results](../TEST_RESULTS.md) (173/173 tests passing)
 
 ### 📦 **Production Ready**
 Generates clean, maintainable TypeScript code ready for deployment.
@@ -99,6 +103,13 @@ Ctrl+Shift+P → ShepLang: Import from GitHub → Paste URL
 - ✅ [shadcn-ui/taxonomy](https://github.com/shadcn-ui/taxonomy) → Full Next.js 13 app
 - ✅ Next.js + Prisma + Tailwind stacks → 100% conversion
 
+**Backend Support:**
+| Backend Type | Support | Confidence |
+|-------------|---------|------------|
+| **Prisma ORM** | ✅ Full extraction | 90% |
+| **React State** | ✅ Heuristics | 50% |
+| **Combined** | ✅ Hybrid | 70% |
+
 **What Gets Generated:**
 | Folder | Files | Description |
 |--------|-------|-------------|
@@ -109,6 +120,8 @@ Ctrl+Shift+P → ShepLang: Import from GitHub → Paste URL
 | `jobs/` | ✅ | Background tasks (cron) |
 | `integrations/` | ✅ | Stripe, SendGrid, Auth0 |
 | `realtime/` | ✅ | WebSocket hooks |
+
+**📊 [View Full Test Results](../TEST_RESULTS.md)** - 173/173 tests passing
 
 ---
 
