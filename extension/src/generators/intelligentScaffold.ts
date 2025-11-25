@@ -817,6 +817,30 @@ function mapFieldType(type: string): string {
 }
 
 /**
+ * Reserved words in ShepLang that cannot be used as field names
+ * These are types and keywords that would confuse the parser
+ */
+const RESERVED_FIELD_NAMES = new Set([
+  'id', 'text', 'number', 'date', 'email', 'money', 'image', 'datetime', 
+  'richtext', 'file', 'yes', 'no', 'app', 'data', 'view', 'action', 
+  'fields', 'states', 'rules', 'list', 'button', 'show', 'add', 'set',
+  'call', 'load', 'job', 'workflow', 'flow', 'trigger', 'schedule'
+]);
+
+/**
+ * Sanitize field name to avoid conflicts with ShepLang reserved words
+ */
+function sanitizeFieldName(name: string): string {
+  if (!name) return 'field';
+  const lower = name.toLowerCase();
+  if (RESERVED_FIELD_NAMES.has(lower)) {
+    // Prefix with underscore or append 'Field'
+    return `${name}Field`;
+  }
+  return name;
+}
+
+/**
  * Generate app configuration file
  * FIXED: Generate VALID ShepLang syntax with brace-based declarations
  * This file can be previewed in the browser
@@ -838,15 +862,16 @@ function generateAppConfig(appModel: AppModel, plan: ArchitecturePlan): string {
   if (previewEntities.length > 0) {
     content += `  // === Data Models ===\n`;
     for (const entity of previewEntities) {
-      const safeName = sanitizeFilename(entity.name);
-      if (safeName) {
-        content += `  data ${safeName} {\n`;
+      const entityName = sanitizeFilename(entity.name);
+      if (entityName) {
+        content += `  data ${entityName} {\n`;
         content += `    fields: {\n`;
         // Add up to 5 fields per entity
         const fields = (entity.fields || []).slice(0, 5);
         for (const field of fields) {
           const fieldType = mapFieldType(field.type);
-          content += `      ${field.name}: ${fieldType}\n`;
+          const fieldName = sanitizeFieldName(field.name);
+          content += `      ${fieldName}: ${fieldType}\n`;
         }
         if ((entity.fields || []).length > 5) {
           content += `      // ... ${entity.fields.length - 5} more fields\n`;
