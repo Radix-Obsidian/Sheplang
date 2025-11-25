@@ -1,0 +1,33 @@
+{
+  "projectName": "nextjs-prisma-fixture",
+  "projectRoot": "C:\\Users\\autre\\OneDrive\\Desktop\\Projects (Golden Sheep AI)\\Sheplang\\test-import-fixtures\\nextjs-prisma",
+  "framework": {
+    "type": "nextjs",
+    "version": "14.0.0",
+    "router": "app",
+    "confidence": 0.95
+  },
+  "typescript": {
+    "enabled": true,
+    "configPath": "tsconfig.json"
+  },
+  "prisma": {
+    "enabled": true,
+    "schemaPath": "prisma/schema.prisma",
+    "clientVersion": "5.6.0"
+  },
+  "sourcePaths": {
+    "app": "app",
+    "components": "app/components"
+  },
+  "apiPaths": {},
+  "confidence": {
+    "framework": 0.95,
+    "typescript": 0.9,
+    "prisma": 0.9,
+    "overall": 0.9166666666666666
+  },
+  "unsupported": [],
+  "detectedAt": "2025-11-25T01:04:16.842Z",
+  "shepLangVersion": "1.0.0"
+}
