@@ -9,6 +9,9 @@ export { callClaude, createClaudeClient, extractJSON } from './claudeClient';
 // ShepLang Code Generation Agent (NEW!)
 export { ShepLangCodeAgent, ComponentSpec, EntitySpec } from './sheplangCodeAgent';
 
+// Suggestion Service for Project Wizard
+export { generateSuggestions, applySuggestion, type ProjectSuggestion } from './suggestionService';
+
 // Training Data
 export { SHEPLANG_TRAINING_EXAMPLES, ShepLangExamples } from './training/sheplangExamples';
 

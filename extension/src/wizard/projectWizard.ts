@@ -10,6 +10,8 @@ import { ProjectQuestionnaire, ProjectType, UserRoleType, EntityDefinition, Inte
 import { AnnotationParser } from './parsers/annotationParser';
 import { getWizardStyles, getWizardScripts } from './wizardHtml';
 import { outputChannel } from '../services/outputChannel';
+import { generateSuggestions, applySuggestion, type ProjectSuggestion } from '../ai/suggestionService';
+import { generateSuggestionPanelHtml, getSuggestionPanelStyles, getSuggestionPanelScripts } from './suggestionPanel';
 
 export class ShepLangProjectWizard {
   private panel: vscode.WebviewPanel | undefined;
@@ -17,6 +19,8 @@ export class ShepLangProjectWizard {
   private questionnaire: Partial<ProjectQuestionnaire> = {};
   private currentStep: number = 1;
   private readonly totalSteps: number = 7;
+  private suggestions: ProjectSuggestion[] = [];
+  private suggestionsLoading: boolean = false;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
@@ -28,7 +32,7 @@ export class ShepLangProjectWizard {
   public async start(): Promise<ProjectQuestionnaire | undefined> {
     outputChannel.section('ShepLang Project Wizard');
 
-    // Create webview panel
+    // Create webview panel with better positioning
     this.panel = vscode.window.createWebviewPanel(
       'shepLangWizard',
       '🎯 New ShepLang Project',
@@ -42,8 +46,14 @@ export class ShepLangProjectWizard {
       }
     );
 
-    // Set initial HTML
-    this.panel.webview.html = this.getWizardHtml(1);
+    // Add delay for VS Code UI to settle before setting content
+    setTimeout(() => {
+      if (this.panel) {
+        this.panel.webview.html = this.getWizardHtml(1);
+        // Reveal the panel to ensure proper positioning
+        this.panel.reveal(vscode.ViewColumn.One);
+      }
+    }, 100);
 
     // Handle messages from webview
     return new Promise<ProjectQuestionnaire | undefined>((resolve) => {
@@ -71,6 +81,12 @@ export class ShepLangProjectWizard {
               break;
             case 'goToStep':
               this.handleGoToStep(message.data);
+              break;
+            case 'applySuggestion':
+              await this.handleApplySuggestion(message.index);
+              break;
+            case 'dismissSuggestion':
+              this.handleDismissSuggestion(message.index);
               break;
           }
         },
@@ -100,9 +116,18 @@ export class ShepLangProjectWizard {
       return;
     }
 
-    // Update webview
+    // Generate AI suggestions after step 2 (when we have project type and description)
+    if (this.currentStep === 3 && this.questionnaire.projectName && this.questionnaire.projectType) {
+      this.generateAISuggestions();
+    }
+
+    // Update webview with delay to ensure smooth transition
     if (this.panel) {
-      this.panel.webview.html = this.getWizardHtml(this.currentStep);
+      setTimeout(() => {
+        if (this.panel) {
+          this.panel.webview.html = this.getWizardHtml(this.currentStep);
+        }
+      }, 50);
     }
   }
 
@@ -117,9 +142,13 @@ export class ShepLangProjectWizard {
       return;
     }
 
-    // Update webview
+    // Update webview with delay to ensure smooth transition
     if (this.panel) {
-      this.panel.webview.html = this.getWizardHtml(this.currentStep);
+      setTimeout(() => {
+        if (this.panel) {
+          this.panel.webview.html = this.getWizardHtml(this.currentStep);
+        }
+      }, 50);
     }
   }
 
@@ -138,7 +167,11 @@ export class ShepLangProjectWizard {
     if (step >= 1 && step <= this.totalSteps) {
       this.currentStep = step;
       if (this.panel) {
-        this.panel.webview.html = this.getWizardHtml(this.currentStep);
+        setTimeout(() => {
+          if (this.panel) {
+            this.panel.webview.html = this.getWizardHtml(this.currentStep);
+          }
+        }, 50);
       }
     }
     return Promise.resolve();
@@ -300,6 +333,7 @@ export class ShepLangProjectWizard {
   <title>ShepLang Project Wizard</title>
   <style>
     ${getWizardStyles()}
+    ${getSuggestionPanelStyles()}
   </style>
 </head>
 <body>
@@ -315,6 +349,8 @@ export class ShepLangProjectWizard {
     <!-- Step Content -->
     <div class="step-content">
       ${this.getStepContent(step)}
+      ${step === 3 && this.suggestions.length > 0 ? generateSuggestionPanelHtml(this.suggestions) : ''}
+      ${step === 3 && this.suggestionsLoading ? '<div class="suggestion-loading">💡 Generating AI suggestions...</div>' : ''}
     </div>
 
     <!-- Navigation -->
@@ -329,6 +365,7 @@ export class ShepLangProjectWizard {
 
   <script>
     ${getWizardScripts()}
+    ${getSuggestionPanelScripts()}
   </script>
 </body>
 </html>`;
@@ -374,31 +411,31 @@ export class ShepLangProjectWizard {
         <input type="text" id="projectName" placeholder="My Awesome App" value="${projectName}">
       </div>
 
-      <div class="option-card ${selectedType === 'mobile-first' ? 'selected' : ''}" data-type="mobile-first">
+      <div class="option-card ${selectedType === 'mobile-first' ? 'selected' : ''}" data-type="mobile-first" role="radio" aria-checked="${selectedType === 'mobile-first'}" tabindex="0">
         <div class="option-icon">📱</div>
         <div class="option-title">Mobile-first app</div>
         <div class="option-description">Social networks, on-demand services, consumer apps</div>
       </div>
 
-      <div class="option-card ${selectedType === 'saas-dashboard' ? 'selected' : ''}" data-type="saas-dashboard">
+      <div class="option-card ${selectedType === 'saas-dashboard' ? 'selected' : ''}" data-type="saas-dashboard" role="radio" aria-checked="${selectedType === 'saas-dashboard'}" tabindex="0">
         <div class="option-icon">💼</div>
         <div class="option-title">SaaS dashboard</div>
         <div class="option-description">B2B tools, internal platforms, team collaboration</div>
       </div>
 
-      <div class="option-card ${selectedType === 'ecommerce' ? 'selected' : ''}" data-type="ecommerce">
+      <div class="option-card ${selectedType === 'ecommerce' ? 'selected' : ''}" data-type="ecommerce" role="radio" aria-checked="${selectedType === 'ecommerce'}" tabindex="0">
         <div class="option-icon">🛒</div>
         <div class="option-title">E-commerce store</div>
         <div class="option-description">Products, shopping carts, checkout, inventory</div>
       </div>
 
-      <div class="option-card ${selectedType === 'content-platform' ? 'selected' : ''}" data-type="content-platform">
+      <div class="option-card ${selectedType === 'content-platform' ? 'selected' : ''}" data-type="content-platform" role="radio" aria-checked="${selectedType === 'content-platform'}" tabindex="0">
         <div class="option-icon">📰</div>
         <div class="option-title">Content platform</div>
         <div class="option-description">Blogs, portfolios, media sites, publishing</div>
       </div>
 
-      <div class="option-card ${selectedType === 'custom' ? 'selected' : ''}" data-type="custom">
+      <div class="option-card ${selectedType === 'custom' ? 'selected' : ''}" data-type="custom" role="radio" aria-checked="${selectedType === 'custom'}" tabindex="0">
         <div class="option-icon">🎯</div>
         <div class="option-title">Custom application</div>
         <div class="option-description">Describe your unique vision below</div>
@@ -450,19 +487,89 @@ export class ShepLangProjectWizard {
 
     return `
       <h1>Design & Accessibility</h1>
-      <p class="subtitle">Did you use Figma or the GitHub Annotation Toolkit?</p>
+      <p class="subtitle">Optional: Add design details or skip if you're not sure</p>
+
+      <div class="help-panel" style="background: var(--vscode-textBlockQuote-background); border-left: 3px solid var(--vscode-textBlockQuote-border); padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+        <div style="display: flex; align-items: start; gap: 10px;">
+          <span style="font-size: 24px;">💡</span>
+          <div>
+            <strong>Not a designer? No problem!</strong>
+            <p style="margin: 5px 0 0 0; opacity: 0.9; line-height: 1.5;">
+              This step is completely optional. You can:
+              <br>• Leave it blank and we'll create a professional default design
+              <br>• Add simple notes like "I want a clean, modern look"
+              <br>• Paste Figma annotations if you have them
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div class="input-group">
-        <label>Design Notes / Annotations</label>
-        <div class="help-text" style="margin-bottom: 10px; font-size: 0.9em; opacity: 0.8;">
-          Paste your specific design notes, accessibility requirements, or Figma annotation text here.
-          <br>Example format:
-          <br>Screen: Dashboard
-          <br>- Button: "Add User" (Opens Modal)
-          <br>A11y: High contrast required
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label>Design Notes (Optional)</label>
+          <button type="button" class="btn-help" onclick="showDesignHelp()" style="background: transparent; border: 1px solid var(--vscode-button-border); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+            📖 Show Examples
+          </button>
         </div>
-        <textarea id="designNotes" placeholder="Paste your annotations here..." style="min-height: 200px;">${notes}</textarea>
+        
+        <div id="designExamples" style="display: none; background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 15px; margin: 10px 0;">
+          <h4 style="margin: 0 0 10px 0;">Example Design Notes:</h4>
+          
+          <div class="example-section" style="margin-bottom: 15px;">
+            <strong>Simple Preference:</strong>
+            <pre style="background: var(--vscode-textCodeBlock-background); padding: 8px; border-radius: 4px; margin: 5px 0; font-size: 13px;">I want a clean, modern dashboard with easy-to-read fonts</pre>
+          </div>
+          
+          <div class="example-section" style="margin-bottom: 15px;">
+            <strong>Specific Requirements:</strong>
+            <pre style="background: var(--vscode-textCodeBlock-background); padding: 8px; border-radius: 4px; margin: 5px 0; font-size: 13px;">Screen: Dashboard
+- Large action buttons for main tasks
+- Card-based layout for metrics
+Accessibility: WCAG 2.1 AA compliant</pre>
+          </div>
+          
+          <div class="example-section">
+            <strong>Figma Annotations:</strong>
+            <pre style="background: var(--vscode-textCodeBlock-background); padding: 8px; border-radius: 4px; margin: 5px 0; font-size: 13px;">@Screen: UserList
+@Flow: Click "Add User" → Modal opens
+@A11y: Keyboard navigation required
+@Component: DataTable with sorting</pre>
+          </div>
+          
+          <button type="button" onclick="useExample('clean')" style="margin-top: 10px; padding: 6px 12px; border-radius: 4px; cursor: pointer; background: var(--vscode-button-secondaryBackground); border: 1px solid var(--vscode-button-border);">
+            Use "Clean & Modern" Template
+          </button>
+        </div>
+        
+        <textarea 
+          id="designNotes" 
+          placeholder="Optional: Describe your design preferences, or leave blank for smart defaults..."
+          style="min-height: 150px; font-family: var(--vscode-editor-font-family); font-size: 14px;"
+        >${notes}</textarea>
+        
+        <div class="help-text" style="margin-top: 10px; font-size: 13px; opacity: 0.8; display: flex; align-items: start; gap: 8px;">
+          <span>💭</span>
+          <span>
+            <strong>Pro Tip:</strong> Start simple! You can always refine the design later. 
+            ShepLang will create beautiful, accessible interfaces by default.
+          </span>
+        </div>
       </div>
+
+      <script>
+        function showDesignHelp() {
+          const examples = document.getElementById('designExamples');
+          examples.style.display = examples.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function useExample(type) {
+          const textarea = document.getElementById('designNotes');
+          if (type === 'clean') {
+            textarea.value = 'I want a clean, modern design with:\\n- Easy-to-read typography\\n- Card-based layout for content\\n- Smooth animations\\n- Mobile-friendly responsive design\\n\\nAccessibility: High contrast mode support';
+          }
+          document.getElementById('designExamples').style.display = 'none';
+        }
+      </script>
     `;
   }
 
@@ -523,17 +630,17 @@ export class ShepLangProjectWizard {
       <h1>Who will use your app?</h1>
       <p class="subtitle">Define user access levels</p>
 
-      <div class="option-card ${roleType === 'single-user' ? 'selected' : ''}" data-role="single-user">
+      <div class="option-card ${roleType === 'single-user' ? 'selected' : ''}" data-role="single-user" role="radio" aria-checked="${roleType === 'single-user'}" tabindex="0">
         <div class="option-title">Single user type</div>
         <div class="option-description">Everyone has the same access</div>
       </div>
 
-      <div class="option-card ${roleType === 'multiple-roles' ? 'selected' : ''}" data-role="multiple-roles">
+      <div class="option-card ${roleType === 'multiple-roles' ? 'selected' : ''}" data-role="multiple-roles" role="radio" aria-checked="${roleType === 'multiple-roles'}" tabindex="0">
         <div class="option-title">Multiple roles</div>
         <div class="option-description">Admin, regular users, etc.</div>
       </div>
 
-      <div class="option-card ${roleType === 'team-based' ? 'selected' : ''}" data-role="team-based">
+      <div class="option-card ${roleType === 'team-based' ? 'selected' : ''}" data-role="team-based" role="radio" aria-checked="${roleType === 'team-based'}" tabindex="0">
         <div class="option-title">Team-based</div>
         <div class="option-description">Organizations, workspaces, teams</div>
       </div>
@@ -769,5 +876,99 @@ export class ShepLangProjectWizard {
     };
 
     return types[type || 'single-user'];
+  }
+
+  /**
+   * Generate AI suggestions based on current questionnaire state
+   */
+  private async generateAISuggestions(): Promise<void> {
+    if (this.suggestionsLoading) {
+      return;
+    }
+
+    this.suggestionsLoading = true;
+    outputChannel.info('Generating AI suggestions...');
+
+    try {
+      const suggestionContext = {
+        projectName: this.questionnaire.projectName || '',
+        projectType: this.questionnaire.projectType || '',
+        description: this.questionnaire.description,
+        features: this.questionnaire.features,
+        entities: this.questionnaire.entities
+      };
+
+      this.suggestions = await generateSuggestions(this.context, suggestionContext);
+      outputChannel.info(`Generated ${this.suggestions.length} suggestions`);
+
+      // Refresh the current step to show suggestions
+      if (this.panel && this.currentStep === 3) {
+        this.panel.webview.html = this.getWizardHtml(this.currentStep);
+      }
+    } catch (error) {
+      outputChannel.error('Failed to generate suggestions:', error);
+      this.suggestions = [];
+    } finally {
+      this.suggestionsLoading = false;
+    }
+  }
+
+  /**
+   * Handle applying a suggestion
+   */
+  private async handleApplySuggestion(index: number): Promise<void> {
+    if (index < 0 || index >= this.suggestions.length) {
+      outputChannel.warn(`Invalid suggestion index: ${index}`);
+      return;
+    }
+
+    const suggestion = this.suggestions[index];
+    outputChannel.info(`Applying suggestion: ${suggestion.title}`);
+
+    try {
+      // Apply the suggestion to the questionnaire
+      this.questionnaire = applySuggestion(
+        this.questionnaire as ProjectQuestionnaire,
+        suggestion
+      );
+
+      // Show success message
+      vscode.window.showInformationMessage(
+        `✓ Applied: ${suggestion.title}`,
+        'View Changes'
+      ).then(selection => {
+        if (selection === 'View Changes') {
+          // Navigate to the relevant step
+          if (suggestion.type === 'entity' && this.currentStep < 3) {
+            this.currentStep = 3;
+            if (this.panel) {
+              this.panel.webview.html = this.getWizardHtml(this.currentStep);
+            }
+          }
+        }
+      });
+
+      // Remove the applied suggestion from the list
+      this.suggestions.splice(index, 1);
+
+    } catch (error) {
+      outputChannel.error('Failed to apply suggestion:', error);
+      vscode.window.showErrorMessage(`Failed to apply suggestion: ${error}`);
+    }
+  }
+
+  /**
+   * Handle dismissing a suggestion
+   */
+  private handleDismissSuggestion(index: number): void {
+    if (index < 0 || index >= this.suggestions.length) {
+      return;
+    }
+
+    const suggestion = this.suggestions[index];
+    outputChannel.info(`Dismissed suggestion: ${suggestion.title}`);
+
+    // Remove the suggestion from the list
+    this.suggestions.splice(index, 1);
   }
 }

@@ -244,7 +244,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.0",
-    "@goldensheepai/sheplang-language": "^0.1.4",
+    "@goldensheepai/sheplang-language": "workspace:*",
+    "@prisma/internals": "^6.19.0",
     "express": "^4.18.2",
     "langium": "^3.0.0",
     "simple-git": "^3.30.0",

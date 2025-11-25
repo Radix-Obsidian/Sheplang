@@ -5,6 +5,8 @@ packages:
   - sheplang/playground
   - sheplang/examples
   - sheplang/e2e
+  - playground-vite
+  - extension
 
 ignoredBuiltDependencies:
   - esbuild

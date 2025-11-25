@@ -24,10 +24,14 @@ export function getWizardStyles(): string {
       min-height: 600px;
       display: flex;
       flex-direction: column;
+      position: relative;
+      z-index: 5;
     }
 
     .progress-section {
       margin-bottom: 40px;
+      position: relative;
+      z-index: 10;
     }
 
     .progress-bar {
@@ -76,16 +80,47 @@ export function getWizardStyles(): string {
       margin-bottom: 15px;
       cursor: pointer;
       transition: all 0.2s ease;
+      position: relative;
     }
 
     .option-card:hover {
       border-color: var(--vscode-button-background);
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .option-card.selected {
       border-color: var(--vscode-button-background);
       background: var(--vscode-input-background);
+      box-shadow: 0 0 0 1px var(--vscode-button-background);
+    }
+
+    .option-card.selected::before {
+      content: '✓';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .option-card.selected .option-icon {
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+
+    .option-card.selected .option-title {
+      color: var(--vscode-button-background);
+      font-weight: 700;
     }
 
     .option-icon {
@@ -137,6 +172,9 @@ export function getWizardStyles(): string {
       align-items: center;
       padding-top: 20px;
       border-top: 1px solid var(--vscode-panel-border);
+      position: relative;
+      z-index: 15;
+      margin-top: 20px;
     }
 
     .btn {
@@ -310,6 +348,42 @@ export function getWizardStyles(): string {
       color: var(--vscode-testing-iconPassed);
       font-size: 14px;
       margin-top: 5px;
+    }
+
+    /* Responsive positioning for VS Code notifications */
+    @media (max-height: 800px) {
+      .wizard-container {
+        min-height: 500px;
+      }
+      
+      .progress-section {
+        margin-bottom: 30px;
+      }
+    }
+
+    @media (max-height: 600px) {
+      .wizard-container {
+        min-height: 400px;
+      }
+      
+      .progress-section {
+        margin-bottom: 20px;
+      }
+      
+      body {
+        padding: 15px;
+      }
+    }
+
+    /* Ensure buttons are always accessible */
+    .navigation .btn {
+      min-width: 120px;
+      position: relative;
+    }
+
+    /* Prevent overlap with VS Code status bar */
+    body {
+      margin-bottom: 60px;
     }
   `;
 }
@@ -680,30 +754,77 @@ export function getWizardScripts(): string {
     document.addEventListener('DOMContentLoaded', function() {
       initialize();
       
-      // Step 1: Project type selection
+      // Step 1: Project type selection with enhanced feedback
       document.querySelectorAll('.option-card[data-type]').forEach(card => {
         card.addEventListener('click', function() {
-          document.querySelectorAll('.option-card[data-type]').forEach(c => c.classList.remove('selected'));
+          // Remove selection from all cards
+          document.querySelectorAll('.option-card[data-type]').forEach(c => {
+            c.classList.remove('selected');
+            c.setAttribute('aria-checked', 'false');
+          });
+          
+          // Add selection to clicked card
           card.classList.add('selected');
+          card.setAttribute('aria-checked', 'true');
           wizardState.selectedType = card.dataset.type;
           
+          // Visual feedback animation
+          card.style.transform = 'scale(0.98)';
+          setTimeout(() => {
+            card.style.transform = '';
+          }, 100);
+          
+          // Handle custom description visibility
           const customDesc = document.getElementById('customDescription');
           if (customDesc) {
             customDesc.style.display = wizardState.selectedType === 'custom' ? 'block' : 'none';
           }
+          
+          // Update validation state
+          hideError();
+        });
+        
+        // Add keyboard support
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
         });
       });
       
-      // Step 4: Role type selection
+      // Step 4: Role type selection with enhanced feedback
       document.querySelectorAll('.option-card[data-role]').forEach(card => {
         card.addEventListener('click', function() {
-          document.querySelectorAll('.option-card[data-role]').forEach(c => c.classList.remove('selected'));
+          // Remove selection from all cards
+          document.querySelectorAll('.option-card[data-role]').forEach(c => {
+            c.classList.remove('selected');
+            c.setAttribute('aria-checked', 'false');
+          });
+          
+          // Add selection to clicked card
           card.classList.add('selected');
+          card.setAttribute('aria-checked', 'true');
           wizardState.selectedRole = card.dataset.role;
           
+          // Visual feedback animation
+          card.style.transform = 'scale(0.98)';
+          setTimeout(() => {
+            card.style.transform = '';
+          }, 100);
+          
+          // Handle roles section visibility
           const rolesSection = document.getElementById('rolesSection');
           if (rolesSection) {
             rolesSection.style.display = wizardState.selectedRole === 'single-user' ? 'none' : 'block';
+          }
+        });
+        
+        // Add keyboard support
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
           }
         });
       });
