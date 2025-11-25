@@ -156,6 +156,68 @@ function generateEssentialFiles(appModel: AppModel): GeneratedFile[] {
     }
   }
 
+  // === ShepAPI WIRING: Generate workflows, jobs, realtime, integrations ===
+  
+  // Generate workflow files based on actions and API patterns
+  const workflows = generateWorkflowsFromActions(appModel);
+  for (const workflow of workflows) {
+    const relativePath = `workflows/${workflow.name}.shep`;
+    if (!seenPaths.has(relativePath)) {
+      seenPaths.add(relativePath);
+      files.push({
+        relativePath,
+        content: workflow.content,
+        dependencies: []
+      });
+      console.log(`[IntelligentScaffold] Added workflow: ${workflow.name}`);
+    }
+  }
+  
+  // Generate real-time hook files for entities
+  const realtimeHooks = generateRealtimeHooks(appModel);
+  for (const hook of realtimeHooks) {
+    const relativePath = `realtime/${hook.name}.shep`;
+    if (!seenPaths.has(relativePath)) {
+      seenPaths.add(relativePath);
+      files.push({
+        relativePath,
+        content: hook.content,
+        dependencies: []
+      });
+      console.log(`[IntelligentScaffold] Added realtime hook: ${hook.name}`);
+    }
+  }
+  
+  // Generate background job files
+  const jobs = generateBackgroundJobs(appModel);
+  for (const job of jobs) {
+    const relativePath = `jobs/${job.name}.shep`;
+    if (!seenPaths.has(relativePath)) {
+      seenPaths.add(relativePath);
+      files.push({
+        relativePath,
+        content: job.content,
+        dependencies: []
+      });
+      console.log(`[IntelligentScaffold] Added background job: ${job.name}`);
+    }
+  }
+  
+  // Generate integration files based on detected services
+  const integrations = generateIntegrationFiles(appModel);
+  for (const integration of integrations) {
+    const relativePath = `integrations/${integration.name}.shep`;
+    if (!seenPaths.has(relativePath)) {
+      seenPaths.add(relativePath);
+      files.push({
+        relativePath,
+        content: integration.content,
+        dependencies: []
+      });
+      console.log(`[IntelligentScaffold] Added integration: ${integration.name}`);
+    }
+  }
+
   console.log(`[IntelligentScaffold] Total essential files: ${files.length}`);
   return files;
 }
@@ -931,4 +993,420 @@ async function writeProjectFiles(
     console.error(`[IntelligentScaffold] VERIFICATION FAILED: ${missing.length} files missing after write`);
     throw new Error(`File verification failed: ${missing.length} files not found after write`);
   }
+}
+
+// =============================================================================
+// ShepAPI GENERATORS - Workflows, Real-time, Jobs, Integrations
+// =============================================================================
+
+interface GeneratedShepFile {
+  name: string;
+  content: string;
+}
+
+/**
+ * Detect workflow patterns from actions
+ * Workflows are multi-step processes like: Create -> Validate -> Send Email -> Update Status
+ */
+function detectWorkflowPatterns(appModel: AppModel): Array<{name: string; trigger: string; steps: string[]; entity: string | null}> {
+  const patterns: Array<{name: string; trigger: string; steps: string[]; entity: string | null}> = [];
+  
+  // Group actions by entity/feature
+  const actionsByPrefix = new Map<string, any[]>();
+  for (const action of appModel.actions) {
+    const name = action.name || '';
+    // Extract prefix: CreateUser -> User, HandlePayment -> Payment
+    const match = name.match(/^(Create|Update|Delete|Handle|Submit|Process|Send|Verify|Accept|Reject|Cancel)(.+)$/i);
+    if (match) {
+      const prefix = match[2];
+      if (!actionsByPrefix.has(prefix)) {
+        actionsByPrefix.set(prefix, []);
+      }
+      actionsByPrefix.get(prefix)!.push(action);
+    }
+  }
+  
+  // Create workflows for entities with multiple related actions
+  for (const [entityName, actions] of actionsByPrefix) {
+    if (actions.length >= 2) {
+      // This looks like a workflow candidate
+      const hasCreate = actions.some(a => /create/i.test(a.name));
+      const hasUpdate = actions.some(a => /update/i.test(a.name));
+      const hasProcess = actions.some(a => /(process|handle|submit)/i.test(a.name));
+      
+      if (hasCreate || hasProcess) {
+        const steps = actions.map(a => {
+          const actionType = a.name.replace(entityName, '').replace(/^(Create|Update|Delete|Handle|Submit|Process|Send|Verify)/i, '$1');
+          return `${actionType} ${entityName}`;
+        });
+        
+        patterns.push({
+          name: `${entityName}Workflow`,
+          trigger: hasCreate ? `User creates ${entityName}` : `User submits ${entityName}`,
+          steps,
+          entity: entityName
+        });
+      }
+    }
+  }
+  
+  // Also check views for form submissions that trigger workflows
+  for (const view of appModel.views) {
+    const viewName = view.name?.toLowerCase() || '';
+    if (viewName.includes('signup') || viewName.includes('register')) {
+      patterns.push({
+        name: 'UserOnboardingWorkflow',
+        trigger: 'User completes signup',
+        steps: [
+          'Validate user data',
+          'Create user account',
+          'Send welcome email',
+          'Set up default settings'
+        ],
+        entity: 'User'
+      });
+    }
+    if (viewName.includes('checkout') || viewName.includes('payment')) {
+      patterns.push({
+        name: 'PaymentWorkflow',
+        trigger: 'User initiates payment',
+        steps: [
+          'Validate payment details',
+          'Process payment with Stripe',
+          'On success: Create order record',
+          'Send confirmation email',
+          'Update inventory'
+        ],
+        entity: 'Payment'
+      });
+    }
+  }
+  
+  return patterns;
+}
+
+/**
+ * Generate workflow files from actions
+ */
+function generateWorkflowsFromActions(appModel: AppModel): GeneratedShepFile[] {
+  const workflows: GeneratedShepFile[] = [];
+  const patterns = detectWorkflowPatterns(appModel);
+  
+  for (const pattern of patterns) {
+    let content = `app ${appModel.appName}\n`;
+    content += `// ${pattern.name} - Automated Workflow\n`;
+    content += `// Generated by ShepAPI\n\n`;
+    content += `workflow ${pattern.name}:\n`;
+    content += `  trigger: "${pattern.trigger}"\n`;
+    if (pattern.entity) {
+      content += `  entity: ${pattern.entity}\n`;
+    }
+    content += `  steps:\n`;
+    for (const step of pattern.steps) {
+      content += `    - "${step}"\n`;
+    }
+    content += `\n  notifications:\n`;
+    content += `    - on_success: "Notify user of completion"\n`;
+    content += `    - on_failure: "Alert admin and retry"\n`;
+    
+    workflows.push({
+      name: pattern.name,
+      content
+    });
+  }
+  
+  return workflows;
+}
+
+/**
+ * Detect which entities need real-time updates
+ */
+function detectRealtimeEntities(appModel: AppModel): string[] {
+  const realtimeEntities: string[] = [];
+  
+  for (const entity of appModel.entities) {
+    const name = entity.name?.toLowerCase() || '';
+    // Common real-time patterns
+    if (name.includes('message') || name.includes('notification') || 
+        name.includes('chat') || name.includes('comment') ||
+        name.includes('activity') || name.includes('event') ||
+        name.includes('order') || name.includes('status')) {
+      realtimeEntities.push(entity.name);
+    }
+  }
+  
+  // Also check views for real-time indicators
+  for (const view of appModel.views) {
+    const viewName = view.name?.toLowerCase() || '';
+    if (viewName.includes('dashboard') || viewName.includes('feed') || 
+        viewName.includes('inbox') || viewName.includes('live')) {
+      // Find related entity
+      for (const entity of appModel.entities) {
+        if (!realtimeEntities.includes(entity.name)) {
+          realtimeEntities.push(entity.name);
+          break; // Just add one for dashboards
+        }
+      }
+    }
+  }
+  
+  return [...new Set(realtimeEntities)]; // Deduplicate
+}
+
+/**
+ * Generate real-time hook files for entities
+ */
+function generateRealtimeHooks(appModel: AppModel): GeneratedShepFile[] {
+  const hooks: GeneratedShepFile[] = [];
+  const realtimeEntities = detectRealtimeEntities(appModel);
+  
+  for (const entityName of realtimeEntities) {
+    let content = `app ${appModel.appName}\n`;
+    content += `// ${entityName} Real-Time Updates\n`;
+    content += `// Generated by ShepAPI - Uses WebSocket/Socket.io\n\n`;
+    content += `realtime ${entityName}Updates:\n`;
+    content += `  entity: ${entityName}\n`;
+    content += `  channel: "${entityName.toLowerCase()}"\n`;
+    content += `  events:\n`;
+    content += `    - "created": "New ${entityName} added"\n`;
+    content += `    - "updated": "${entityName} modified"\n`;
+    content += `    - "deleted": "${entityName} removed"\n`;
+    content += `\n  hooks:\n`;
+    content += `    use${entityName}Realtime:\n`;
+    content += `      description: "Subscribe to ${entityName} updates"\n`;
+    content += `      returns: "${entityName}[]"\n`;
+    content += `    use${entityName}Presence:\n`;
+    content += `      description: "Track who is viewing ${entityName}"\n`;
+    content += `      returns: "User[]"\n`;
+    
+    hooks.push({
+      name: `${entityName}Realtime`,
+      content
+    });
+  }
+  
+  return hooks;
+}
+
+/**
+ * Detect background job patterns
+ */
+function detectBackgroundJobs(appModel: AppModel): Array<{name: string; schedule: string; description: string; entity: string | null}> {
+  const jobs: Array<{name: string; schedule: string; description: string; entity: string | null}> = [];
+  
+  // Check for entities that commonly need scheduled jobs
+  for (const entity of appModel.entities) {
+    const name = entity.name?.toLowerCase() || '';
+    
+    if (name.includes('subscription') || name.includes('billing')) {
+      jobs.push({
+        name: 'ProcessSubscriptionRenewals',
+        schedule: '0 0 * * *', // Daily at midnight
+        description: 'Process subscription renewals and billing',
+        entity: entity.name
+      });
+    }
+    
+    if (name.includes('session') || name.includes('token')) {
+      jobs.push({
+        name: 'CleanupExpiredSessions',
+        schedule: '0 */6 * * *', // Every 6 hours
+        description: 'Remove expired sessions and tokens',
+        entity: entity.name
+      });
+    }
+    
+    if (name.includes('invitation') || name.includes('invite')) {
+      jobs.push({
+        name: 'ExpireOldInvitations',
+        schedule: '0 0 * * *', // Daily
+        description: 'Expire invitations older than 7 days',
+        entity: entity.name
+      });
+    }
+    
+    if (name.includes('notification')) {
+      jobs.push({
+        name: 'SendPendingNotifications',
+        schedule: '*/5 * * * *', // Every 5 minutes
+        description: 'Process and send pending notifications',
+        entity: entity.name
+      });
+    }
+  }
+  
+  // Always add common jobs for SaaS apps
+  if (appModel.entities.length > 0) {
+    jobs.push({
+      name: 'GenerateAnalyticsReport',
+      schedule: '0 6 * * 1', // Every Monday at 6 AM
+      description: 'Generate weekly analytics report',
+      entity: null
+    });
+    
+    jobs.push({
+      name: 'DatabaseBackup',
+      schedule: '0 2 * * *', // Daily at 2 AM
+      description: 'Backup database to cloud storage',
+      entity: null
+    });
+  }
+  
+  return jobs;
+}
+
+/**
+ * Generate background job files
+ */
+function generateBackgroundJobs(appModel: AppModel): GeneratedShepFile[] {
+  const jobFiles: GeneratedShepFile[] = [];
+  const jobs = detectBackgroundJobs(appModel);
+  
+  for (const job of jobs) {
+    let content = `app ${appModel.appName}\n`;
+    content += `// ${job.name} - Background Job\n`;
+    content += `// Generated by ShepAPI - Uses node-cron\n\n`;
+    content += `job ${job.name}:\n`;
+    content += `  schedule: "${job.schedule}"\n`;
+    content += `  description: "${job.description}"\n`;
+    if (job.entity) {
+      content += `  entity: ${job.entity}\n`;
+    }
+    content += `\n  steps:\n`;
+    content += `    - "Log job start"\n`;
+    content += `    - "Execute main logic"\n`;
+    content += `    - "Log job completion"\n`;
+    content += `\n  error_handling:\n`;
+    content += `    retry: 3\n`;
+    content += `    notify_on_failure: true\n`;
+    content += `    dead_letter_queue: true\n`;
+    
+    jobFiles.push({
+      name: job.name,
+      content
+    });
+  }
+  
+  return jobFiles;
+}
+
+/**
+ * Detect third-party integrations based on entity and view names
+ */
+function detectIntegrations(appModel: AppModel): Array<{name: string; type: string; features: string[]}> {
+  const integrations: Array<{name: string; type: string; features: string[]}> = [];
+  const detectedTypes = new Set<string>();
+  
+  for (const entity of appModel.entities) {
+    const name = entity.name?.toLowerCase() || '';
+    
+    // Payment integrations
+    if ((name.includes('payment') || name.includes('subscription') || 
+         name.includes('billing') || name.includes('price')) && !detectedTypes.has('stripe')) {
+      detectedTypes.add('stripe');
+      integrations.push({
+        name: 'Stripe',
+        type: 'payment',
+        features: ['Payments', 'Subscriptions', 'Invoicing', 'Webhooks']
+      });
+    }
+    
+    // Email integrations
+    if ((name.includes('email') || name.includes('invite') || 
+         name.includes('notification') || name.includes('verification')) && !detectedTypes.has('email')) {
+      detectedTypes.add('email');
+      integrations.push({
+        name: 'SendGrid',
+        type: 'email',
+        features: ['Transactional emails', 'Templates', 'Tracking', 'Webhooks']
+      });
+    }
+    
+    // Auth integrations
+    if ((name.includes('session') || name.includes('account') || 
+         name.includes('oauth') || name.includes('sso')) && !detectedTypes.has('auth')) {
+      detectedTypes.add('auth');
+      integrations.push({
+        name: 'Auth0',
+        type: 'authentication',
+        features: ['SSO', 'OAuth providers', 'MFA', 'Session management']
+      });
+    }
+    
+    // Storage integrations
+    if ((name.includes('file') || name.includes('upload') || 
+         name.includes('image') || name.includes('avatar')) && !detectedTypes.has('storage')) {
+      detectedTypes.add('storage');
+      integrations.push({
+        name: 'AWS_S3',
+        type: 'storage',
+        features: ['File uploads', 'CDN', 'Signed URLs', 'Image optimization']
+      });
+    }
+  }
+  
+  // Check views for additional integrations
+  for (const view of appModel.views) {
+    const viewName = view.name?.toLowerCase() || '';
+    
+    if ((viewName.includes('analytics') || viewName.includes('dashboard')) && !detectedTypes.has('analytics')) {
+      detectedTypes.add('analytics');
+      integrations.push({
+        name: 'Mixpanel',
+        type: 'analytics',
+        features: ['Event tracking', 'User analytics', 'Funnels', 'Cohorts']
+      });
+    }
+  }
+  
+  return integrations;
+}
+
+/**
+ * Generate integration files based on detected services
+ */
+function generateIntegrationFiles(appModel: AppModel): GeneratedShepFile[] {
+  const integrationFiles: GeneratedShepFile[] = [];
+  const integrations = detectIntegrations(appModel);
+  
+  for (const integration of integrations) {
+    let content = `app ${appModel.appName}\n`;
+    content += `// ${integration.name} Integration\n`;
+    content += `// Type: ${integration.type}\n`;
+    content += `// Generated by ShepAPI\n\n`;
+    content += `integration ${integration.name}:\n`;
+    content += `  type: "${integration.type}"\n`;
+    content += `  provider: "${integration.name.toLowerCase()}"\n`;
+    content += `\n  features:\n`;
+    for (const feature of integration.features) {
+      content += `    - "${feature}"\n`;
+    }
+    content += `\n  config:\n`;
+    content += `    api_key: env("${integration.name.toUpperCase()}_API_KEY")\n`;
+    content += `    webhook_secret: env("${integration.name.toUpperCase()}_WEBHOOK_SECRET")\n`;
+    content += `\n  webhooks:\n`;
+    content += `    endpoint: "/api/webhooks/${integration.name.toLowerCase()}"\n`;
+    content += `    events:\n`;
+    
+    // Add integration-specific webhook events
+    if (integration.type === 'payment') {
+      content += `      - "payment.succeeded"\n`;
+      content += `      - "payment.failed"\n`;
+      content += `      - "subscription.created"\n`;
+      content += `      - "subscription.cancelled"\n`;
+    } else if (integration.type === 'email') {
+      content += `      - "email.delivered"\n`;
+      content += `      - "email.bounced"\n`;
+      content += `      - "email.opened"\n`;
+    } else {
+      content += `      - "event.received"\n`;
+    }
+    
+    integrationFiles.push({
+      name: integration.name,
+      content
+    });
+  }
+  
+  return integrationFiles;
 }
