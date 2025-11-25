@@ -33,6 +33,11 @@ export async function generateFromPlan(
   outputPath: string,
   context?: vscode.ExtensionContext
 ): Promise<GeneratedProject> {
+  console.log(`[IntelligentScaffold] generateFromPlan called:`);
+  console.log(`  - appModel.appName: ${appModel.appName}`);
+  console.log(`  - outputPath: ${outputPath}`);
+  console.log(`  - plan.folders: ${plan.folders?.length || 0}`);
+  
   // Create AI agent if context provided
   const agent = context ? new ShepLangCodeAgent(context) : null;
   const files: GeneratedFile[] = [];
@@ -42,6 +47,11 @@ export async function generateFromPlan(
     const folderFiles = await generateFolderFiles(folder, appModel, plan, agent);
     files.push(...folderFiles);
   }
+
+  // CRITICAL FALLBACK: Generate essential files from appModel
+  // Even if AI plan has empty folders, we MUST generate these files
+  const essentialFiles = generateEssentialFiles(appModel);
+  files.push(...essentialFiles);
 
   // Generate root files
   files.push({
@@ -56,6 +66,13 @@ export async function generateFromPlan(
     dependencies: []
   });
 
+  // Generate main backend file with ALL entities
+  files.push({
+    relativePath: `${appModel.appName}.shepthon`,
+    content: generateMainBackendFile(appModel),
+    dependencies: []
+  });
+
   // Write all files to disk
   await writeProjectFiles(outputPath, files);
 
@@ -67,6 +84,212 @@ export async function generateFromPlan(
     files,
     report
   };
+}
+
+/**
+ * CRITICAL: Generate essential files from appModel
+ * This ensures we always have real files even if AI plan is incomplete
+ * FIX: Use 'models/', 'views/', 'actions/' WITHOUT 'src/' prefix to avoid duplication
+ * The outputPath already handles the root, and AI plan folders may include src/
+ */
+function generateEssentialFiles(appModel: AppModel): GeneratedFile[] {
+  const files: GeneratedFile[] = [];
+  const seenPaths = new Set<string>(); // Prevent duplicate files
+  
+  console.log(`[IntelligentScaffold] generateEssentialFiles called:`);
+  console.log(`  - Entities: ${appModel.entities.length}`);
+  console.log(`  - Views: ${appModel.views.length}`);
+  console.log(`  - Actions: ${appModel.actions.length}`);
+
+  // Generate model files for each entity (deduplicated)
+  for (const entity of appModel.entities) {
+    const safeName = sanitizeFilename(entity.name);
+    if (safeName) {
+      const relativePath = `models/${safeName}.shep`;
+      if (!seenPaths.has(relativePath)) {
+        seenPaths.add(relativePath);
+        files.push({
+          relativePath,
+          content: generateEntityModelFile(entity, appModel),
+          dependencies: []
+        });
+        console.log(`[IntelligentScaffold] Added model: ${safeName}`);
+      }
+    }
+  }
+
+  // Generate view files for each view (deduplicated)
+  for (const view of appModel.views) {
+    const safeName = sanitizeFilename(view.name);
+    if (safeName) {
+      const relativePath = `views/${safeName}.shep`;
+      if (!seenPaths.has(relativePath)) {
+        seenPaths.add(relativePath);
+        files.push({
+          relativePath,
+          content: generateViewFileFromModel(view, appModel),
+          dependencies: []
+        });
+        console.log(`[IntelligentScaffold] Added view: ${safeName}`);
+      }
+    } else {
+      console.warn(`[IntelligentScaffold] Skipped invalid view name: ${view.name}`);
+    }
+  }
+
+  // Generate action files for each action (deduplicated)
+  for (const action of appModel.actions) {
+    const safeName = sanitizeFilename(action.name);
+    if (safeName) {
+      const relativePath = `actions/${safeName}.shep`;
+      if (!seenPaths.has(relativePath)) {
+        seenPaths.add(relativePath);
+        files.push({
+          relativePath,
+          content: generateActionFileFromModel(action, appModel),
+          dependencies: []
+        });
+        console.log(`[IntelligentScaffold] Added action: ${safeName}`);
+      }
+    } else {
+      console.warn(`[IntelligentScaffold] Skipped invalid action name: ${action.name}`);
+    }
+  }
+
+  console.log(`[IntelligentScaffold] Total essential files: ${files.length}`);
+  return files;
+}
+
+/**
+ * Sanitize a string to be a valid filename
+ * Extracts identifier from complex expressions like arrow functions
+ */
+function sanitizeFilename(name: string): string | null {
+  // Try to extract a function name from complex signatures
+  // e.g., "(event) => void handleUserCreate(...)" -> "handleUserCreate"
+  const funcMatch = name.match(/\b(handle\w+|on\w+|\w+Handler|\w+Action)\b/i);
+  if (funcMatch) {
+    return funcMatch[1].replace(/[^a-zA-Z0-9_]/g, '');
+  }
+  
+  // Try to get any reasonable identifier
+  const identMatch = name.match(/^([a-zA-Z_][a-zA-Z0-9_]*)$/);
+  if (identMatch) {
+    return identMatch[1];
+  }
+  
+  // Extract first valid identifier from the string
+  const firstIdentMatch = name.match(/\b([a-zA-Z_][a-zA-Z0-9_]{2,})\b/);
+  if (firstIdentMatch) {
+    return firstIdentMatch[1];
+  }
+  
+  // Last resort: remove all invalid characters
+  const cleaned = name.replace(/[^a-zA-Z0-9_]/g, '');
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+/**
+ * Generate entity model file with proper structure
+ */
+function generateEntityModelFile(entity: any, appModel: AppModel): string {
+  let content = `app ${appModel.appName}\n`;
+  content += `// ${entity.name} Data Model\n`;
+  content += `// Source: ${entity.source || 'imported'}\n\n`;
+  content += `data ${entity.name}:\n`;
+  content += `  fields:\n`;
+  
+  for (const field of entity.fields || []) {
+    const optional = field.required ? '' : ' // optional';
+    content += `    ${field.name}: ${field.type}${optional}\n`;
+  }
+  
+  return content;
+}
+
+/**
+ * Generate view file from appModel view
+ */
+function generateViewFileFromModel(view: any, appModel: AppModel): string {
+  let content = `app ${appModel.appName}\n`;
+  content += `// ${view.name} Screen\n`;
+  content += `// From: ${view.filePath || 'imported'}\n\n`;
+  content += `view ${view.name}:\n`;
+  
+  if (view.widgets && view.widgets.length > 0) {
+    for (const widget of view.widgets) {
+      if (widget.kind === 'list') {
+        content += `  list ${widget.entityName}\n`;
+      } else if (widget.kind === 'button') {
+        content += `  button "${widget.label || 'Click'}" -> ${widget.actionName || 'HandleClick'}\n`;
+      } else {
+        content += `  // TODO: Add ${widget.kind} widget\n`;
+      }
+    }
+  } else {
+    content += `  // TODO: Add widgets for this view\n`;
+    content += `  // Example: list EntityName\n`;
+    content += `  // Example: button "Click me" -> ActionName\n`;
+  }
+  
+  return content;
+}
+
+/**
+ * Generate action file from appModel action
+ */
+function generateActionFileFromModel(action: any, appModel: AppModel): string {
+  const params = (action.parameters && action.parameters.length > 0)
+    ? action.parameters.join(', ')
+    : 'params';
+  
+  let content = `app ${appModel.appName}\n`;
+  content += `// ${action.name} Action\n`;
+  content += `// Source: ${action.source || 'imported'}\n\n`;
+  content += `action ${action.name}(${params}):\n`;
+  
+  if (action.apiCalls && action.apiCalls.length > 0) {
+    for (const apiCall of action.apiCalls) {
+      if (apiCall.method === 'GET') {
+        content += `  load ${apiCall.method} "${apiCall.path}" into data\n`;
+      } else {
+        content += `  call ${apiCall.method} "${apiCall.path}"\n`;
+      }
+    }
+  } else {
+    content += `  // TODO: Implement business logic\n`;
+  }
+  
+  content += `  show Dashboard\n`;
+  
+  return content;
+}
+
+/**
+ * Generate main backend file with ALL entities
+ */
+function generateMainBackendFile(appModel: AppModel): string {
+  let content = `// ${appModel.appName} Backend API\n`;
+  content += `// Generated by ShepLang Import\n\n`;
+  
+  // Generate models for all entities
+  for (const entity of appModel.entities) {
+    content += `model ${entity.name} {\n`;
+    for (const field of entity.fields || []) {
+      content += `  ${field.name}: ${field.type}\n`;
+    }
+    content += `}\n\n`;
+    
+    // Generate CRUD endpoints for entity
+    const tableName = entity.name.toLowerCase();
+    content += `GET /${tableName} -> db.all("${tableName}")\n`;
+    content += `GET /${tableName}/:id -> db.find("${tableName}", params.id)\n`;
+    content += `POST /${tableName} -> db.add("${tableName}", body)\n`;
+    content += `PUT /${tableName}/:id -> db.update("${tableName}", params.id, body)\n`;
+    content += `DELETE /${tableName}/:id -> db.remove("${tableName}", params.id)\n\n`;
+  }
+  
+  return content;
 }
 
 /**
@@ -176,7 +399,8 @@ async function generateFileContent(
  * Generate model file
  */
 function generateModelFile(entity: any, fileSpec: any): string {
-  let content = `// ${entity.name} Data Model\n`;
+  let content = `app ${entity.name}Model\n`;
+  content += `// ${entity.name} Data Model\n`;
   content += `// ${fileSpec.purpose}\n\n`;
   content += `data ${entity.name}:\n`;
   content += `  fields:\n`;
@@ -193,7 +417,8 @@ function generateModelFile(entity: any, fileSpec: any): string {
  * Generate view file
  */
 function generateViewFile(view: any, appModel: AppModel, fileSpec: any): string {
-  let content = `// ${view.name} Screen\n`;
+  let content = `app ${appModel.appName}\n`;
+  content += `// ${view.name} Screen\n`;
   content += `// ${fileSpec.purpose}\n\n`;
   content += `view ${view.name}:\n`;
   
@@ -224,7 +449,8 @@ function generateActionFile(action: any, fileSpec: any): string {
     ? action.parameters.join(', ') 
     : 'params';
   
-  let content = `// ${action.name} Action\n`;
+  let content = `app ${action.name}App\n`;
+  content += `// ${action.name} Action\n`;
   content += `// ${fileSpec.purpose}\n\n`;
   content += `action ${action.name}(${params}):\n`;
   
@@ -357,29 +583,74 @@ function generateFallbackBackend(appModel: AppModel, fileSpec: any): string {
 
 /**
  * Generate app configuration file
+ * FIX: Deduplicate imports to prevent duplicate import statements
+ * FIX: Use paths WITHOUT 'src/' prefix to match generateEssentialFiles
  */
 function generateAppConfig(appModel: AppModel, plan: ArchitecturePlan): string {
-  let content = `// ${appModel.appName} - Main Application Configuration\n`;
+  // CRITICAL: app declaration MUST be on line 1 for diagnostics
+  let content = `app ${appModel.appName}\n`;
+  content += `// ${appModel.appName} - Main Application Configuration\n`;
   content += `// Generated with ${plan.structure} architecture\n\n`;
-  content += `app ${appModel.appName}\n\n`;
   
-  content += `// Import models\n`;
-  for (const entity of appModel.entities) {
-    content += `// import ${entity.name} from "path/to/${entity.name}.shep"\n`;
+  // Deduplicate entities, views, and actions by name
+  const uniqueEntities = deduplicateByName(appModel.entities);
+  const uniqueViews = deduplicateByName(appModel.views);
+  const uniqueActions = deduplicateByName(appModel.actions);
+  
+  // Import models with REAL paths (no src/ prefix to avoid duplication)
+  if (uniqueEntities.length > 0) {
+    content += `// Data Models\n`;
+    for (const entity of uniqueEntities) {
+      const safeName = sanitizeFilename(entity.name);
+      if (safeName) {
+        content += `import ${safeName} from "models/${safeName}.shep"\n`;
+      }
+    }
+    content += `\n`;
   }
-  content += `\n`;
   
-  content += `// Import views\n`;
-  for (const view of appModel.views) {
-    content += `// import ${view.name} from "path/to/${view.name}.shep"\n`;
+  // Import views with REAL paths (no src/ prefix)
+  if (uniqueViews.length > 0) {
+    content += `// Views\n`;
+    for (const view of uniqueViews) {
+      const safeName = sanitizeFilename(view.name);
+      if (safeName) {
+        content += `import ${safeName} from "views/${safeName}.shep"\n`;
+      }
+    }
+    content += `\n`;
   }
-  content += `\n`;
   
-  const firstView = appModel.views[0]?.name || 'Dashboard';
+  // Import actions with REAL paths (no src/ prefix)
+  if (uniqueActions.length > 0) {
+    content += `// Actions\n`;
+    for (const action of uniqueActions) {
+      const safeName = sanitizeFilename(action.name);
+      if (safeName) {
+        content += `import ${safeName} from "actions/${safeName}.shep"\n`;
+      }
+    }
+    content += `\n`;
+  }
+  
+  const firstView = uniqueViews[0]?.name ? sanitizeFilename(uniqueViews[0].name) : 'Dashboard';
   content += `// App entry point\n`;
-  content += `view ${firstView}\n`;
+  content += `view ${firstView || 'Dashboard'}\n`;
   
   return content;
+}
+
+/**
+ * Deduplicate array items by name property
+ */
+function deduplicateByName<T extends { name: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter(item => {
+    const name = sanitizeFilename(item.name);
+    if (!name || seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
 }
 
 /**
@@ -477,17 +748,53 @@ async function writeProjectFiles(
   outputPath: string,
   files: GeneratedFile[]
 ): Promise<void> {
+  console.log(`[IntelligentScaffold] Writing ${files.length} files to ${outputPath}`);
+  
+  if (files.length === 0) {
+    console.error('[IntelligentScaffold] ERROR: No files to write!');
+    throw new Error('No files generated - nothing to write');
+  }
+  
+  // Ensure output directory exists
+  if (!fs.existsSync(outputPath)) {
+    console.log(`[IntelligentScaffold] Creating output directory: ${outputPath}`);
+    fs.mkdirSync(outputPath, { recursive: true });
+  }
+  
   // Create all directories first
   const dirs = new Set(files.map(f => path.dirname(path.join(outputPath, f.relativePath))));
   for (const dir of dirs) {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    try {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`[IntelligentScaffold] Created dir: ${dir}`);
+      }
+    } catch (err) {
+      console.error(`[IntelligentScaffold] Failed to create dir ${dir}:`, err);
+      throw err;
     }
   }
   
   // Write all files
+  let written = 0;
   for (const file of files) {
     const filePath = path.join(outputPath, file.relativePath);
-    fs.writeFileSync(filePath, file.content, 'utf-8');
+    try {
+      fs.writeFileSync(filePath, file.content, 'utf-8');
+      written++;
+      console.log(`[IntelligentScaffold] Wrote: ${file.relativePath}`);
+    } catch (err) {
+      console.error(`[IntelligentScaffold] Failed to write ${filePath}:`, err);
+      throw err;
+    }
+  }
+  
+  console.log(`[IntelligentScaffold] Successfully wrote ${written}/${files.length} files`);
+  
+  // Verify files exist
+  const missing = files.filter(f => !fs.existsSync(path.join(outputPath, f.relativePath)));
+  if (missing.length > 0) {
+    console.error(`[IntelligentScaffold] VERIFICATION FAILED: ${missing.length} files missing after write`);
+    throw new Error(`File verification failed: ${missing.length} files not found after write`);
   }
 }

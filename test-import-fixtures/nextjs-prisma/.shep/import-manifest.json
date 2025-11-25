@@ -20,7 +20,9 @@
     "app": "app",
     "components": "app/components"
   },
-  "apiPaths": {},
+  "apiPaths": {
+    "nextjs": "app/api"
+  },
   "confidence": {
     "framework": 0.95,
     "typescript": 0.9,
@@ -28,6 +30,6 @@
     "overall": 0.9166666666666666
   },
   "unsupported": [],
-  "detectedAt": "2025-11-25T01:04:16.842Z",
+  "detectedAt": "2025-11-25T09:22:55.042Z",
   "shepLangVersion": "1.0.0"
 }

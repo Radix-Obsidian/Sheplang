@@ -1,25 +1,29 @@
 /**
  * Streamlined Import Command
  * 
- * FIXES:
- * 1. No duplicate questions (removed concept type, kept app type)
- * 2. Instant file generation (no delays)
- * 3. Persistent confirmation dialog (doesn't disappear)
- * 4. Single scaffold generator (removed duplication)
- * 5. Clear progress feedback
+ * PROPERLY WIRED to use all Slice implementations:
+ * - Slice 2: reactParser (React/TSX parsing)
+ * - Slice 3: entityExtractor (Prisma schema parsing)
+ * - Slice 4: viewMapper (Component → ShepLang mapping)
+ * - Slice 5: apiRouteParser (Next.js API routes)
+ * - Slice 6: importAnalysisAggregator + importWizardPanel
+ * - Slice 7: telemetry
  */
 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-// import { analyzeProject, AppModel } from '../parsers/astAnalyzer'; // Temporarily disabled to fix activation
+import * as os from 'os';
 
-// Stub interface to replace disabled AppModel
-interface AppModel {
-  entities: any[];
-  views: any[];
-  appName: string;
-}
+// Real Slice Imports - ALL WIRED!
+import { extractEntities } from '../parsers/entityExtractor';
+import { parseReactFile, ReactComponent } from '../parsers/reactParser';
+import { mapProjectToShepLang } from '../parsers/viewMapper';
+import { parseAPIRoutes } from '../parsers/apiRouteParser';
+import { aggregateAnalysis } from '../services/importAnalysisAggregator';
+import { showImportWizardPanel } from '../wizard/importWizardPanel';
+import { trackImportStart, trackImportSuccess, trackImportFailure } from '../services/telemetry';
+
 import { generateShepLangFiles, generateImportReport } from '../generators/shepGenerator';
 import { generateShepThonBackend } from '../generators/shepthonGenerator';
 import { generateFromPlan } from '../generators/intelligentScaffold';
@@ -27,54 +31,250 @@ import { outputChannel } from '../services/outputChannel';
 import { callClaude } from '../ai/claudeClient';
 import type { ArchitecturePlan } from '../wizard/architectureWizard';
 
+// AppModel interface (full version)
+interface AppModel {
+  appName: string;
+  projectRoot: string;
+  entities: any[];
+  views: any[];
+  actions: any[];
+  todos?: any[];
+}
+
+/**
+ * Get a sensible default location for new projects
+ * Prefers: Documents/ShepLang Projects, falls back to Desktop
+ */
+function getDefaultProjectsFolder(): string {
+  const homedir = os.homedir();
+  
+  // Try Documents/ShepLang Projects
+  const docsFolder = path.join(homedir, 'Documents', 'ShepLang Projects');
+  if (fs.existsSync(path.join(homedir, 'Documents'))) {
+    if (!fs.existsSync(docsFolder)) {
+      try {
+        fs.mkdirSync(docsFolder, { recursive: true });
+      } catch {
+        // Fall through to Desktop
+      }
+    }
+    if (fs.existsSync(docsFolder)) {
+      return docsFolder;
+    }
+  }
+  
+  // Fall back to Desktop
+  const desktopFolder = path.join(homedir, 'Desktop');
+  if (fs.existsSync(desktopFolder)) {
+    return desktopFolder;
+  }
+  
+  // Ultimate fallback: home directory
+  return homedir;
+}
+
+/**
+ * Parse all React/TSX files in a project (Slice 2 integration)
+ */
+async function parseReactProject(projectRoot: string): Promise<ReactComponent[]> {
+  const components: ReactComponent[] = [];
+  
+  // Directories to scan for React components
+  const scanDirs = [
+    path.join(projectRoot, 'src'),
+    path.join(projectRoot, 'app'),
+    path.join(projectRoot, 'pages'),
+    path.join(projectRoot, 'components'),
+    path.join(projectRoot, 'src', 'components'),
+    path.join(projectRoot, 'src', 'app'),
+    path.join(projectRoot, 'src', 'pages')
+  ];
+  
+  for (const dir of scanDirs) {
+    if (fs.existsSync(dir)) {
+      const files = findReactFiles(dir);
+      for (const file of files) {
+        try {
+          const component = parseReactFile(file);
+          if (component) {
+            components.push(component);
+          }
+        } catch (error) {
+          outputChannel.warn(`[Slice 2] Failed to parse ${file}: ${error}`);
+        }
+      }
+    }
+  }
+  
+  return components;
+}
+
+/**
+ * Recursively find all React/TSX files in a directory
+ */
+function findReactFiles(dir: string): string[] {
+  const files: string[] = [];
+  
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      
+      // Skip node_modules and hidden directories
+      if (entry.name.startsWith('.') || entry.name === 'node_modules') {
+        continue;
+      }
+      
+      if (entry.isDirectory()) {
+        files.push(...findReactFiles(fullPath));
+      } else if (entry.isFile() && /\.(tsx?|jsx?)$/.test(entry.name)) {
+        // Skip test files, config files, and declaration files
+        if (!/\.(test|spec|config|d)\./i.test(entry.name)) {
+          files.push(fullPath);
+        }
+      }
+    }
+  } catch (error) {
+    // Ignore permission errors
+  }
+  
+  return files;
+}
+
 /**
  * Streamlined import with improved UX
+ * 
+ * NEW FLOW (works from blank VS Code window):
+ * 1. Select source project (from Desktop/GitHub)
+ * 2. Name your new ShepLang project
+ * 3. Choose where to save it
+ * 4. Analyze, generate, and OPEN the new workspace
  */
 export async function streamlinedImport(context: vscode.ExtensionContext): Promise<void> {
-  outputChannel.section('ShepLang Import');
+  outputChannel.section('🐑 ShepLang Import Wizard');
 
   try {
+    // STEP 1: Select the SOURCE project to import (no workspace required!)
+    outputChannel.info('Step 1: Selecting source project...');
+    
+    const projectRoot = await selectProjectFolder();
+    if (!projectRoot) {
+      outputChannel.info('Import cancelled - no project selected');
+      return;
+    }
+
+    // STEP 2: Detect what kind of project this is
+    outputChannel.info('Step 2: Detecting project type...');
+    const stack = await detectStack(projectRoot);
+    
+    if (!stack.isValid) {
+      vscode.window.showErrorMessage(
+        '❌ Not a valid Next.js/React/Vite project. Make sure the folder contains a package.json with React, Next.js, or Vite.'
+      );
+      return;
+    }
+    
+    outputChannel.success(`✅ Found ${stack.framework.toUpperCase()} project!`);
+    
+    // Use actual root (handles nested GitHub ZIP folders)
+    const analysisRoot = stack.actualRoot;
+    
+    // STEP 3: Ask user to name their NEW ShepLang project
+    const projectName = await vscode.window.showInputBox({
+      prompt: '🐑 What should we name your ShepLang project?',
+      placeHolder: 'my-awesome-app',
+      value: path.basename(analysisRoot).replace(/-main$/, ''), // Remove GitHub "-main" suffix
+      validateInput: (value) => {
+        if (!value || value.trim().length === 0) {
+          return 'Project name cannot be empty';
+        }
+        if (!/^[a-z0-9-_]+$/i.test(value)) {
+          return 'Project name can only contain letters, numbers, hyphens, and underscores';
+        }
+        return null;
+      }
+    });
+    
+    if (!projectName) {
+      outputChannel.info('Import cancelled - no project name provided');
+      return;
+    }
+    
+    // STEP 4: Ask where to save the NEW project
+    const saveLocation = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.file(path.join(getDefaultProjectsFolder(), projectName)),
+      saveLabel: 'Create ShepLang Project Here',
+      title: '🐑 Where should we create your ShepLang project?'
+    });
+    
+    if (!saveLocation) {
+      outputChannel.info('Import cancelled - no save location selected');
+      return;
+    }
+    
+    const outputFolder = saveLocation.fsPath;
+    
+    // Create the output folder
+    if (!fs.existsSync(outputFolder)) {
+      fs.mkdirSync(outputFolder, { recursive: true });
+    }
+    
+    outputChannel.info(`Creating project at: ${outputFolder}`);
+
+    // Now run the analysis and generation with progress
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: '🚀 ShepLang Import',
+        title: '🐑 ShepLang Import',
         cancellable: false
       },
       async (progress) => {
-        // Step 1: Select project folder
-        progress.report({ message: '📂 Waiting for you to select a project folder...', increment: 0 });
-        const projectRoot = await selectProjectFolder();
-        if (!projectRoot) {
-          outputChannel.info('Import cancelled - no project selected');
-          return;
-        }
+        progress.report({ message: `🔍 Analyzing ${stack.framework.toUpperCase()} project...`, increment: 10 });
 
-        // Step 2: Detect stack
-        progress.report({ message: '🔍 Scanning project files...', increment: 10 });
-        const stack = await detectStack(projectRoot);
-        if (!stack.isValid) {
-          vscode.window.showErrorMessage('❌ Not a valid Next.js/React/Vite project');
-          return;
-        }
-        outputChannel.info(`Detected: ${stack.framework.toUpperCase()}`);
-        progress.report({ message: `✅ Found ${stack.framework.toUpperCase()} project!`, increment: 5 });
-        await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause to show success
+        // Step 3: REAL ANALYSIS using all slices!
+        // Track import start (Slice 7: Telemetry)
+        trackImportStart(stack.framework, stack.hasPrisma);
+        const startTime = Date.now();
 
-        // Step 3: Analyze project (temporarily disabled)
-        progress.report({ message: '🧠 AI is reading your code...', increment: 10 });
-        // const appModel = await analyzeProject(projectRoot); // Temporarily disabled
-        const appModel = { 
-          entities: [], 
-          views: [], 
-          actions: [],
-          appName: 'Imported App',
-          projectRoot,
+        // 🐑 Golden Sheep messages - goofy but informative!
+        progress.report({ message: '🐑 Baaaa! Sheep are reading your Prisma schema...', increment: 5 });
+        
+        // Slice 3: Entity Extraction (Prisma parsing)
+        const entityResult = await extractEntities(analysisRoot);
+        outputChannel.info(`[Slice 3] Extracted ${entityResult.entities.length} entities from ${entityResult.source}`);
+        
+        progress.report({ message: '🐑 Wooly good! Now sniffing your React components...', increment: 5 });
+        
+        // Slice 2: React Component Parsing
+        const components = await parseReactProject(analysisRoot);
+        outputChannel.info(`[Slice 2] Found ${components.length} React components`);
+        
+        progress.report({ message: '🐑 Baa-rilliant! Mapping components to ShepLang views...', increment: 5 });
+        
+        // Slice 4: View/Action Mapping
+        const projectMapping = mapProjectToShepLang(components, entityResult.entities);
+        outputChannel.info(`[Slice 4] Mapped ${projectMapping.views.length} views, ${projectMapping.actions.length} actions`);
+        
+        progress.report({ message: '🐑 Ewe got it! Parsing API routes...', increment: 5 });
+        
+        // Slice 5: API Route Parsing
+        const routeResult = parseAPIRoutes(analysisRoot);
+        outputChannel.info(`[Slice 5] Found ${routeResult.routes.length} API routes`);
+        
+        // Build the proper AppModel from real data
+        const appModel: AppModel = {
+          appName: projectName, // Use user-provided name
+          projectRoot: analysisRoot,
+          entities: entityResult.entities,
+          views: projectMapping.views,
+          actions: projectMapping.actions,
           todos: []
-        }; // Stub
-        outputChannel.info(`Found ${appModel.entities.length} entities, ${appModel.views.length} views`);
-        const componentCount = appModel.entities.length + appModel.views.length;
-        progress.report({ message: `✨ Discovered ${componentCount} components and pages`, increment: 10 });
-        await new Promise(resolve => setTimeout(resolve, 500));
+        };
+        
+        const componentCount = entityResult.entities.length + projectMapping.views.length;
+        progress.report({ message: `🐑 Shear genius! Found ${componentCount} things to convert!`, increment: 5 });
+        outputChannel.success(`✅ Analysis complete: ${entityResult.entities.length} entities, ${projectMapping.views.length} views, ${projectMapping.actions.length} actions, ${routeResult.routes.length} routes`);
 
         // Step 4: SINGLE QUESTION - What type of application?
         progress.report({ message: '💭 Tell us about your project...', increment: 5 });
@@ -114,12 +314,7 @@ export async function streamlinedImport(context: vscode.ExtensionContext): Promi
           return;
         }
 
-        // Step 6: Select output folder
-        const outputFolder = await selectOutputFolder();
-        if (!outputFolder) {
-          outputChannel.info('Import cancelled - no output folder selected');
-          return;
-        }
+        // outputFolder already set before progress dialog started
 
         let mainFilePath: string;
         let report: string;
@@ -226,28 +421,47 @@ export async function streamlinedImport(context: vscode.ExtensionContext): Promi
 
         progress.report({ message: 'Complete!', increment: 100 });
 
-        // Success message
-        vscode.window.showInformationMessage(
-          `✅ Successfully imported ${appModel.appName}!`,
-          'Open Folder',
-          'View Report'
-        ).then(selection => {
-          if (selection === 'Open Folder') {
-            vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(outputFolder));
-          } else if (selection === 'View Report') {
-            vscode.workspace.openTextDocument(reportPath).then(doc => {
-              vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
-            });
-          }
+        // Track success (Slice 7: Telemetry)
+        const durationMs = Date.now() - startTime;
+        trackImportSuccess({
+          framework: stack.framework,
+          hasPrisma: stack.hasPrisma,
+          entityCount: entityResult.entities.length,
+          viewCount: projectMapping.views.length,
+          actionCount: projectMapping.actions.length,
+          routeCount: routeResult.routes.length,
+          confidence: entityResult.confidence,
+          durationMs
         });
 
-        outputChannel.success('\n🎉 Import complete!');
+        outputChannel.success('\n🐑 Baa-doom! Import complete!');
         outputChannel.info(`Project saved to: ${outputFolder}`);
+        outputChannel.info(`📊 Stats: ${entityResult.entities.length} entities, ${projectMapping.views.length} views, ${projectMapping.actions.length} actions in ${durationMs}ms`);
+        
+        progress.report({ message: '🎉 Opening your new ShepLang workspace!', increment: 100 });
       }
     );
+    
+    // CRITICAL: AUTOMATICALLY open the new workspace in the SAME window
+    // This is the key differentiator vs Copilot - seamless blank → project flow!
+    // 
+    // Per VS Code API docs:
+    // - forceReuseWindow: true = Force opening in the same window (what we want!)
+    // - forceNewWindow: false just means "don't force new", but doesn't guarantee same window
+    //
+    // Note: This will restart the extension host, which is expected behavior.
+    outputChannel.info('🐑 Opening your new workspace in this window...');
+    
+    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(outputFolder), {
+      forceReuseWindow: true  // FORCE same window - no new window!
+    });
+    
   } catch (error: any) {
-    outputChannel.error(`Import failed: ${error.message}`);
-    vscode.window.showErrorMessage(`Import failed: ${error.message}`);
+    // Track failure (Slice 7: Telemetry)
+    trackImportFailure('import_error', error.message);
+    
+    outputChannel.error(`🐑 Baa-d news! Import failed: ${error.message}`);
+    vscode.window.showErrorMessage(`🐑 Import failed: ${error.message}`);
   }
 }
 
@@ -692,15 +906,43 @@ async function detectStack(projectRoot: string): Promise<{
   hasPrisma: boolean;
   hasTypeScript: boolean;
   isValid: boolean;
+  actualRoot: string; // The actual project root (may differ if nested)
 }> {
-  const packageJsonPath = path.join(projectRoot, 'package.json');
+  let actualRoot = projectRoot;
+  let packageJsonPath = path.join(projectRoot, 'package.json');
   
+  // Check for package.json at root
+  if (!fs.existsSync(packageJsonPath)) {
+    // GitHub ZIP downloads create nested folders like: repo-main/repo-main/
+    // Check one level deeper for common patterns
+    try {
+      const entries = fs.readdirSync(projectRoot, { withFileTypes: true });
+      const subdirs = entries.filter(e => e.isDirectory() && !e.name.startsWith('.'));
+      
+      // If there's exactly one subdirectory, check if IT has package.json
+      if (subdirs.length === 1) {
+        const nestedPath = path.join(projectRoot, subdirs[0].name);
+        const nestedPackageJson = path.join(nestedPath, 'package.json');
+        
+        if (fs.existsSync(nestedPackageJson)) {
+          outputChannel.info(`🐑 Found nested project folder: ${subdirs[0].name}/`);
+          actualRoot = nestedPath;
+          packageJsonPath = nestedPackageJson;
+        }
+      }
+    } catch (error) {
+      // Ignore read errors
+    }
+  }
+  
+  // Still no package.json found
   if (!fs.existsSync(packageJsonPath)) {
     return {
       framework: 'unknown',
       hasPrisma: false,
       hasTypeScript: false,
-      isValid: false
+      isValid: false,
+      actualRoot
     };
   }
 
@@ -741,6 +983,7 @@ async function detectStack(projectRoot: string): Promise<{
     framework,
     hasPrisma: 'prisma' in allDeps || '@prisma/client' in allDeps,
     hasTypeScript: 'typescript' in allDeps,
-    isValid: true // Any project with package.json is valid
+    isValid: true, // Any project with package.json is valid
+    actualRoot
   };
 }

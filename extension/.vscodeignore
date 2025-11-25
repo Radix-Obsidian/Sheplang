@@ -1,3 +1,9 @@
+# VS Code Extension Bundled with esbuild
+# See: https://code.visualstudio.com/api/working-with-extensions/bundling-extension
+#
+# Since we bundle ALL dependencies into dist/extension.js,
+# we can exclude node_modules and source files.
+
 # Development files
 .vscode/**
 .vscode-test/**
@@ -11,45 +17,48 @@ vscode.proposed.*.d.ts
 **/tsconfig.json
 **/.eslintrc.json
 tsconfig.tsbuildinfo
+esbuild.js
+webpack.config.js
 
 # Source maps (optional - remove if debugging needed)
 **/*.map
 
-# TypeScript source files (keep compiled .js)
+# TypeScript source files
 **/*.ts
-!out/**/*.d.ts
+!**/*.d.ts
 
 # Exclude parent sheplang directory
 ../sheplang/**
 
-# Test files from dependencies
-node_modules/**/test/**
-node_modules/**/tests/**
-node_modules/**/*.test.js
-node_modules/**/*.spec.js
+# Node modules - EXCLUDED because we bundle with esbuild
+node_modules/**
 
-# Source files from language package (keep compiled)
-node_modules/@goldensheepai/sheplang-language/src/**
-node_modules/@goldensheepai/sheplang-language/test/**
-node_modules/@goldensheepai/sheplang-language/tests/**
-# CRITICAL: Do NOT exclude language package dependencies
-# node_modules/@goldensheepai/sheplang-language/node_modules/**
-
-# TypeScript sources in node_modules (keep .js and .d.ts)
-node_modules/**/*.ts
-!node_modules/**/*.d.ts
+# Old output directory (now using dist/ for everything)
+# Language server is now bundled to dist/server.js via esbuild
+out/**
 
 # Demo and test artifacts
 test-resources/**
 demo-workspace/**
+scripts/**
 
 # Environment and secrets
 .env
-src/ai/config.ts
+.env.*
 
 # Logs
 *.log
+trace.log
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Keep these files:
+# - dist/extension.js (bundled code)
+# - package.json
+# - README.md
+# - media/** (icons, images)
+# - syntaxes/** (TextMate grammars)
+# - snippets/** (code snippets)
+# - language-configuration.json

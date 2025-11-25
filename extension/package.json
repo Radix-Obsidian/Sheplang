@@ -26,7 +26,7 @@
     "workspaceContains:**/*.shep",
     "workspaceContains:**/*.shepthon"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
@@ -70,52 +70,19 @@
     ],
     "commands": [
       {
-        "command": "sheplang.sendFeedback",
-        "title": "ShepLang: Send Feedback",
-        "category": "ShepLang"
+        "command": "sheplang.importFromGitHub",
+        "title": "ShepLang: Import from GitHub",
+        "icon": "$(github)"
+      },
+      {
+        "command": "sheplang.importFromNextJS",
+        "title": "ShepLang: Import from Local Project",
+        "icon": "$(folder-opened)"
       },
       {
         "command": "sheplang.showPreview",
         "title": "ShepLang: Show Preview",
         "icon": "$(open-preview)"
-      },
-      {
-        "command": "sheplang.newProject",
-        "title": "ShepLang: New Project"
-      },
-      {
-        "command": "sheplang.restartBackend",
-        "title": "ShepLang: Restart Backend"
-      },
-      {
-        "command": "sheplang.importFromGitHub",
-        "title": "ShepLang: Import from Git Repository",
-        "icon": "$(git-pull-request)"
-      },
-      {
-        "command": "sheplang.importFromNextJS",
-        "title": "ShepLang: Import from Next.js/React Project",
-        "icon": "$(cloud-download)"
-      },
-      {
-        "command": "sheplang.importFromWebflow",
-        "title": "ShepLang: Import from Webflow Export",
-        "icon": "$(cloud-download)"
-      },
-      {
-        "command": "sheplang.showAIUsage",
-        "title": "ShepLang: Show AI Import Usage",
-        "icon": "$(info)"
-      },
-      {
-        "command": "sheplang.resetAIUsage",
-        "title": "ShepLang: Reset AI Usage (Testing)",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "sheplang.updateApiKey",
-        "title": "ShepLang: Update Anthropic API Key",
-        "icon": "$(key)"
       },
       {
         "command": "sheplang.showPreviewInBrowser",
@@ -128,24 +95,14 @@
         "icon": "$(debug-stop)"
       },
       {
-        "command": "sheplang.quickStart",
-        "title": "ShepLang: Quick Start",
-        "icon": "$(rocket)"
+        "command": "sheplang.sendFeedback",
+        "title": "ShepLang: Send Feedback",
+        "category": "ShepLang"
       },
       {
-        "command": "sheplang.openExamples",
-        "title": "ShepLang: Open Example Project",
-        "icon": "$(book)"
-      },
-      {
-        "command": "sheplang.startProjectWizard",
-        "title": "ShepLang: Start Project Wizard",
-        "icon": "$(rocket)"
-      },
-      {
-        "command": "sheplang.quickCreateProject",
-        "title": "ShepLang: Quick Create Project",
-        "icon": "$(add)"
+        "command": "sheplang.updateApiKey",
+        "title": "ShepLang: Update Anthropic API Key",
+        "icon": "$(key)"
       }
     ],
     "menus": {
@@ -158,12 +115,6 @@
       ]
     },
     "keybindings": [
-      {
-        "command": "sheplang.quickStart",
-        "key": "ctrl+shift+s",
-        "mac": "cmd+shift+s",
-        "when": "!editorFocus || editorLangId == sheplang"
-      },
       {
         "command": "sheplang.showPreview",
         "key": "ctrl+shift+v",
@@ -215,6 +166,12 @@
           "default": false,
           "description": "Debug: Bypass import limits for testing AI functionality. Do not enable in production.",
           "scope": "application"
+        },
+        "sheplang.telemetry.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable anonymous usage telemetry to help improve ShepLang. **Privacy:** No file paths, project names, or code content is collected - only aggregate counts and timings. Respects VS Code's global telemetry setting.",
+          "scope": "application"
         }
       }
     },
@@ -230,13 +187,16 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run package",
     "prebuild": "node scripts/build-config.js",
-    "compile": "npm run prebuild && tsc -p ./",
-    "watch": "npm run prebuild && tsc -watch -p ./",
-    "package": "npm run compile && vsce package",
-    "publish": "npm run compile && vsce publish",
-    "test": "npm run compile && vscode-test",
+    "compile": "npm run prebuild && npm run check-types && node esbuild.js",
+    "check-types": "tsc --noEmit",
+    "watch": "npm run prebuild && node esbuild.js --watch",
+    "package": "npm run prebuild && npm run check-types && node esbuild.js --production",
+    "publish": "npm run package && vsce publish",
+    "compile-tests": "tsc -p . --outDir out",
+    "pretest": "npm run compile-tests",
+    "test": "vscode-test",
     "test:production": "node scripts/test-production.js",
     "demo:setup": "node scripts/demo-setup.js",
     "demo:open": "code --disable-extensions --extensionDevelopmentPath=. demo-workspace/sheplang-demo.code-workspace",
@@ -245,7 +205,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.0",
     "@goldensheepai/sheplang-language": "workspace:*",
-    "@prisma/internals": "^6.19.0",
     "express": "^4.18.2",
     "langium": "^3.0.0",
     "simple-git": "^3.30.0",
@@ -264,10 +223,12 @@
     "@types/vscode": "^1.85.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^2.22.0",
+    "@vscode/vsce": "^3.7.1",
     "chalk": "^4.1.2",
+    "esbuild": "^0.27.0",
     "glob": "^13.0.0",
     "mocha": "^11.7.5",
+    "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.0"
   },

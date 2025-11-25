@@ -8,35 +8,38 @@ import {
 } from 'vscode-languageclient/node';
 import { showPreviewCommand } from './commands/preview';
 import { showPreviewInBrowser, stopPreviewServer } from './commands/previewInBrowser';
-import { newProjectCommand } from './commands/newProject';
-import { restartBackendCommand } from './commands/restartBackend';
-import { showOutputCommand } from './commands/showOutput';
-import { createBackendFileCommand } from './commands/createBackendFile';
-// import { manageFigmaToken } from './commands/manageFigmaToken';
-
-// Next.js/React importer
-import { streamlinedImport } from './commands/streamlinedImport';
-
-// Git Importer
-import { importFromGitHubCommand } from './commands/importFromGitHub';
-
-// ShepLang Project Wizard
-import { startProjectWizard } from './commands/projectWizard';
-import { testWizard, quickTestWizard } from './commands/testWizard';
-
-// TODO: Add Webflow importer
-// import { importFromWebflow } from './commands/importFromWebflow';
 import { RuntimeManager } from './services/runtimeManager';
 import { outputChannel } from './services/outputChannel';
-import { showUsageStats, resetUsageForTesting } from './ai/usageTracker';
 import { sendFeedbackCommand } from './commands/sendFeedback';
 
-// Extraordinary features
+// ========================================
+// ALPHA FOCUS: Import Only
+// ========================================
+// Next.js/React importer (Local)
+import { streamlinedImport } from './commands/streamlinedImport';
+// Git Importer (GitHub)
+import { importFromGitHubCommand } from './commands/importFromGitHub';
+
+// ========================================
+// Language features (keep for .shep files)
+// ========================================
 import { initializeAutoPreview } from './features/autoPreview';
 import { registerIntelliSense } from './features/intelligentCompletion';
-import { registerQuickStart, showQuickStartForNewUsers } from './features/quickStart';
 import { registerDiagnostics } from './features/diagnostics';
 import { registerSemanticHighlighting } from './features/semanticHighlighting';
+
+// ========================================
+// DISABLED FOR ALPHA - Re-enable in Beta
+// ========================================
+// import { newProjectCommand } from './commands/newProject';
+// import { restartBackendCommand } from './commands/restartBackend';
+// import { showOutputCommand } from './commands/showOutput';
+// import { createBackendFileCommand } from './commands/createBackendFile';
+// import { startProjectWizard } from './commands/projectWizard';
+// import { testWizard, quickTestWizard } from './commands/testWizard';
+// import { showUsageStats, resetUsageForTesting } from './ai/usageTracker';
+// import { registerQuickStart, showQuickStartForNewUsers } from './features/quickStart';
+// import { importFromWebflow } from './commands/importFromWebflow';
 
 let client: LanguageClient;
 let runtimeManager: RuntimeManager;
@@ -55,33 +58,33 @@ export function activate(context: vscode.ExtensionContext) {
   runtimeManager = new RuntimeManager(context);
   context.subscriptions.push(runtimeManager);
 
-  // Show quick start for new users (minimalist approach)
-  setTimeout(() => {
-    showQuickStartForNewUsers(context);
-  }, 1000);
+  // ALPHA: Disabled - Quick start wizard not in alpha
+  // setTimeout(() => {
+  //   showQuickStartForNewUsers(context);
+  // }, 1000);
 
-  // Register commands
-  outputChannel.info('Registering commands...');
+  // ========================================
+  // ALPHA COMMANDS: Import + Preview Only
+  // ========================================
+  outputChannel.info('Registering ALPHA commands (Import focus)...');
   context.subscriptions.push(
+    // CORE ALPHA: Import from GitHub
+    vscode.commands.registerCommand('sheplang.importFromGitHub', () => importFromGitHubCommand()),
+    
+    // CORE ALPHA: Import from Local Project
+    vscode.commands.registerCommand('sheplang.importFromNextJS', () => streamlinedImport(context)),
+    
+    // Preview (needed to see results)
     vscode.commands.registerCommand('sheplang.showPreview', async () => {
       await showPreviewCommand(context, runtimeManager);
     }),
     vscode.commands.registerCommand('sheplang.showPreviewInBrowser', () => showPreviewInBrowser(context)),
     vscode.commands.registerCommand('sheplang.stopPreviewServer', () => stopPreviewServer()),
-    vscode.commands.registerCommand('sheplang.newProject', () => newProjectCommand(context)),
-    vscode.commands.registerCommand('sheplang.restartBackend', () => restartBackendCommand(context)),
-    vscode.commands.registerCommand('sheplang.showOutput', () => showOutputCommand()),
-    vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
-    vscode.commands.registerCommand('sheplang.importFromNextJS', () => streamlinedImport(context)),
-    vscode.commands.registerCommand('sheplang.importFromGitHub', importFromGitHubCommand),
-    vscode.commands.registerCommand('sheplang.startProjectWizard', () => startProjectWizard(context)),
-    vscode.commands.registerCommand('sheplang.testWizard', () => testWizard()),
-    vscode.commands.registerCommand('sheplang.quickTestWizard', () => quickTestWizard()),
-
-    // AI usage management commands
-    vscode.commands.registerCommand('sheplang.showAIUsage', () => showUsageStats(context)),
-    vscode.commands.registerCommand('sheplang.resetAIUsage', () => resetUsageForTesting(context)),
+    
+    // Feedback (important for alpha)
     vscode.commands.registerCommand('sheplang.sendFeedback', () => sendFeedbackCommand(context)),
+    
+    // API Key management
     vscode.commands.registerCommand('sheplang.updateApiKey', async () => {
       const key = await vscode.window.showInputBox({
         prompt: 'Enter your Anthropic API key (for unlimited imports)',
@@ -93,19 +96,26 @@ export function activate(context: vscode.ExtensionContext) {
         await vscode.workspace.getConfiguration('sheplang').update('anthropicApiKey', key, vscode.ConfigurationTarget.Global);
         vscode.window.showInformationMessage('✓ API key updated! You now have unlimited imports.');
       }
-    }),
-
-    // Error broadcasting command (used internally for error handling)
-    vscode.commands.registerCommand('sheplang.broadcastError', (error: Error | string) => {
-      const message = typeof error === 'string' ? error : error.message;
-      outputChannel.error(message);
-      vscode.window.showErrorMessage(`ShepLang: ${message}`);
-    }),
-
-    // TODO: Uncomment when Webflow importer is ready
-    // vscode.commands.registerCommand('sheplang.importFromWebflow', () => importFromWebflow())
+    })
   );
-  outputChannel.success('All commands registered');
+  outputChannel.success('ALPHA commands registered');
+
+  // ========================================
+  // DISABLED FOR ALPHA - Re-enable in Beta
+  // ========================================
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand('sheplang.newProject', () => newProjectCommand(context)),
+  //   vscode.commands.registerCommand('sheplang.restartBackend', () => restartBackendCommand(context)),
+  //   vscode.commands.registerCommand('sheplang.showOutput', () => showOutputCommand()),
+  //   vscode.commands.registerCommand('sheplang.createBackendFile', () => createBackendFileCommand()),
+  //   vscode.commands.registerCommand('sheplang.startProjectWizard', () => startProjectWizard(context)),
+  //   vscode.commands.registerCommand('sheplang.testWizard', () => testWizard()),
+  //   vscode.commands.registerCommand('sheplang.quickTestWizard', () => quickTestWizard()),
+  //   vscode.commands.registerCommand('sheplang.showAIUsage', () => showUsageStats(context)),
+  //   vscode.commands.registerCommand('sheplang.resetAIUsage', () => resetUsageForTesting(context)),
+  //   vscode.commands.registerCommand('sheplang.broadcastError', (error: Error | string) => {...}),
+  //   vscode.commands.registerCommand('sheplang.importFromWebflow', () => importFromWebflow())
+  // );
 
   // Start Language Server
   startLanguageServer(context);
@@ -121,9 +131,9 @@ export function activate(context: vscode.ExtensionContext) {
   registerIntelliSense(context);
   outputChannel.success('✓ Intelligent completion enabled');
 
-  // Quick start system (replaces heavy onboarding)
-  registerQuickStart(context);
-  outputChannel.success('✓ Quick start ready');
+  // ALPHA: Disabled - Quick start not in alpha
+  // registerQuickStart(context);
+  // outputChannel.success('✓ Quick start ready');
 
   // Comprehensive error diagnostics
   const diagnosticsManager = registerDiagnostics(context);
@@ -183,9 +193,9 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function startLanguageServer(context: vscode.ExtensionContext) {
-  // The server is implemented in node
+  // The server is bundled with esbuild to dist/server.js
   const serverModule = context.asAbsolutePath(
-    path.join('out', 'server', 'server.js')
+    path.join('dist', 'server.js')
   );
 
   // The debug options for the server
