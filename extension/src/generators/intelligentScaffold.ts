@@ -101,104 +101,51 @@ function generateEssentialFiles(appModel: AppModel): GeneratedFile[] {
   console.log(`  - Views: ${appModel.views.length}`);
   console.log(`  - Actions: ${appModel.actions.length}`);
 
-  // Generate model files for each entity (deduplicated)
-  for (const entity of appModel.entities) {
-    const safeName = sanitizeFilename(entity.name);
-    if (safeName) {
-      const relativePath = `models/${safeName}.shep`;
-      if (!seenPaths.has(relativePath)) {
-        seenPaths.add(relativePath);
-        files.push({
-          relativePath,
-          content: generateEntityModelFile(entity, appModel),
-          dependencies: []
-        });
-        console.log(`[IntelligentScaffold] Added model: ${safeName}`);
-      }
-    }
+  // ==========================================================================
+  // A-GRADE UX FIX: All declarations go in app.shep
+  // 
+  // Separate .shep files cause "not found" errors because:
+  // 1. Each file has its own `app { }` block
+  // 2. Cross-file references don't resolve in ShepLang grammar
+  // 3. Users see confusing "Entity not found" errors
+  //
+  // Solution: Put EVERYTHING in app.shep (already done in generateAppConfig)
+  // Generate README files for folder documentation only
+  // ==========================================================================
+  
+  console.log(`[IntelligentScaffold] All ${appModel.entities.length} entities, ${appModel.views.length} views, ${appModel.actions.length} actions in app.shep`);
+  
+  // Generate folder READMEs for organization (not .shep files)
+  if (appModel.entities.length > 0) {
+    files.push({
+      relativePath: 'models/README.md',
+      content: `# Data Models\n\nThis project has ${appModel.entities.length} data models defined in \`app.shep\`.\n\n## Models\n${appModel.entities.map(e => `- ${e.name}`).join('\n')}\n`,
+      dependencies: []
+    });
+  }
+  
+  if (appModel.views.length > 0) {
+    files.push({
+      relativePath: 'views/README.md', 
+      content: `# Views\n\nThis project has ${appModel.views.length} views defined in \`app.shep\`.\n\n## Views\n${appModel.views.slice(0, 20).map(v => `- ${v.name}`).join('\n')}${appModel.views.length > 20 ? `\n- ... and ${appModel.views.length - 20} more` : ''}\n`,
+      dependencies: []
+    });
+  }
+  
+  if (appModel.actions.length > 0) {
+    files.push({
+      relativePath: 'actions/README.md',
+      content: `# Actions\n\nThis project has ${appModel.actions.length} actions defined in \`app.shep\`.\n\n## Actions\n${appModel.actions.map(a => `- ${a.name}`).join('\n')}\n`,
+      dependencies: []
+    });
   }
 
-  // Generate view files for each view (deduplicated)
-  for (const view of appModel.views) {
-    const safeName = sanitizeFilename(view.name);
-    if (safeName) {
-      const relativePath = `views/${safeName}.shep`;
-      if (!seenPaths.has(relativePath)) {
-        seenPaths.add(relativePath);
-        files.push({
-          relativePath,
-          content: generateViewFileFromModel(view, appModel),
-          dependencies: []
-        });
-        console.log(`[IntelligentScaffold] Added view: ${safeName}`);
-      }
-    } else {
-      console.warn(`[IntelligentScaffold] Skipped invalid view name: ${view.name}`);
-    }
-  }
-
-  // Generate action files for each action (deduplicated)
-  for (const action of appModel.actions) {
-    const safeName = sanitizeFilename(action.name);
-    if (safeName) {
-      const relativePath = `actions/${safeName}.shep`;
-      if (!seenPaths.has(relativePath)) {
-        seenPaths.add(relativePath);
-        files.push({
-          relativePath,
-          content: generateActionFileFromModel(action, appModel),
-          dependencies: []
-        });
-        console.log(`[IntelligentScaffold] Added action: ${safeName}`);
-      }
-    } else {
-      console.warn(`[IntelligentScaffold] Skipped invalid action name: ${action.name}`);
-    }
-  }
-
-  // === ShepAPI WIRING: Generate workflows, jobs, realtime, integrations ===
-  
-  // Generate workflow files based on actions and API patterns
-  const workflows = generateWorkflowsFromActions(appModel);
-  for (const workflow of workflows) {
-    const relativePath = `workflows/${workflow.name}.shep`;
-    if (!seenPaths.has(relativePath)) {
-      seenPaths.add(relativePath);
-      files.push({
-        relativePath,
-        content: workflow.content,
-        dependencies: []
-      });
-      console.log(`[IntelligentScaffold] Added workflow: ${workflow.name}`);
-    }
-  }
-  
-  // NOTE: 'realtime' keyword is NOT in ShepLang grammar - skip generation
-  // When realtime support is added to grammar, uncomment this section
-  // const realtimeHooks = generateRealtimeHooks(appModel);
-  // ...
-  console.log(`[IntelligentScaffold] Skipping realtime hooks (not in grammar yet)`);
-  
-  // Generate background job files (job IS in the grammar)
-  const jobs = generateBackgroundJobs(appModel);
-  for (const job of jobs) {
-    const relativePath = `jobs/${job.name}.shep`;
-    if (!seenPaths.has(relativePath)) {
-      seenPaths.add(relativePath);
-      files.push({
-        relativePath,
-        content: job.content,
-        dependencies: []
-      });
-      console.log(`[IntelligentScaffold] Added background job: ${job.name}`);
-    }
-  }
-  
-  // NOTE: 'integration' keyword is NOT in ShepLang grammar - skip generation
-  // When integration support is added to grammar, uncomment this section
-  // const integrations = generateIntegrationFiles(appModel);
-  // ...
-  console.log(`[IntelligentScaffold] Skipping integrations (not in grammar yet)`);
+  // Skip ALL separate .shep file generation for A-grade UX
+  // Everything is in app.shep - no reference errors, no confusion
+  // 
+  // Future: Re-enable when cross-file resolution is fully implemented
+  // - workflows, jobs, realtime, integrations need grammar support
+  // - Cross-file references need Langium scope provider updates
 
   console.log(`[IntelligentScaffold] Total essential files: ${files.length}`);
   return files;
@@ -818,83 +765,71 @@ function generateAppConfig(appModel: AppModel, plan: ArchitecturePlan): string {
   content += `  // Generated with ${plan.structure} architecture\n`;
   content += `  // Source: ${plan.projectType}\n\n`;
   
-  // Generate data declarations (up to 5 main entities for preview)
-  const previewEntities = uniqueEntities.slice(0, 5);
-  if (previewEntities.length > 0) {
-    content += `  // === Data Models ===\n`;
-    for (const entity of previewEntities) {
+  // Generate ALL data declarations (complete for reference resolution)
+  if (uniqueEntities.length > 0) {
+    content += `  // === Data Models (${uniqueEntities.length} total) ===\n`;
+    for (const entity of uniqueEntities) {
       const entityName = sanitizeFilename(entity.name);
       if (entityName) {
         content += `  data ${entityName} {\n`;
         content += `    fields: {\n`;
-        // Add up to 5 fields per entity
-        const fields = (entity.fields || []).slice(0, 5);
+        // Include ALL fields for proper type resolution
+        const fields = entity.fields || [];
         for (const field of fields) {
           const fieldType = mapFieldType(field.type);
           const fieldName = sanitizeFieldName(field.name);
           content += `      ${fieldName}: ${fieldType}\n`;
         }
-        if ((entity.fields || []).length > 5) {
-          content += `      // ... ${entity.fields.length - 5} more fields\n`;
-        }
         content += `    }\n`;
         content += `  }\n\n`;
       }
     }
-    if (uniqueEntities.length > 5) {
-      content += `  // ... ${uniqueEntities.length - 5} more data models in models/ folder\n\n`;
-    }
   }
   
-  // Generate view declarations (up to 3 for preview)
-  const previewViews = uniqueViews.slice(0, 3);
-  if (previewViews.length > 0) {
-    content += `  // === Views ===\n`;
-    for (const view of previewViews) {
+  // Generate ALL view declarations (complete for reference resolution)
+  if (uniqueViews.length > 0) {
+    content += `  // === Views (${uniqueViews.length} total) ===\n`;
+    // First, find the first valid action for button references
+    const firstValidAction = uniqueActions.find(a => sanitizeFilename(a.name));
+    const defaultActionName = firstValidAction ? sanitizeFilename(firstValidAction.name) : null;
+    
+    for (const view of uniqueViews) {
       const safeName = sanitizeFilename(view.name);
       if (safeName) {
         content += `  view ${safeName} {\n`;
-        // Reference a data entity if available
-        if (previewEntities.length > 0) {
-          content += `    list ${previewEntities[0].name}\n`;
-        }
-        // Add a sample button
-        if (uniqueActions.length > 0) {
-          const action = uniqueActions[0];
-          const actionName = sanitizeFilename(action.name);
-          if (actionName) {
-            content += `    button "Action" -> ${actionName}\n`;
+        // Reference first entity if available
+        if (uniqueEntities.length > 0) {
+          const entityName = sanitizeFilename(uniqueEntities[0].name);
+          if (entityName) {
+            content += `    list ${entityName}\n`;
           }
+        }
+        // Only add button if we have a valid action to reference
+        if (defaultActionName) {
+          content += `    button "Action" -> ${defaultActionName}\n`;
         }
         content += `  }\n\n`;
       }
-    }
-    if (uniqueViews.length > 3) {
-      content += `  // ... ${uniqueViews.length - 3} more views in views/ folder\n\n`;
     }
   }
   
-  // Generate action declarations (up to 3 for preview)
-  const previewActions = uniqueActions.slice(0, 3);
-  if (previewActions.length > 0) {
-    content += `  // === Actions ===\n`;
-    for (const action of previewActions) {
+  // Generate ALL action declarations (complete for reference resolution)
+  if (uniqueActions.length > 0) {
+    content += `  // === Actions (${uniqueActions.length} total) ===\n`;
+    // Find first valid entity and view for action bodies
+    const firstValidEntity = uniqueEntities.find(e => sanitizeFilename(e.name));
+    const firstValidView = uniqueViews.find(v => sanitizeFilename(v.name));
+    const entityName = firstValidEntity ? sanitizeFilename(firstValidEntity.name) : 'Data';
+    const viewName = firstValidView ? sanitizeFilename(firstValidView.name) : 'Dashboard';
+    
+    for (const action of uniqueActions) {
       const safeName = sanitizeFilename(action.name);
       if (safeName) {
         content += `  action ${safeName}(params) {\n`;
-        if (previewEntities.length > 0) {
-          content += `    add ${previewEntities[0].name} with params\n`;
-        }
-        if (previewViews.length > 0) {
-          content += `    show ${previewViews[0].name}\n`;
-        } else {
-          content += `    show Dashboard\n`;
-        }
+        content += `    add ${entityName} with params\n`;
+        content += `    show ${viewName}\n`;
         content += `  }\n\n`;
       }
-    }
-    if (uniqueActions.length > 3) {
-      content += `  // ... ${uniqueActions.length - 3} more actions in actions/ folder\n`;
     }
   }
   
