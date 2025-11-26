@@ -1,6 +1,6 @@
 {
   "name": "@goldensheepai/sheplang-language",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "The first AI-native programming language parser with built-in verification",
   "keywords": [
     "sheplang",

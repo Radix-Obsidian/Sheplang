@@ -86,3 +86,9 @@ export { mapToAppModel };
 export { preprocessIndentToBraces, preprocessWithMap } from './preprocessor.js';
 export type { AppModel, Statement, Expression } from './types.js';
 export type { Diagnostic, CompilationResult } from './types/diagnostics.js';
+
+// Export Langium services for language server integration
+export { createShepServices, ShepCustomModule } from './shep-module.js';
+export { ShepScopeComputation } from './shep-scope.js';
+export * from './generated/ast.js';
+export * from './generated/module.js';
