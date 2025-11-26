@@ -34,67 +34,39 @@ export class DiagnosticsManager {
       const line = lines[i];
       const lineNumber = i;
 
-      // Error 1: Missing colon after declarations
-      if (line.match(/^(data|view|action)\s+\w+\s*$/)) {
+      // Error 1: Incomplete declaration (missing { or :)
+      // Only check for lines at the START of line (not indented declarations inside app {})
+      if (line.match(/^(data|view|action)\s+\w+\s*$/) && !line.match(/^\s+/)) {
         const error = this.createDiagnostic(
           lineNumber,
           line.length,
-          'Missing colon (:) after declaration',
-          'MISSING_COLON',
+          'Incomplete declaration - add { to start the block',
+          'INCOMPLETE_DECL',
           vscode.DiagnosticSeverity.Error,
-          `Add a colon at the end: ${line.trim()}:`
+          `Add opening brace: ${line.trim()} {`
         );
         diagnostics.push(error);
 
         errors.push({
-          message: 'Looks like you forgot a colon',
-          code: 'MISSING_COLON',
+          message: 'This declaration needs a block',
+          code: 'INCOMPLETE_DECL',
           location: {
             file: document.fileName,
             line: lineNumber + 1,
             column: line.length
           },
-          suggestion: 'Add a colon (:) at the end of data, view, and action declarations.',
+          suggestion: 'Add { after the name to start the block.',
           fix: {
-            description: 'Add the missing colon',
-            code: `${line.trim()}:`
+            description: 'Add opening brace',
+            code: `${line.trim()} {\n  // content here\n}`
           }
         });
       }
 
       // Error 2: Invalid field type
-      if (line.match(/^\s+\w+:\s+\w+/) && !line.match(/:\s+(text|number|yes\/no|date|time)/)) {
-        const match = line.match(/:\s+(\w+)/);
-        if (match) {
-          const invalidType = match[1];
-          const column = line.indexOf(invalidType);
-          
-          const error = this.createDiagnostic(
-            lineNumber,
-            column + invalidType.length,
-            `Invalid field type "${invalidType}"`,
-            'INVALID_TYPE',
-            vscode.DiagnosticSeverity.Error,
-            'Use: text, number, yes/no, date, or time'
-          );
-          diagnostics.push(error);
-
-          errors.push({
-            message: `"${invalidType}" isn't a supported field type`,
-            code: 'INVALID_TYPE',
-            location: {
-              file: document.fileName,
-              line: lineNumber + 1,
-              column
-            },
-            suggestion: 'ShepLang supports: text, number, yes/no, date, and time',
-            fix: {
-              description: 'Change to a valid type',
-              code: 'name: text\nage: number\nactive: yes/no\nbirthday: date\nappointed: time'
-            }
-          });
-        }
-      }
+      // DISABLED: Too many false positives - Langium parser handles this better
+      // This regex-based check can't understand context (whether we're inside fields: {})
+      // TODO: Re-enable with context-aware checking
 
       // Error 3: Undefined entity reference
       const entityMatch = line.match(/list\s+(\w+)|add\s+(\w+)/);
@@ -259,17 +231,21 @@ export class DiagnosticsManager {
 
   /**
    * Check if entity is defined in document
+   * Supports both colon syntax (data Name:) and brace syntax (data Name {)
    */
   private isEntityDefined(text: string, entityName: string): boolean {
-    const regex = new RegExp(`^data\\s+${entityName}:`, 'm');
+    // Match either "data Name:" or "data Name {" with optional leading whitespace
+    const regex = new RegExp(`data\\s+${entityName}\\s*[:{]`, 'm');
     return regex.test(text);
   }
 
   /**
    * Check if action is defined in document
+   * Supports indented actions inside app { } blocks
    */
   private isActionDefined(text: string, actionName: string): boolean {
-    const regex = new RegExp(`^action\\s+${actionName}\\s*\\(`, 'm');
+    // Match "action Name(" with optional leading whitespace (for indented actions)
+    const regex = new RegExp(`action\\s+${actionName}\\s*\\(`, 'm');
     return regex.test(text);
   }
 

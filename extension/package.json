@@ -2,7 +2,7 @@
   "name": "sheplang-vscode",
   "displayName": "ShepLang - AI-Native Verified Programming",
   "description": "The first AI-native programming language with built-in verification. Write in English, ship verified code.",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "publisher": "GoldenSheepAI",
   "icon": "media/icon.png",
   "engines": {
