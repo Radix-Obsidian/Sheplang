@@ -120,8 +120,9 @@ TriggerEvent:
   ('on' entity=ShepIdentifier '.' eventType=EventType) |
   ('on' entity=ShepIdentifier '.' field=ShepIdentifier '->' value=ShepIdentifier);
 
+// EventType uses UPPERCASE to avoid conflicts with common field names like 'created', 'updated'
 EventType returns string:
-  'created' | 'updated' | 'deleted';
+  'CREATED' | 'UPDATED' | 'DELETED';
 
 ParamDecl: name=ShepIdentifier (':' type=TypeRef)?;
 Stmt: AddStmt | ShowStmt | CallStmt | LoadStmt | UpdateStmt | DeleteStmt | IfStmt | ForStmt | AssignStmt | WorkflowStmt | RawStmt;
