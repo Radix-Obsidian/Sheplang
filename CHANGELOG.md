@@ -15,6 +15,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2025-11-27
+
+### 🛡️ Multi-Language ShepVerify Release
+
+#### Added
+- ✅ **ShepVerify Dashboard** - Real-time code verification panel
+- ✅ **11 Language Support** - TypeScript, JavaScript, React TSX/JSX, Python, HTML, CSS, SCSS, LESS, JSON, ShepLang
+- ✅ **Python Verification Adapter** - Type hints, None safety, PEP8 checks
+- ✅ **HTML Verification Adapter** - Accessibility, SEO, semantics
+- ✅ **CSS Verification Adapter** - Best practices, performance
+- ✅ **Language Switcher in Playground** - Demo verification for all languages
+- ✅ **Demo Code Samples** - Sample issues for each language
+- ✅ **Click-to-Navigate Errors** - Jump to exact line from dashboard
+
+#### Changed
+- Playground now shows ShepVerify panel instead of preview
+- Extension displayName changed to "ShepVerify - Real-Time Code Verification"
+- Updated activation events to include all 11 languages
+- Header messaging updated for multi-language focus
+- All READMEs updated for ShepVerify focus
+
+#### Fixed
+- Python files now correctly verified (was using TypeScript adapter)
+
+---
+
 ## [1.0.0] - 2025-11-18
 
 ### 🎉 VS Code Marketplace Launch

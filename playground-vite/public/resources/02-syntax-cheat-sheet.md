@@ -1,62 +1,55 @@
-# ShepLang Playground Syntax Cheat Sheet
-**Your Complete Guide to Building Apps in Minutes**
+# ShepLang Syntax Cheat Sheet
+**Write code. Watch ShepVerify check it in real-time.**
 
 ---
 
-## 🎯 Quick Reference
+## 🛡️ How This Works
 
-### Core Philosophy
-- **🎨 AI-Optimized**: Small grammar designed for AI code generation
-- **👥 Human-Readable**: Non-technical founders can read and understand
-- **✅ Type-Safe**: 100% inferred types with compile-time verification
-- **🌐 Full-Stack Ready**: Frontend here, backend in VS Code extension
+1. Write ShepLang code on the left
+2. Watch **ShepVerify** analyze it on the right
+3. See your **verification score** update live
+4. Click errors to learn what went wrong
 
 ---
 
-## 📚 Basic Structure (🎨 Playground Ready)
+## 📚 Basic Structure
 
 ### Application Declaration
 ```sheplang
-app AppName {
-  // data models, views, actions go here
-}
+app AppName
 ```
-**✅ Try this in playground now!**
+**ShepVerify checks:** Valid app name, proper structure
 
 ### Data Models
 ```sheplang
-data ModelName {
-  fields: {
+data ModelName:
+  fields:
     fieldName: text
     anotherField: number
     optionalField: text?
-  }
-}
 ```
-**✅ Try this in playground now!**
+**ShepVerify checks:** Valid field names, known types, optional syntax
 
 ### Views (UI Screens)
 ```sheplang
-view ViewName {
+view ViewName:
   list ModelName
   button "Button Text" -> ActionName
   input "Label" -> fieldName
-}
 ```
-**✅ Try this in playground now!**
+**ShepVerify checks:** Valid view name, button targets exist, inputs are valid
 
 ### Actions (Operations)
 ```sheplang
-action ActionName(param1, param2) {
+action ActionName(param1, param2):
   add ModelName with param1, param2
   show ViewName
-}
 ```
-**✅ Try this in playground now!**
+**ShepVerify checks:** Parameters used, model exists, view exists
 
 ---
 
-## 🎨 Data Types (🎨 Playground Ready)
+## 🎨 Data Types
 
 ### Basic Types
 ```sheplang
