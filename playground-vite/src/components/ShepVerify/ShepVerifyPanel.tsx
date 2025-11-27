@@ -9,6 +9,7 @@ interface ShepVerifyPanelProps {
   parseTime: number;
   theme: 'light' | 'dark';
   onErrorClick?: (line: number, column: number) => void;
+  onDemoLanguageChange?: (lang: string) => void;
 }
 
 enum VerifyTab {
@@ -135,11 +136,18 @@ const ShepVerifyPanel: React.FC<ShepVerifyPanelProps> = ({
   diagnostics, 
   parseTime,
   theme,
-  onErrorClick 
+  onErrorClick,
+  onDemoLanguageChange 
 }) => {
   const [activeTab, setActiveTab] = useState<VerifyTab>(VerifyTab.Verification);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set(['typeSafety', 'nullSafety']));
   const [demoLanguage, setDemoLanguage] = useState<DemoLanguage>('sheplang');
+  
+  // Handle language change and notify parent
+  const handleLanguageChange = (lang: DemoLanguage) => {
+    setDemoLanguage(lang);
+    onDemoLanguageChange?.(lang);
+  };
 
   // Calculate verification scores from diagnostics
   const verificationResult = useMemo(() => {
@@ -285,7 +293,7 @@ const ShepVerifyPanel: React.FC<ShepVerifyPanelProps> = ({
           <button
             key={lang}
             className={`lang-btn ${demoLanguage === lang ? 'active' : ''}`}
-            onClick={() => setDemoLanguage(lang)}
+            onClick={() => handleLanguageChange(lang)}
             title={LANGUAGE_DEMOS[lang].name}
           >
             {LANGUAGE_DEMOS[lang].icon}

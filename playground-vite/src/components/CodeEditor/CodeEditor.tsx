@@ -4,12 +4,24 @@ import type { ShepLangDiagnostic } from '@/types';
 import { analyzeCode } from '@/services/sheplangAnalyzer';
 import './CodeEditor.css';
 
+// Map demo languages to Monaco language IDs
+const MONACO_LANGUAGE_MAP: Record<string, string> = {
+  sheplang: 'sheplang',
+  typescript: 'typescript',
+  python: 'python',
+  react: 'typescript', // TSX uses typescript
+  html: 'html',
+  css: 'css'
+};
+
 interface CodeEditorProps {
   value: string;
   theme: 'light' | 'dark';
   onChange: (value: string) => void;
   onAnalysisComplete: (results: { diagnostics: ShepLangDiagnostic[], parseTime: number }) => void;
   editorRef?: React.MutableRefObject<any>;
+  readOnly?: boolean;
+  language?: string;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ 
@@ -17,7 +29,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   theme, 
   onChange,
   onAnalysisComplete,
-  editorRef: externalEditorRef
+  editorRef: externalEditorRef,
+  readOnly = false,
+  language = 'sheplang'
 }) => {
   const internalEditorRef = useRef<any>(null);
   const editorRef = externalEditorRef || internalEditorRef;
@@ -229,11 +243,19 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     };
   }, [value]);
 
+  const monacoLanguage = MONACO_LANGUAGE_MAP[language] || 'sheplang';
+  
   return (
-    <div className="code-editor">
+    <div className={`code-editor ${readOnly ? 'demo-mode' : ''}`}>
+      {readOnly && (
+        <div className="demo-banner-editor">
+          <span>📖 Demo Code (Read-Only)</span>
+          <span className="demo-lang">{language.toUpperCase()}</span>
+        </div>
+      )}
       <Editor
         height="100%"
-        defaultLanguage="sheplang"
+        language={monacoLanguage}
         theme={theme === 'dark' ? 'vs-dark' : 'light'}
         value={value}
         onChange={(value) => onChange(value || '')}
@@ -245,6 +267,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           scrollBeyondLastLine: false,
           automaticLayout: true,
           wordWrap: 'on',
+          readOnly: readOnly,
           scrollbar: {
             vertical: 'auto',
             horizontal: 'auto'

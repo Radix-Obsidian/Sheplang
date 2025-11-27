@@ -1,102 +1,93 @@
-# 🐑 ShepLang - Write in English. Ship Verified Code.
+# 🛡️ ShepVerify - Real-Time Code Verification
 
-**The AI-native programming language with 100% verification coverage. Build production apps in plain English.**
-
-![ShepLang Icon](media/icon.png)
+**Ship verified code across 11 languages. Lighthouse-style scores for your entire codebase.**
 
 ---
 
-## 🐑 What is ShepLang?
+## 🆕 What's New in v1.4.0
 
-ShepLang is a programming language designed for **non-technical founders** who think in user stories, not algorithms. Write business logic in plain English, compile to production TypeScript.
+### Multi-Language Verification
 
-### Production Example
+ShepVerify now verifies **11 languages**, not just ShepLang:
 
-```shep
-app TaskManager {
-  data Task:
-    fields:
-      title: text
-      status: text
-      priority: text
-    states: todo -> in_progress -> done
-  
-  action CreateTask(title, priority):
-    call POST "/tasks" with title, priority
-    load GET "/tasks" into tasks
-    show Dashboard
-  
-  action CompleteTask(taskId):
-    call PATCH "/tasks/:id" with status="done"
-    show Dashboard
-}
-```
-
-**This generates complete full-stack applications:**
-- ✅ Frontend React components with API calls
-- ✅ Backend Express endpoints with validation  
-- ✅ Database Prisma models with migrations
-- ✅ Authentication, real-time, integrations
-
-### Simple Example
-
-```shep
-app MyTodos {
-  data Todo:
-    fields:
-      title: text
-      done: yes/no
-      created: datetime
-  
-  view Dashboard:
-    show "My Todo List"
-    list Todo
-    button "Add Task" -> CreateTodo
-  
-  action CreateTodo(title):
-    add Todo with title, done=false, created=now
-    show Dashboard
-}
-```
-
-**This compiles to production-ready TypeScript.**
+| Language | What We Check |
+|----------|---------------|
+| 🔷 **TypeScript** | Type safety, null checks, `any` usage |
+| 🟡 **JavaScript** | Type coercion, null access |
+| ⚛️ **React TSX/JSX** | Hook rules, prop types, patterns |
+| 🐍 **Python** | Type hints, None safety, PEP8 |
+| 🌐 **HTML** | Accessibility, SEO, semantics |
+| 🎨 **CSS/SCSS/LESS** | Best practices, performance |
+| 📦 **JSON** | Syntax, schema validation |
+| 🐑 **ShepLang** | Full 4-phase verification |
 
 ---
 
 ## ✨ Features
 
-### 🎨 **Syntax Highlighting**
-Beautiful, readable code with full TextMate grammar support for `.shep` and `.shepthon` files.
+### 🛡️ **ShepVerify Dashboard**
+Real-time verification panel showing:
+- **Lighthouse-style scores** (0-100%)
+- **Phase breakdown** for each language
+- **Click any error** to jump to exact line
+- **Verification history**
 
-### 📝 **Intelligent Code Snippets**
-Type `app`, `data`, `view`, or `action` and press Tab for instant code templates.
+### 📊 **Language-Specific Metrics**
+Each language gets relevant checks:
 
-### 🔍 **Real-Time Diagnostics**
-Language Server Protocol integration provides instant error detection and helpful suggestions.
+| TypeScript | Python | HTML |
+|------------|--------|------|
+| Type Safety | Type Hints | Accessibility |
+| Null Safety | None Safety | SEO |
+| Code Quality | PEP8 | Semantics |
+| React Patterns | Best Practices | - |
 
-### 🚀 **One-Click Compilation**
-Compile ShepLang to TypeScript with a single command.
+### 🎯 **Click-to-Navigate**
+Double-click any error to:
+- Jump to the exact line
+- See the error highlighted
+- Fix it immediately
 
-### 🛠️ **Full Tooling Support**
-- ✅ **IntelliSense** - Context-aware code completion
-- ✅ **Hover Documentation** - Instant help on symbols
-- ✅ **Go to Definition** - Jump to declarations
-- ✅ **Error Diagnostics** - Real-time syntax checking
-- ✅ **Semantic Highlighting** - Advanced syntax coloring
-- ✅ **Document Symbols** - Quick file navigation
-- ✅ **Workspace Symbols** - Project-wide search
+---
 
-**All features are active!** [View Test Results](../TEST_RESULTS.md) (173/173 tests passing)
+## 🐑 Bonus: ShepLang
 
-### 📦 **Production Ready**
-Generates clean, maintainable TypeScript code ready for deployment.
+Also includes full support for **ShepLang** - the AI-native programming language:
 
-### 🔄 **Import from GitHub** 🆕
-**Convert real production codebases to ShepLang with one click:**
+```sheplang
+app TaskManager
 
+data Task:
+  fields:
+    title: text
+    done: yes/no
+
+view Dashboard:
+  list Task
+  button "Add" -> CreateTask
+
+action CreateTask(title):
+  call POST "/tasks" with title
+  show Dashboard
 ```
-Ctrl+Shift+P → ShepLang: Import from GitHub → Paste URL
-```
+
+---
+
+## 🚀 Quick Start
+
+1. **Install** this extension
+2. **Open** any TypeScript, Python, React, HTML, CSS, or ShepLang file
+3. **See** real-time verification in the ShepVerify panel
+
+---
+
+## 📋 Commands
+
+| Command | Description |
+|---------|-------------|
+| `ShepLang: Run ShepVerify` | Manual verification |
+| `ShepLang: Quick Create Project` | AI-powered app generation |
+| `ShepLang: Import from GitHub` | Convert existing code |
 
 **Tested & Verified on Real Projects:**
 - ✅ [boxyhq/saas-starter-kit](https://github.com/boxyhq/saas-starter-kit) → 162+ ShepLang files

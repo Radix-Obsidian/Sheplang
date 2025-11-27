@@ -1,8 +1,8 @@
 {
   "name": "sheplang-vscode",
-  "displayName": "ShepLang - AI-Native Verified Programming",
-  "description": "The first AI-native programming language with built-in verification. Write in English, ship verified code.",
-  "version": "1.3.2",
+  "displayName": "ShepVerify - Real-Time Code Verification",
+  "description": "Ship verified code across 11 languages. Lighthouse-style scores for TypeScript, Python, React, HTML, CSS & more. Click errors to jump to exact line.",
+  "version": "1.4.0",
   "publisher": "GoldenSheepAI",
   "icon": "media/icon.png",
   "engines": {
@@ -14,15 +14,30 @@
     "Formatters"
   ],
   "keywords": [
-    "sheplang",
-    "ai",
+    "shepverify",
     "verification",
-    "full-stack",
-    "shepthon",
-    "verified",
-    "type-safe"
+    "linter",
+    "typescript",
+    "python",
+    "react",
+    "html",
+    "css",
+    "code-quality",
+    "type-safety",
+    "sheplang",
+    "ai"
   ],
   "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascriptreact",
+    "onLanguage:python",
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:scss",
+    "onLanguage:less",
+    "onLanguage:json",
     "workspaceContains:**/*.shep",
     "workspaceContains:**/*.shepthon"
   ],

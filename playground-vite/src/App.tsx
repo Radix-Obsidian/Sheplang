@@ -6,8 +6,210 @@ import ShepVerifyPanel from '@/components/ShepVerify/ShepVerifyPanel';
 import type { ShepLangDiagnostic } from '@/types';
 import SplitPane from '@/components/Layout/SplitPane';
 
+// Demo code samples for each language
+const DEMO_CODE_SAMPLES: Record<string, string> = {
+  sheplang: `app TaskFlowYC
+
+data ApplicationSection:
+  fields:
+    category: text
+    content: text
+
+view YCApplication:
+  text "TaskFlow - AI-Powered Project Management"
+  text "Helping remote teams ship 10x faster"
+  button "Add Company Info" -> AddCompanySection
+  button "Add Product Details" -> AddProductSection
+  list ApplicationSection
+
+action AddCompanySection():
+  add ApplicationSection with category = "Company", content = "TaskFlow automates task assignment."
+  show YCApplication`,
+  
+  typescript: `// Sample TypeScript code with issues ShepVerify would catch
+import React, { useState, useEffect } from 'react';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+function fetchUser(id: number): Promise<User> {
+  return fetch(\`/api/users/\${id}\`)
+    .then(res => res.json() as any);  // ⚠️ ShepVerify: Avoid 'any'
+}
+
+const UserProfile = ({ userId }: { userId: string }) => {
+  const [user, setUser] = useState<User | null>(null);
+  
+  useEffect(() => {
+    fetchUser(parseInt(userId)).then(setUser);
+  }, []);  // ⚠️ ShepVerify: Missing dependency 'userId'
+  
+  return (
+    <div>
+      <h1>{user!.name}</h1>  {/* ⚠️ ShepVerify: Non-null assertion */}
+      <p>{user?.email}</p>
+    </div>
+  );
+};`,
+  
+  python: `# Sample Python code with issues ShepVerify would catch
+import math, sys, os
+
+def f(a):
+    s=0
+    for i in range(len(a)):
+        if a[i] == None or a[i]=="":
+            pass
+        else:
+            try:
+                s = s + float(a[i])
+                c=c+1
+            except:
+                print("bad", a[i])  # ⚠️ ShepVerify: Use logging
+        if c==0:
+            s = 0
+        else:
+            s = s/c
+            return [c,s,s]
+
+def main():
+    x = [10,"20","",None,"oops",30,40]
+    r = f(x)
+    print("stats:", r[0], r[1], r[2], "done")  # ⚠️ ShepVerify: Use logging
+
+main()`,
+  
+  react: `// Sample React TSX with issues ShepVerify would catch
+import React, { useState, useEffect } from 'react';
+
+interface OrderViewProps {
+  onNavigate: (to: string) => void;
+  onSubmit;  // ⚠️ ShepVerify: Missing type annotation
+}
+
+export default function OrderView({ onNavigate }: OrderViewProps) {
+  const [items, setItems] = useState<any[]>([]);  // ⚠️ ShepVerify: Avoid 'any'
+  const [newItemTitle, setNewItemTitle] = useState('');
+  
+  useEffect(() => {
+    setItems(getAllOrders());
+  }, []);  // ⚠️ ShepVerify: Missing dependency
+  
+  const handleAdd = () => {
+    if (!newItemTitle.trim()) return;
+    const newItem = addOrder({ title: newItemTitle } as any);  // ⚠️ any
+    setItems([...items, newItem]);
+    setNewItemTitle('');
+  };
+  
+  const handleToggle = (id: string) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, done: !item.done } : item
+    ));
+  };
+  
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">OrderView</h2>
+      <input type="text" value={newItemTitle} onChange={e => setNewItemTitle(e.target.value)} />
+      <button onClick={handleAdd}>Add</button>
+    </div>
+  );
+}`,
+  
+  html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ⚠️ ShepVerify: Missing meta description for SEO -->
+  <title>My App</title>
+</head>
+<body>
+  <header>
+    <nav>
+      <a>Home</a>  <!-- ⚠️ ShepVerify: Missing href attribute -->
+      <a href="/about">About</a>
+    </nav>
+  </header>
+  
+  <main>
+    <h1>Welcome to My App</h1>
+    
+    <img src="/hero.jpg">  <!-- ⚠️ ShepVerify: Missing alt attribute -->
+    
+    <button></button>  <!-- ⚠️ ShepVerify: Empty button, no accessible text -->
+    
+    <form>
+      <input type="text" placeholder="Enter name">
+      <button type="submit">Submit</button>
+    </form>
+  </main>
+  
+  <footer>
+    <p>&copy; 2025 My App</p>
+  </footer>
+</body>
+</html>`,
+  
+  css: `/* Sample CSS with issues ShepVerify would catch */
+
+* {
+  /* ⚠️ ShepVerify: Universal selector impacts performance */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.header {
+  background: #1a1a2e;
+  padding: 20px;
+  color: white !important;  /* ⚠️ ShepVerify: Avoid !important */
+}
+
+.nav-link {
+  color: #4EC9B0;
+  text-decoration: none;
+  padding: 10px 20px;
+}
+
+.nav-link:hover {
+  background: rgba(78, 201, 176, 0.2);
+}
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.button {
+  background: #4EC9B0 !important;  /* ⚠️ ShepVerify: Avoid !important */
+  color: #1a1a2e;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}`
+};
+
 // Default ShepLang code for first load
-const DEFAULT_CODE = `app TaskFlowYC
+const DEFAULT_CODE = DEMO_CODE_SAMPLES.sheplang;
+
+const DEFAULT_CODE_OLD = `app TaskFlowYC
 
 data ApplicationSection:
   fields:
@@ -41,12 +243,26 @@ action AddTeamSection():
 
 function App() {
   const [code, setCode] = useState<string>(DEFAULT_CODE);
+  const [displayCode, setDisplayCode] = useState<string>(DEFAULT_CODE);
+  const [demoLanguage, setDemoLanguage] = useState<string>('sheplang');
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [diagnostics, setDiagnostics] = useState<ShepLangDiagnostic[]>([]);
   const [parseTime, setParseTime] = useState<number>(0);
   
   // Editor ref for error navigation
   const editorRef = useRef<any>(null);
+  
+  // Handle demo language change
+  const handleDemoLanguageChange = (lang: string) => {
+    setDemoLanguage(lang);
+    if (lang === 'sheplang') {
+      // Return to actual ShepLang code
+      setDisplayCode(code);
+    } else {
+      // Show demo code for selected language
+      setDisplayCode(DEMO_CODE_SAMPLES[lang] || code);
+    }
+  };
   
   // Load code from URL param, localStorage, or use default
   useEffect(() => {
@@ -87,8 +303,12 @@ function App() {
   }, []);
   
   const handleCodeChange = (newCode: string) => {
-    setCode(newCode);
-    localStorage.setItem('sheplang-playground-code', newCode);
+    if (demoLanguage === 'sheplang') {
+      setCode(newCode);
+      setDisplayCode(newCode);
+      localStorage.setItem('sheplang-playground-code', newCode);
+    }
+    // Don't save demo code changes
   };
   
   const handleAnalysisComplete = (results: { diagnostics: ShepLangDiagnostic[], parseTime: number }) => {
@@ -122,11 +342,13 @@ function App() {
       <SplitPane
         left={
           <CodeEditor 
-            value={code}
+            value={displayCode}
             theme={theme}
             onChange={handleCodeChange}
             onAnalysisComplete={handleAnalysisComplete}
             editorRef={editorRef}
+            readOnly={demoLanguage !== 'sheplang'}
+            language={demoLanguage}
           />
         }
         right={
@@ -136,6 +358,7 @@ function App() {
             parseTime={parseTime}
             theme={theme}
             onErrorClick={handleErrorClick}
+            onDemoLanguageChange={handleDemoLanguageChange}
           />
         }
       />
