@@ -31,7 +31,8 @@ TransitionChain:
 
 // Contextual keyword support - allows keywords as identifiers per Langium docs
 // Extended to include common field names from Prisma schemas
-ShepIdentifier returns string: ID | 'status' | 'job' | 'background' | 'states' | 'schedule' | 'action' | 'step' |
+// Added 'scheduler' for JobDecl keyword support
+ShepIdentifier returns string: ID | 'status' | 'job' | 'scheduler' | 'background' | 'states' | 'schedule' | 'action' | 'step' |
   'id' | 'email' | 'name' | 'title' | 'content' | 'author' | 'user' | 'post' | 'comment' |
   'createdAt' | 'updatedAt' | 'deletedAt' | 'completed' | 'priority' | 'role' | 'password' |
   'text' | 'number' | 'date' | 'image' | 'file' | 'url' | 'phone';
