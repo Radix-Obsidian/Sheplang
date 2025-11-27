@@ -182,8 +182,8 @@
       },
       {
         "command": "shepverify.rerun",
-        "key": "alt+shift+v",
-        "mac": "alt+shift+v",
+        "key": "alt+shift+r",
+        "mac": "alt+shift+r",
         "when": "editorLangId == sheplang"
       },
       {

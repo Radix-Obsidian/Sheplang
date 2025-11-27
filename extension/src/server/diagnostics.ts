@@ -47,44 +47,84 @@ export async function validateDocument(document: TextDocument): Promise<Diagnost
 async function validateShepLang(document: TextDocument, text: string, parseShep: any): Promise<Diagnostic[]> {
   const diagnostics: Diagnostic[] = [];
   
-  try {
-    // Parse using ShepLang parser from @sheplang/language
-    const parseResult = await parseShep(text);
+  // Use LENIENT validation for better UX
+  // The strict Langium parser is too aggressive for editor feedback
+  // Only show errors for things that will DEFINITELY break the app
+  
+  // Check 1: Must have app declaration
+  if (!text.match(/^\s*app\s+\w+/m)) {
+    diagnostics.push({
+      severity: DiagnosticSeverity.Error,
+      range: { start: { line: 0, character: 0 }, end: { line: 0, character: 10 } },
+      message: 'Missing app declaration. Start with: app MyAppName {',
+      source: 'sheplang'
+    });
+    return diagnostics;
+  }
+  
+  // Check 2: Balanced braces
+  const openBraces = (text.match(/{/g) || []).length;
+  const closeBraces = (text.match(/}/g) || []).length;
+  if (openBraces !== closeBraces) {
+    diagnostics.push({
+      severity: DiagnosticSeverity.Warning,
+      range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } },
+      message: `Unbalanced braces: ${openBraces} opening, ${closeBraces} closing`,
+      source: 'sheplang'
+    });
+  }
+  
+  // Check 3: Basic structure validation (warnings only)
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
     
-    // Convert parser diagnostics to LSP diagnostics
+    // Check for common typos in keywords
+    if (line.match(/^datsa\s/i)) {
+      diagnostics.push({
+        severity: DiagnosticSeverity.Warning,
+        range: { start: { line: i, character: 0 }, end: { line: i, character: 5 } },
+        message: 'Did you mean "data"?',
+        source: 'sheplang'
+      });
+    }
+    if (line.match(/^veiw\s/i) || line.match(/^vxiew\s/i)) {
+      diagnostics.push({
+        severity: DiagnosticSeverity.Warning,
+        range: { start: { line: i, character: 0 }, end: { line: i, character: 5 } },
+        message: 'Did you mean "view"?',
+        source: 'sheplang'
+      });
+    }
+    if (line.match(/^acton\s/i) || line.match(/^actoin\s/i)) {
+      diagnostics.push({
+        severity: DiagnosticSeverity.Warning,
+        range: { start: { line: i, character: 0 }, end: { line: i, character: 6 } },
+        message: 'Did you mean "action"?',
+        source: 'sheplang'
+      });
+    }
+  }
+  
+  // Optional: Try strict parsing and downgrade errors to hints
+  try {
+    const parseResult = await parseShep(text);
     if (parseResult.diagnostics && parseResult.diagnostics.length > 0) {
       for (const diag of parseResult.diagnostics) {
-        const severity = 
-          diag.severity === 'error' ? DiagnosticSeverity.Error :
-          diag.severity === 'warning' ? DiagnosticSeverity.Warning :
-          DiagnosticSeverity.Information;
-
-        const line = Math.max(0, (diag.line || 1) - 1);
-        const character = Math.max(0, (diag.column || 0));
-
+        // Downgrade parser errors to Hints - don't block the user
         diagnostics.push({
-          severity,
+          severity: DiagnosticSeverity.Hint,
           range: {
-            start: { line, character },
-            end: { line, character: character + 1 }
+            start: { line: Math.max(0, (diag.line || 1) - 1), character: Math.max(0, (diag.column || 0)) },
+            end: { line: Math.max(0, (diag.line || 1) - 1), character: Math.max(0, (diag.column || 0)) + 1 }
           },
-          message: diag.message,
-          source: 'sheplang'
+          message: `Parser: ${diag.message}`,
+          source: 'sheplang-parser'
         });
       }
     }
-
-    // Additional semantic validation can be added in Phase 2
   } catch (error) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: { line: 0, character: 0 },
-        end: { line: 0, character: 1 }
-      },
-      message: error instanceof Error ? error.message : 'Parse error',
-      source: 'sheplang'
-    });
+    // Silently ignore strict parser errors - the preview will show if it works
   }
 
   return diagnostics;
