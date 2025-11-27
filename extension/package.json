@@ -176,20 +176,20 @@
     "keybindings": [
       {
         "command": "sheplang.showPreview",
-        "key": "ctrl+shift+v",
-        "mac": "cmd+shift+v",
+        "key": "alt+shift+p",
+        "mac": "alt+shift+p",
         "when": "editorLangId == sheplang"
       },
       {
         "command": "shepverify.rerun",
-        "key": "ctrl+shift+r",
-        "mac": "cmd+shift+r",
+        "key": "alt+shift+v",
+        "mac": "alt+shift+v",
         "when": "editorLangId == sheplang"
       },
       {
         "command": "shepverify-dashboard.focus",
-        "key": "ctrl+alt+s",
-        "mac": "cmd+alt+s",
+        "key": "alt+shift+d",
+        "mac": "alt+shift+d",
         "when": "editorLangId == sheplang"
       }
     ],

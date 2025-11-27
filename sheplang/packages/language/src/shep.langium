@@ -295,12 +295,15 @@ IdentifierRef: ref=IdentifierName;
 // Data type rule to allow type keywords as identifiers (Langium best practice)
 IdentifierName returns string: ID | 'id' | 'text' | 'number' | 'date' | 'email';
 
+// Raw statement for comments/pseudocode - text MUST be quoted
+// (Terminals are context-free in Langium, so unquoted would be too greedy)
 RawStmt: '~' text=STRING;
 
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal STRING: /"[^"]*"|'[^']*'/;
-terminal NUMBER: /[0-9]+(\.[0-9]+)?/;
+// TIME must come BEFORE NUMBER for correct precedence (9am vs 9)
 terminal TIME: /[0-9]{1,2}(:[0-9]{2})?(am|pm)/;
+terminal NUMBER: /[0-9]+(\.[0-9]+)?/;
 
 hidden terminal WS: /\s+/;
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;

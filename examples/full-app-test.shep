@@ -20,7 +20,7 @@ app FullApp {
   scheduler SendReminders {
     schedule: daily at 9am
     action {
-      ~ send reminder emails
+      ~ "send reminder emails"
     }
   }
 }

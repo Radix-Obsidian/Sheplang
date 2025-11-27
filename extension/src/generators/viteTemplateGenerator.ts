@@ -294,6 +294,7 @@ function generatePackageJson(app: ShepLangApp): GeneratedFile {
       'lucide-react': '^0.263.1'
     },
     devDependencies: {
+      '@types/node': '^20.8.0',
       '@types/react': '^18.2.15',
       '@types/react-dom': '^18.2.7',
       '@vitejs/plugin-react': '^4.0.3',
