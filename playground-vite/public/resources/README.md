@@ -1,51 +1,50 @@
 # ShepLang Playground Documentation Resources
 
-**Purpose**: Convert playground users to VS Code extension users through high-quality, founder-friendly documentation.
+**Purpose**: Demonstrate ShepVerify real-time verification and convert users to VS Code extension.
+
+## 🛡️ What This Playground Does
+
+1. **ShepLang Editor** - Write ShepLang code with syntax highlighting
+2. **ShepVerify Panel** - Real-time verification with scores
+3. **Language Demos** - Preview how ShepVerify works on TypeScript, Python, React, etc.
 
 ## 📁 Resource Structure
 
 ```
-playground-resources/
-├── README.md                    # This file - overview and strategy
-├── 01-quick-start.md           # 1-page, <2min read for immediate engagement
-├── 02-syntax-cheat-sheet.md     # Comprehensive ShepLang syntax reference
-├── 03-playground-vs-extension.md # Feature comparison creating FOMO
-├── 04-react-typescript-overlay.md # Side-by-side comparisons for syntax toggle
-├── 05-migration-guide.md        # CTA-heavy guide to VS Code extension
-└── conversion-funnel.md         # How all resources work together
+resources/
+├── README.md                    # This file
+├── 01-quick-start.md            # ShepVerify introduction
+├── 02-syntax-cheat-sheet.md     # ShepLang syntax reference
+└── ... other guides
 ```
 
-## 🎯 Conversion Strategy
+## 🎯 User Journey
 
-### Funnel Approach
-1. **Quick Start** → Immediate value, low commitment
-2. **Syntax Cheat Sheet** → Build confidence with language
-3. **Playground Limitations** → Create need for more power
-4. **Migration Guide** → Direct path to extension
+1. **Land** → See ShepVerify panel with scores
+2. **Explore** → Try different language demos (🐑🔷🐍⚛️🌐🎨)
+3. **Learn** → Read about ShepLang syntax
+4. **Convert** → Install VS Code extension for real verification
 
-### Key Principles
-- **Founder-friendly tone**: Empowering, encouraging, non-technical
-- **Zero hallucination**: Every feature claim verified against actual codebase
-- **Strong CTAs**: Every resource ends with clear next steps
-- **Progressive disclosure**: Each resource builds on previous knowledge
+## 🚀 Key Features Demonstrated
 
-## 🚀 Integration Notes
+### In Playground (ShepLang Only)
+- ✅ Real-time verification scores
+- ✅ Phase breakdown (Type Safety, Null Safety, etc.)
+- ✅ Clickable errors
+- ✅ Language-specific categories
 
-These resources are designed to be integrated into the playground-vite as:
-- **Resource tab** with quick access to all guides
-- **Contextual help** triggered by user actions
-- **Overlay modals** for React/TypeScript comparisons
-- **Conversion prompts** at natural decision points
+### In VS Code Extension (11 Languages)
+- ✅ TypeScript, JavaScript, React
+- ✅ Python
+- ✅ HTML, CSS
+- ✅ JSON
+- ✅ ShepLang
 
-## 📊 Success Metrics
+## 📊 Conversion Goal
 
-- **Resource engagement**: Time spent, completion rates
-- **Conversion rate**: Playground → Extension downloads
-- **Feature adoption**: Users trying advanced syntax after reading guides
-- **Retention**: Return visitors to playground and extension
+Playground shows ~40% of VS Code experience → User wants the full experience → Installs extension
 
 ---
 
-*Created by: Documentation Engineer*  
-*Date: November 24, 2025*  
-*Status: Ready for review and integration*
+*Updated: November 27, 2025*  
+*Focus: ShepVerify demonstration*

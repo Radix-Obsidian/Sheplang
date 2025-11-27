@@ -454,3 +454,135 @@
 .verify-content::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Language Switcher */
+.language-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.switcher-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-right: 4px;
+}
+
+.lang-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.lang-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.lang-btn.active {
+  background: rgba(78, 201, 176, 0.2);
+  border-color: #4EC9B0;
+  box-shadow: 0 0 8px rgba(78, 201, 176, 0.3);
+}
+
+/* Demo Mode */
+.demo-mode {
+  position: relative;
+}
+
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(107, 91, 149, 0.3), rgba(102, 126, 234, 0.3));
+  border: 1px solid rgba(107, 91, 149, 0.5);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.demo-icon {
+  font-size: 24px;
+}
+
+.demo-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.demo-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+/* Demo Issues */
+.demo-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border-left: 3px solid;
+}
+
+.demo-issue.error {
+  border-left-color: #F14C4C;
+}
+
+.demo-issue.warning {
+  border-left-color: #DCDCAA;
+}
+
+.demo-issue .issue-icon {
+  font-size: 14px;
+}
+
+.demo-issue.error .issue-icon {
+  color: #F14C4C;
+}
+
+.demo-issue.warning .issue-icon {
+  color: #DCDCAA;
+}
+
+.demo-issue .issue-message {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.demo-issue .issue-line {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Demo CTA */
+.demo-cta {
+  margin-top: 20px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(78, 201, 176, 0.1)) !important;
+  border: 1px solid rgba(255, 215, 0, 0.3) !important;
+}
+
+.demo-cta h4 {
+  color: #FFD700 !important;
+}

@@ -17,6 +17,112 @@ enum VerifyTab {
   Resources = 'resources'
 }
 
+// Supported languages for demo mode
+type DemoLanguage = 'sheplang' | 'typescript' | 'python' | 'react' | 'html' | 'css';
+
+interface LanguageDemo {
+  name: string;
+  icon: string;
+  scores: {
+    overall: number;
+    categories: { name: string; score: number }[];
+  };
+  sampleIssues: { type: 'error' | 'warning'; message: string; line: number }[];
+}
+
+const LANGUAGE_DEMOS: Record<DemoLanguage, LanguageDemo> = {
+  sheplang: {
+    name: 'ShepLang',
+    icon: '🐑',
+    scores: { overall: 0, categories: [] }, // Will be calculated from actual diagnostics
+    sampleIssues: []
+  },
+  typescript: {
+    name: 'TypeScript',
+    icon: '🔷',
+    scores: {
+      overall: 78,
+      categories: [
+        { name: 'Type Safety', score: 65 },
+        { name: 'Null Safety', score: 80 },
+        { name: 'Code Quality', score: 90 },
+        { name: 'React Patterns', score: 75 }
+      ]
+    },
+    sampleIssues: [
+      { type: 'error', message: 'Avoid using "any" type - use specific types', line: 12 },
+      { type: 'error', message: 'Type assertion to "any" may hide type errors', line: 24 },
+      { type: 'warning', message: 'Non-null assertion (!) bypasses null checks', line: 31 }
+    ]
+  },
+  python: {
+    name: 'Python',
+    icon: '🐍',
+    scores: {
+      overall: 68,
+      categories: [
+        { name: 'Type Hints', score: 45 },
+        { name: 'None Safety', score: 85 },
+        { name: 'Code Quality', score: 70 },
+        { name: 'Best Practices', score: 72 }
+      ]
+    },
+    sampleIssues: [
+      { type: 'warning', message: 'Function "process_data" missing return type annotation', line: 5 },
+      { type: 'error', message: 'Bare "except:" catches all exceptions including KeyboardInterrupt', line: 15 },
+      { type: 'warning', message: 'Consider using logging instead of print()', line: 22 }
+    ]
+  },
+  react: {
+    name: 'React TSX',
+    icon: '⚛️',
+    scores: {
+      overall: 82,
+      categories: [
+        { name: 'Type Safety', score: 80 },
+        { name: 'Null Safety', score: 75 },
+        { name: 'Code Quality', score: 90 },
+        { name: 'React Patterns', score: 85 }
+      ]
+    },
+    sampleIssues: [
+      { type: 'warning', message: 'useEffect missing dependency: "userId"', line: 18 },
+      { type: 'error', message: 'Props interface missing type for "onSubmit"', line: 8 }
+    ]
+  },
+  html: {
+    name: 'HTML',
+    icon: '🌐',
+    scores: {
+      overall: 85,
+      categories: [
+        { name: 'Accessibility', score: 75 },
+        { name: 'SEO', score: 90 },
+        { name: 'Semantics', score: 90 }
+      ]
+    },
+    sampleIssues: [
+      { type: 'error', message: 'Image missing alt attribute - required for accessibility', line: 24 },
+      { type: 'warning', message: 'Page missing meta description - important for SEO', line: 1 }
+    ]
+  },
+  css: {
+    name: 'CSS',
+    icon: '🎨',
+    scores: {
+      overall: 92,
+      categories: [
+        { name: 'Best Practices', score: 85 },
+        { name: 'Performance', score: 95 },
+        { name: 'Maintainability', score: 95 }
+      ]
+    },
+    sampleIssues: [
+      { type: 'warning', message: 'Avoid using !important - makes CSS harder to maintain', line: 45 }
+    ]
+  }
+};
+
 interface PhaseResult {
   name: string;
   status: 'passed' | 'warning' | 'failed';
@@ -33,6 +139,7 @@ const ShepVerifyPanel: React.FC<ShepVerifyPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<VerifyTab>(VerifyTab.Verification);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set(['typeSafety', 'nullSafety']));
+  const [demoLanguage, setDemoLanguage] = useState<DemoLanguage>('sheplang');
 
   // Calculate verification scores from diagnostics
   const verificationResult = useMemo(() => {
@@ -171,8 +278,99 @@ const ShepVerifyPanel: React.FC<ShepVerifyPanelProps> = ({
         </div>
       </div>
 
+      {/* Language Switcher */}
+      <div className="language-switcher">
+        <span className="switcher-label">Try:</span>
+        {(Object.keys(LANGUAGE_DEMOS) as DemoLanguage[]).map((lang) => (
+          <button
+            key={lang}
+            className={`lang-btn ${demoLanguage === lang ? 'active' : ''}`}
+            onClick={() => setDemoLanguage(lang)}
+            title={LANGUAGE_DEMOS[lang].name}
+          >
+            {LANGUAGE_DEMOS[lang].icon}
+          </button>
+        ))}
+      </div>
+
       <div className="verify-content">
-        {activeTab === VerifyTab.Verification && (
+        {activeTab === VerifyTab.Verification && demoLanguage !== 'sheplang' && (
+          <div className="verification-view demo-mode">
+            {/* Demo Mode Banner */}
+            <div className="demo-banner">
+              <span className="demo-icon">{LANGUAGE_DEMOS[demoLanguage].icon}</span>
+              <span className="demo-text">
+                {LANGUAGE_DEMOS[demoLanguage].name} Demo
+              </span>
+              <span className="demo-hint">Sample verification preview</span>
+            </div>
+
+            {/* Demo Overall Score */}
+            <div className="score-section">
+              <div className="score-header">
+                <span className="score-label">Score</span>
+                <span 
+                  className="score-value" 
+                  style={{ color: getScoreColor(LANGUAGE_DEMOS[demoLanguage].scores.overall) }}
+                >
+                  {LANGUAGE_DEMOS[demoLanguage].scores.overall}%
+                </span>
+              </div>
+              <div className="score-bar">
+                <div 
+                  className="score-fill" 
+                  style={{ 
+                    width: `${LANGUAGE_DEMOS[demoLanguage].scores.overall}%`,
+                    backgroundColor: getScoreColor(LANGUAGE_DEMOS[demoLanguage].scores.overall)
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Demo Category Scores */}
+            <div className="category-scores">
+              {LANGUAGE_DEMOS[demoLanguage].scores.categories.map((cat) => (
+                <div key={cat.name} className="category-score">
+                  <span className="category-name">{cat.name}</span>
+                  <span 
+                    className="category-value"
+                    style={{ color: getScoreColor(cat.score) }}
+                  >
+                    {cat.score}%
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Demo Issues */}
+            <div className="phases-section">
+              <h3 className="section-title">Sample Issues</h3>
+              {LANGUAGE_DEMOS[demoLanguage].sampleIssues.map((issue, idx) => (
+                <div key={idx} className={`demo-issue ${issue.type}`}>
+                  <span className="issue-icon">{issue.type === 'error' ? '✖' : '⚠'}</span>
+                  <span className="issue-message">{issue.message}</span>
+                  <span className="issue-line">Line {issue.line}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* VS Code CTA for Demo */}
+            <div className="vscode-cta demo-cta">
+              <h4>Want real {LANGUAGE_DEMOS[demoLanguage].name} verification?</h4>
+              <p>Install the VS Code extension for live verification of your actual code.</p>
+              <a 
+                href="https://marketplace.visualstudio.com/items?itemName=GoldenSheepAI.sheplang-vscode"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cta-button"
+              >
+                🚀 Install for VS Code
+              </a>
+            </div>
+          </div>
+        )}
+
+        {activeTab === VerifyTab.Verification && demoLanguage === 'sheplang' && (
           <div className="verification-view">
             {/* Overall Status Banner */}
             <div className={`status-banner ${getStatusClass(verificationResult.status)}`}>
