@@ -28,6 +28,25 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "shepverify",
+          "title": "ShepVerify",
+          "icon": "resources/shepverify-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "shepverify": [
+        {
+          "id": "shepverify-dashboard",
+          "name": "Verification Dashboard",
+          "icon": "resources/shepverify-icon.svg",
+          "contextualTitle": "ShepVerify"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "sheplang",
@@ -103,6 +122,21 @@
         "command": "sheplang.updateApiKey",
         "title": "ShepLang: Update Anthropic API Key",
         "icon": "$(key)"
+      },
+      {
+        "command": "shepverify.rerun",
+        "title": "ShepVerify: Re-run Verification",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "shepverify.openError",
+        "title": "ShepVerify: Open Error Location",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "shepverify.clearHistory",
+        "title": "ShepVerify: Clear History",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -112,6 +146,20 @@
           "command": "sheplang.showPreview",
           "group": "navigation"
         }
+      ],
+      "view/title": [
+        {
+          "command": "shepverify.rerun",
+          "when": "view == shepverify-dashboard",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "shepverify.clearHistory",
+          "when": "view == shepverify-dashboard && viewItem == history",
+          "group": "inline"
+        }
       ]
     },
     "keybindings": [
@@ -119,6 +167,18 @@
         "command": "sheplang.showPreview",
         "key": "ctrl+shift+v",
         "mac": "cmd+shift+v",
+        "when": "editorLangId == sheplang"
+      },
+      {
+        "command": "shepverify.rerun",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorLangId == sheplang"
+      },
+      {
+        "command": "shepverify-dashboard.focus",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d",
         "when": "editorLangId == sheplang"
       }
     ],
@@ -204,7 +264,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.0",
-    "@goldensheepai/sheplang-language": "workspace:*",
+    "@goldensheepai/sheplang-language": "file:../sheplang/packages/language/goldensheepai-sheplang-language-0.2.1.tgz",
     "express": "^4.18.2",
     "langium": "^3.0.0",
     "simple-git": "^3.30.0",
