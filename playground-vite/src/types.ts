@@ -29,3 +29,14 @@ export interface PreviewResult {
   html: string;
   generationTime: number;
 }
+
+/**
+ * ShepVerify verification scores
+ */
+export interface VerificationScore {
+  overall: number;
+  typeSafety: number;
+  nullSafety: number;
+  apiContracts: number;
+  exhaustiveness: number;
+}

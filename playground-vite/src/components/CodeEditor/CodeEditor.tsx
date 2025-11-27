@@ -9,15 +9,18 @@ interface CodeEditorProps {
   theme: 'light' | 'dark';
   onChange: (value: string) => void;
   onAnalysisComplete: (results: { diagnostics: ShepLangDiagnostic[], parseTime: number }) => void;
+  editorRef?: React.MutableRefObject<any>;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ 
   value, 
   theme, 
   onChange,
-  onAnalysisComplete
+  onAnalysisComplete,
+  editorRef: externalEditorRef
 }) => {
-  const editorRef = useRef<any>(null);
+  const internalEditorRef = useRef<any>(null);
+  const editorRef = externalEditorRef || internalEditorRef;
   const monacoRef = useRef<any>(null);
   const analysisTimeoutRef = useRef<number | null>(null);
 

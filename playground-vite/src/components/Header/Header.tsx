@@ -16,24 +16,24 @@ const Header: React.FC<HeaderProps> = ({ onThemeToggle, errorCount, warningCount
       <div className="header-left">
         <img src="/sheplang-icon.png" alt="ShepLang Logo" className="header-logo" />
         <h1 className="header-title">
-          <span className="logo-lite">ShepLang Lite</span>
-          <span className="tagline">The Frontend Powerhouse</span>
+          <span className="logo-lite">ShepLang Playground</span>
+          <span className="tagline">Write & Verify in Real-Time</span>
         </h1>
       </div>
       <div className="header-middle">
         {showUpsell && (
           <div className="extension-upsell">
             <div className="upsell-content">
-              <h4>Ready for more power?</h4>
-              <p>Try our VS Code extension for:</p>
+              <h4>🛡️ ShepVerify for 11 Languages</h4>
+              <p>Our VS Code extension verifies more than just ShepLang:</p>
               <ul>
-                <li>🎨 <strong>Syntax Highlighting</strong> - Beautiful code with TextMate grammar</li>
-                <li>📝 <strong>Intelligent Snippets</strong> - Instant code templates</li>
-                <li>🔍 <strong>Real-Time Diagnostics</strong> - Instant error detection</li>
-                <li>🚀 <strong>One-Click Compilation</strong> - ShepLang to TypeScript</li>
-                <li>🛠️ <strong>Full Tooling</strong> - Autocomplete, Go to Definition, Hover info</li>
-                <li>⚡ <strong>Backend APIs</strong> - Full-stack generation</li>
-                <li>💾 <strong>Database Integration</strong> - Complete data layer</li>
+                <li>🔷 <strong>TypeScript & JavaScript</strong> - Type safety, null checks</li>
+                <li>⚛️ <strong>React (TSX/JSX)</strong> - Hook rules, prop types</li>
+                <li>🐍 <strong>Python</strong> - Type hints, PEP8, None safety</li>
+                <li>🌐 <strong>HTML</strong> - Accessibility, SEO</li>
+                <li>🎨 <strong>CSS/SCSS/LESS</strong> - Best practices</li>
+                <li>📦 <strong>JSON</strong> - Schema validation</li>
+                <li>🐑 <strong>ShepLang</strong> - Full verification</li>
               </ul>
               <div className="upsell-actions">
                 <a 

@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Header from '@/components/Header/Header';
 import CodeEditor from '@/components/CodeEditor/CodeEditor';
-import PreviewPanel from '@/components/Preview/PreviewPanel';
-import CongratulationsModal from '@/components/CongratulationsModal/CongratulationsModal';
+import ShepVerifyPanel from '@/components/ShepVerify/ShepVerifyPanel';
 import type { ShepLangDiagnostic } from '@/types';
 import SplitPane from '@/components/Layout/SplitPane';
 
@@ -46,11 +45,8 @@ function App() {
   const [diagnostics, setDiagnostics] = useState<ShepLangDiagnostic[]>([]);
   const [parseTime, setParseTime] = useState<number>(0);
   
-  // Congratulations modal state
-  const [hasModifiedCode, setHasModifiedCode] = useState<boolean>(false);
-  const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState<boolean>(false);
-  const [showCongratulations, setShowCongratulations] = useState<boolean>(false);
-  const [congratulationsShown, setCongratulationsShown] = useState<boolean>(false);
+  // Editor ref for error navigation
+  const editorRef = useRef<any>(null);
   
   // Load code from URL param, localStorage, or use default
   useEffect(() => {
@@ -93,11 +89,6 @@ function App() {
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
     localStorage.setItem('sheplang-playground-code', newCode);
-    
-    // Track if user has modified the code from default
-    if (newCode.trim() !== DEFAULT_CODE.trim() && !hasModifiedCode) {
-      setHasModifiedCode(true);
-    }
   };
   
   const handleAnalysisComplete = (results: { diagnostics: ShepLangDiagnostic[], parseTime: number }) => {
@@ -109,20 +100,15 @@ function App() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  // Handle when user interacts with preview
-  const handlePreviewInteraction = () => {
-    setHasInteractedWithPreview(true);
-    
-    // Show congratulations on first preview interaction
-    if (!congratulationsShown) {
-      setShowCongratulations(true);
-      setCongratulationsShown(true);
+  // Handle error click - navigate to line in editor
+  const handleErrorClick = (line: number, column: number) => {
+    // This will be handled by the CodeEditor component
+    // For now, we can scroll/highlight using Monaco's API if available
+    if (editorRef.current) {
+      editorRef.current.revealLineInCenter(line);
+      editorRef.current.setPosition({ lineNumber: line, column });
+      editorRef.current.focus();
     }
-  };
-
-  // Close congratulations modal
-  const handleCloseCongratulations = () => {
-    setShowCongratulations(false);
   };
 
   return (
@@ -140,20 +126,18 @@ function App() {
             theme={theme}
             onChange={handleCodeChange}
             onAnalysisComplete={handleAnalysisComplete}
+            editorRef={editorRef}
           />
         }
         right={
-          <PreviewPanel 
+          <ShepVerifyPanel 
             code={code}
+            diagnostics={diagnostics}
+            parseTime={parseTime}
             theme={theme}
-            onInteraction={handlePreviewInteraction}
+            onErrorClick={handleErrorClick}
           />
         }
-      />
-      
-      <CongratulationsModal 
-        isOpen={showCongratulations}
-        onClose={handleCloseCongratulations}
       />
     </div>
   );
