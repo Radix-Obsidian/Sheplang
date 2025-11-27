@@ -35,10 +35,13 @@ export class HistoryService {
     const key = this.getHistoryKey();
     const history = this.context.globalState.get<HistoryEntry[]>(key, []);
     
-    // Convert stored dates back to Date objects
+    // Convert stored dates back to Date objects and ensure arrays exist
     return history.map(entry => ({
       ...entry,
-      timestamp: new Date(entry.timestamp)
+      timestamp: new Date(entry.timestamp),
+      // Ensure errors and warnings arrays are preserved
+      errors: entry.errors || [],
+      warnings: entry.warnings || []
     }));
   }
 

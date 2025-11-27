@@ -86,18 +86,42 @@ export function initializeShepVerifyDashboard(
   context.subscriptions.push(
     vscode.commands.registerCommand('shepverify.openError', async (filePath: string, line: number, column: number) => {
       try {
+        console.log('[ShepVerify] Opening error:', { filePath, line, column });
+        
+        if (!filePath) {
+          vscode.window.showWarningMessage('No file path provided for error location');
+          return;
+        }
+        
         const uri = vscode.Uri.file(filePath);
         const document = await vscode.workspace.openTextDocument(uri);
         const editor = await vscode.window.showTextDocument(document);
         
+        // Ensure line and column are valid numbers (default to 1 if not)
+        const safeLine = typeof line === 'number' && line > 0 ? line : 1;
+        const safeColumn = typeof column === 'number' && column > 0 ? column : 1;
+        
         // Position cursor at error location (VS Code uses 0-based indexing)
-        const position = new vscode.Position(line - 1, column - 1);
+        const position = new vscode.Position(safeLine - 1, safeColumn - 1);
         const range = new vscode.Range(position, position);
         
         // Reveal and select the error line
         editor.selection = new vscode.Selection(position, position);
         editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+        
+        // Also highlight the line briefly
+        const lineRange = document.lineAt(safeLine - 1).range;
+        editor.setDecorations(
+          vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(255, 0, 0, 0.2)',
+            isWholeLine: true
+          }),
+          [lineRange]
+        );
+        
+        console.log('[ShepVerify] Navigated to line', safeLine, 'column', safeColumn);
       } catch (error) {
+        console.error('[ShepVerify] Failed to open error location:', error);
         vscode.window.showErrorMessage(`Failed to open file: ${error}`);
       }
     })
@@ -131,13 +155,19 @@ export function initializeShepVerifyDashboard(
     })
   );
 
+  // Supported languages for multi-language verification
+  const SUPPORTED_LANGUAGES = [
+    'sheplang', 'typescript', 'javascript', 'typescriptreact', 'javascriptreact',
+    'html', 'css', 'scss', 'less', 'json', 'jsonc', 'python'
+  ];
+
   // Run verification when active editor changes
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(editor => {
-      if (editor && editor.document.languageId === 'sheplang') {
+      if (editor && SUPPORTED_LANGUAGES.includes(editor.document.languageId)) {
         runVerificationOnActiveDocument();
       } else {
-        // Hide status bar when not viewing ShepLang file
+        // Hide status bar when not viewing supported file
         updateStatusBar('none', 0, 0);
       }
     })
@@ -146,7 +176,7 @@ export function initializeShepVerifyDashboard(
   // Run verification when document changes
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(event => {
-      if (event.document.languageId === 'sheplang') {
+      if (SUPPORTED_LANGUAGES.includes(event.document.languageId)) {
         // Debounce: only update if this is the active document
         if (vscode.window.activeTextEditor?.document === event.document) {
           runVerificationOnActiveDocument();
@@ -155,8 +185,9 @@ export function initializeShepVerifyDashboard(
     })
   );
 
-  // Run verification on already-open .shep file
-  if (vscode.window.activeTextEditor?.document.languageId === 'sheplang') {
+  // Run verification on already-open supported file
+  if (vscode.window.activeTextEditor && 
+      SUPPORTED_LANGUAGES.includes(vscode.window.activeTextEditor.document.languageId)) {
     runVerificationOnActiveDocument();
   }
 
@@ -174,25 +205,28 @@ async function runVerificationOnActiveDocument(): Promise<void> {
   }
 
   const activeEditor = vscode.window.activeTextEditor;
-  const report = verificationService.runVerification(activeEditor?.document);
+  
+  // Await the async verification (now supports multiple languages)
+  const report = await verificationService.runVerification(activeEditor?.document);
   
   // Save to history if we have a valid report (not "none" status)
   if (report.status !== 'none' && report.timestamp) {
-    const errorCount = Object.values(report.phases).reduce(
-      (sum, phase) => sum + phase.errors.length,
-      0
-    );
-    const warningCount = Object.values(report.phases).reduce(
-      (sum, phase) => sum + phase.warnings.length,
-      0
-    );
+    // Collect all errors and warnings from all phases
+    const allErrors = Object.values(report.phases).flatMap((phase: any) => phase.errors || []);
+    const allWarnings = Object.values(report.phases).flatMap((phase: any) => phase.warnings || []);
+    const errorCount = allErrors.length;
+    const warningCount = allWarnings.length;
 
     const historyEntry: HistoryEntry = {
       timestamp: report.timestamp,
       status: report.status,
       errorCount,
       warningCount,
-      projectPath: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || ''
+      projectPath: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '',
+      // Store errors and warnings for navigation from history
+      errors: allErrors,
+      warnings: allWarnings,
+      filePath: activeEditor?.document.uri.fsPath
     };
 
     await historyService.addEntry(historyEntry);
@@ -206,10 +240,10 @@ async function runVerificationOnActiveDocument(): Promise<void> {
   
   // Update status bar with current verification status
   const totalErrors = Object.values(report.phases).reduce(
-    (sum, phase) => sum + phase.errors.length, 0
+    (sum: number, phase: any) => sum + (phase.errors?.length || 0), 0
   );
   const totalWarnings = Object.values(report.phases).reduce(
-    (sum, phase) => sum + phase.warnings.length, 0
+    (sum: number, phase: any) => sum + (phase.warnings?.length || 0), 0
   );
   updateStatusBar(report.status, totalErrors, totalWarnings);
 }
@@ -241,37 +275,63 @@ export function refreshDashboard(): void {
 
 /**
  * Update the status bar with verification status
+ * Now supports multi-language verification!
  */
 function updateStatusBar(status: string, errorCount: number, warningCount: number): void {
   if (!statusBarItem) return;
 
   const activeEditor = vscode.window.activeTextEditor;
-  const isShepFile = activeEditor?.document.languageId === 'sheplang';
+  const languageId = activeEditor?.document.languageId;
+  
+  // Supported languages for status bar
+  const SUPPORTED_LANGUAGES = [
+    'sheplang', 'typescript', 'javascript', 'typescriptreact', 'javascriptreact',
+    'html', 'css', 'scss', 'less', 'json', 'jsonc', 'python'
+  ];
+  
+  const isSupportedFile = languageId && SUPPORTED_LANGUAGES.includes(languageId);
 
-  if (!isShepFile) {
+  if (!isSupportedFile) {
     statusBarItem.hide();
     return;
   }
+  
+  // Get language display name
+  const languageNames: Record<string, string> = {
+    'sheplang': 'ShepLang',
+    'typescript': 'TypeScript',
+    'javascript': 'JavaScript',
+    'typescriptreact': 'React TSX',
+    'javascriptreact': 'React JSX',
+    'html': 'HTML',
+    'css': 'CSS',
+    'scss': 'SCSS',
+    'less': 'LESS',
+    'json': 'JSON',
+    'jsonc': 'JSON',
+    'python': 'Python'
+  };
+  const langName = languageNames[languageId] || languageId;
 
   // Set icon and text based on status
   switch (status) {
     case 'passed':
-      statusBarItem.text = '$(shield) ShepVerify: ✓ Verified';
+      statusBarItem.text = `$(shield) ShepVerify [${langName}]: ✓ Verified`;
       statusBarItem.backgroundColor = undefined;
       statusBarItem.color = '#4EC9B0';  // Green
       break;
     case 'warning':
-      statusBarItem.text = `$(shield) ShepVerify: ⚠ ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
+      statusBarItem.text = `$(shield) ShepVerify [${langName}]: ⚠ ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
       statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
       statusBarItem.color = undefined;
       break;
     case 'failed':
-      statusBarItem.text = `$(shield) ShepVerify: ✖ ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
+      statusBarItem.text = `$(shield) ShepVerify [${langName}]: ✖ ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
       statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
       statusBarItem.color = undefined;
       break;
     default:
-      statusBarItem.text = '$(shield) ShepVerify';
+      statusBarItem.text = `$(shield) ShepVerify [${langName}]`;
       statusBarItem.backgroundColor = undefined;
       statusBarItem.color = undefined;
   }

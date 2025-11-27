@@ -143,6 +143,24 @@
         "title": "ShepLang: Generate Vite App",
         "icon": "$(package)",
         "category": "ShepLang"
+      },
+      {
+        "command": "sheplang.previewInStackBlitz",
+        "title": "ShepLang: Preview in StackBlitz",
+        "icon": "$(cloud-upload)",
+        "category": "ShepLang"
+      },
+      {
+        "command": "sheplang.previewInCodeSandbox",
+        "title": "ShepLang: Preview in CodeSandbox",
+        "icon": "$(browser)",
+        "category": "ShepLang"
+      },
+      {
+        "command": "sheplang.showEmbeddedPreviewOptions",
+        "title": "ShepLang: Preview Online...",
+        "icon": "$(cloud)",
+        "category": "ShepLang"
       }
     ],
     "menus": {

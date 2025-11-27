@@ -3,33 +3,80 @@
  * 
  * Bridges the gap between VS Code diagnostics and the ShepVerify Dashboard.
  * Converts raw diagnostics into a structured VerificationReport.
+ * 
+ * Now supports MULTI-LANGUAGE verification via UniversalVerifierService:
+ * - ShepLang (native)
+ * - TypeScript/JavaScript/React (TSX/JSX)
+ * - HTML, CSS, SCSS, LESS
+ * - JSON
+ * - Python
  */
 
 import * as vscode from 'vscode';
 import { VerificationReport, VerificationStatus, createEmptyReport } from './types';
+import { UniversalVerifierService } from '../services/universalVerifier';
+
+// Supported languages for multi-language verification
+const SUPPORTED_LANGUAGES = [
+  'sheplang',
+  'typescript',
+  'javascript', 
+  'typescriptreact',
+  'javascriptreact',
+  'html',
+  'css',
+  'scss',
+  'less',
+  'json',
+  'jsonc',
+  'python'
+];
 
 /**
  * Service for running verification and generating reports
  */
 export class VerificationService {
-  /**
-   * No initialization needed - we read from VS Code's diagnostic collection
-   */
+  private universalVerifier: UniversalVerifierService;
+  
+  constructor() {
+    this.universalVerifier = new UniversalVerifierService();
+  }
 
   /**
    * Run verification on the active document
    * Returns a VerificationReport based on current diagnostics
+   * Now supports multiple languages!
    */
-  public runVerification(document: vscode.TextDocument | undefined): VerificationReport {
+  public async runVerification(document: vscode.TextDocument | undefined): Promise<VerificationReport> {
+    if (!document) {
+      return createEmptyReport();
+    }
+    
+    // Check if this language is supported
+    if (!SUPPORTED_LANGUAGES.includes(document.languageId)) {
+      return createEmptyReport();
+    }
+    
+    // For ShepLang, use the native diagnostics-based verification
+    if (document.languageId === 'sheplang') {
+      const diagnostics = vscode.languages.getDiagnostics(document.uri);
+      return this.diagnosticsToReport(document, diagnostics);
+    }
+    
+    // For other languages, use the Universal Verifier
+    return this.universalVerifier.verify(document);
+  }
+  
+  /**
+   * Synchronous version for backward compatibility
+   * @deprecated Use runVerification() instead
+   */
+  public runVerificationSync(document: vscode.TextDocument | undefined): VerificationReport {
     if (!document || document.languageId !== 'sheplang') {
-      // No ShepLang file active
       return createEmptyReport();
     }
 
-    // Get diagnostics for this document from VS Code API
     const diagnostics = vscode.languages.getDiagnostics(document.uri);
-
-    // Convert diagnostics to VerificationReport
     return this.diagnosticsToReport(document, diagnostics);
   }
 

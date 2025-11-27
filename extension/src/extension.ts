@@ -34,9 +34,16 @@ import { registerSemanticHighlighting } from './features/semanticHighlighting';
 import { initializeShepVerifyDashboard } from './dashboard';
 
 // ========================================
-// Vite Template Generator (Phase 4)
+// Vite Template Generator (Phase 4.1)
 // ========================================
 import { generateViteApp } from './generators/viteTemplateGenerator';
+
+// ========================================
+// Online Preview Embeds (Phase 4.2)
+// ========================================
+import { createStackBlitzEmbed } from './commands/stackblitzEmbed';
+import { createCodeSandboxEmbed } from './commands/codeSandboxEmbed';
+import { EmbeddedPreviewService } from './services/embeddedPreviewService';
 
 // ========================================
 // DISABLED FOR ALPHA - Re-enable in Beta
@@ -114,7 +121,7 @@ export function activate(context: vscode.ExtensionContext) {
       // Only log in debug mode if needed
     }),
     
-    // Generate Vite App (Phase 4)
+    // Generate Vite App (Phase 4.1)
     vscode.commands.registerCommand('sheplang.generateViteApp', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor || editor.document.languageId !== 'sheplang') {
@@ -175,9 +182,32 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.window.showErrorMessage(`Failed to generate: ${result.error}`);
         }
       });
+    }),
+    
+    // StackBlitz/CodeSandbox Preview (Phase 4.2)
+    vscode.commands.registerCommand('sheplang.previewInStackBlitz', () => createStackBlitzEmbed(context)),
+    vscode.commands.registerCommand('sheplang.previewInCodeSandbox', () => createCodeSandboxEmbed(context)),
+    vscode.commands.registerCommand('sheplang.showEmbeddedPreviewOptions', async () => {
+      const options = [
+        { label: '$(globe) StackBlitz', description: 'Preview in StackBlitz (recommended)' },
+        { label: '$(device-desktop) CodeSandbox', description: 'Preview in CodeSandbox' }
+      ];
+      const selected = await vscode.window.showQuickPick(options, {
+        title: 'Choose Preview Service',
+        placeHolder: 'Select where to preview your ShepLang app'
+      });
+      if (selected?.label.includes('StackBlitz')) {
+        createStackBlitzEmbed(context);
+      } else if (selected?.label.includes('CodeSandbox')) {
+        createCodeSandboxEmbed(context);
+      }
     })
   );
   outputChannel.success('ALPHA commands registered');
+  
+  // Initialize Embedded Preview Service (Phase 4.2)
+  const embeddedPreviewService = new EmbeddedPreviewService(context);
+  context.subscriptions.push(embeddedPreviewService.createToolbarButton());
 
   // ========================================
   // DISABLED FOR ALPHA - Re-enable in Beta

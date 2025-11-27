@@ -479,8 +479,32 @@ IDE AI (Copilot/Claude/Cursor) already understands ShepLang syntax and can fix e
 | Template generator for Vite projects | ✅ | `viteTemplateGenerator.ts` complete |
 | Command registration | ✅ | `sheplang.generateViteApp` in Command Palette |
 | Editor toolbar button | ✅ | Shows on .shep files |
-| StackBlitz/CodeSandbox preview embed | ⬜ | Future enhancement |
+| StackBlitz embed | ✅ | `stackblitzEmbed.ts` - Preview in StackBlitz |
+| CodeSandbox embed | ✅ | `codeSandboxEmbed.ts` - Preview in CodeSandbox |
+| Preview Online toolbar button | ✅ | Status bar button for quick access |
 | One-click deploy preparation | ⬜ | Future enhancement |
+
+### Phase 4.5: Dashboard Enhancements (Week 6)
+**Status:** ✅ **COMPLETE**
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| History click → navigate to error | ✅ | Clicking history entry opens file at error location |
+| AI hints in tooltips | ✅ | "Ask your IDE AI to fix this!" hints |
+| Error suggestions | ✅ | Suggestions shown in error tooltips |
+| Store errors in history | ✅ | History entries now store errors/warnings for navigation |
+
+### Phase 5: Multi-Language ShepVerify (Week 7+)
+**Status:** 🟡 **PLANNED**
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Universal Verifier Service | ✅ | `universalVerifier.ts` with adapter pattern |
+| TypeScript/JavaScript adapter | 🟡 | Basic checks implemented, needs dashboard wiring |
+| Python adapter | ⬜ | Future - type hints, None safety |
+| Multi-language dashboard | ⬜ | Auto-detect language, show appropriate verification |
+
+**See:** `.specify/MULTI_LANGUAGE_SHEPVERIFY_PLAN.md` for full details
 
 ---
 

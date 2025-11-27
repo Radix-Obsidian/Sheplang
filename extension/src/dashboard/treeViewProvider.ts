@@ -370,7 +370,21 @@ export class ShepVerifyTreeProvider implements vscode.TreeDataProvider<ShepVerif
         vscode.TreeItemCollapsibleState.None
       );
       
-      item.tooltip = `${error.file}:${error.line}:${error.column}\n${error.message}\n\nClick to open file at error location`;
+      // Build tooltip with location, message, suggestion (if any), and AI hint
+      const tooltipLines = [
+        `${error.file}:${error.line}:${error.column}`,
+        '',
+        error.message
+      ];
+      if (error.suggestion) {
+        tooltipLines.push('');
+        tooltipLines.push(`💡 Suggestion: ${error.suggestion}`);
+      }
+      tooltipLines.push('');
+      tooltipLines.push('🤖 Tip: Ask your IDE AI (Copilot/Claude/Cursor) to fix this!');
+      tooltipLines.push('');
+      tooltipLines.push('Click to open file at error location');
+      item.tooltip = tooltipLines.join('\n');
       item.description = `Line ${error.line}`;
       
       // Make error clickable to open file
@@ -391,7 +405,17 @@ export class ShepVerifyTreeProvider implements vscode.TreeDataProvider<ShepVerif
         vscode.TreeItemCollapsibleState.None
       );
       
-      item.tooltip = `${warning.file}:${warning.line}:${warning.column}\n${warning.message}`;
+      // Build tooltip with location, message, and AI hint
+      const tooltipLines = [
+        `${warning.file}:${warning.line}:${warning.column}`,
+        '',
+        warning.message,
+        '',
+        '🤖 Tip: Ask your IDE AI (Copilot/Claude/Cursor) to review this!',
+        '',
+        'Click to open file at warning location'
+      ];
+      item.tooltip = tooltipLines.join('\n');
       item.description = `Line ${warning.line}`;
       
       // Make warning clickable to open file
@@ -421,14 +445,79 @@ export class ShepVerifyTreeProvider implements vscode.TreeDataProvider<ShepVerif
       ];
     }
 
-    const { frontend, backend, schema, flow } = this.report.scores;
+    // Get language-specific score labels
+    const language = this.report.language || 'sheplang';
+    const scoreLabels = this.getScoreLabelsForLanguage(language);
     
-    return [
-      this.createScoreChildItem('Frontend', frontend),
-      this.createScoreChildItem('Backend', backend),
-      this.createScoreChildItem('Schema', schema),
-      this.createScoreChildItem('Flow', flow)
+    // Create items for each defined score
+    const items: ShepVerifyTreeItem[] = [];
+    for (const [key, label] of Object.entries(scoreLabels)) {
+      const score = (this.report.scores as any)[key];
+      if (score !== undefined) {
+        items.push(this.createScoreChildItem(label, score));
+      }
+    }
+    
+    return items.length > 0 ? items : [
+      new ShepVerifyTreeItem(
+        'No scores available',
+        'score',
+        vscode.TreeItemCollapsibleState.None
+      )
     ];
+  }
+  
+  /**
+   * Get score labels based on language
+   */
+  private getScoreLabelsForLanguage(language: string): Record<string, string> {
+    switch (language) {
+      case 'typescript':
+      case 'javascript':
+      case 'typescriptreact':
+      case 'javascriptreact':
+        return {
+          typeSafety: 'Type Safety',
+          nullSafety: 'Null Safety',
+          codeQuality: 'Code Quality',
+          reactPatterns: 'React Patterns'
+        };
+      case 'html':
+        return {
+          accessibility: 'Accessibility',
+          seo: 'SEO',
+          semantics: 'Semantics'
+        };
+      case 'css':
+      case 'scss':
+      case 'less':
+        return {
+          bestPractices: 'Best Practices',
+          performance: 'Performance',
+          maintainability: 'Maintainability'
+        };
+      case 'json':
+      case 'jsonc':
+        return {
+          syntax: 'Syntax',
+          schemaCompliance: 'Schema',
+          bestPractices: 'Best Practices'
+        };
+      case 'python':
+        return {
+          typeSafety: 'Type Hints',
+          nullSafety: 'None Safety',
+          codeQuality: 'Code Quality',
+          bestPractices: 'Best Practices'
+        };
+      default: // sheplang
+        return {
+          frontend: 'Frontend',
+          backend: 'Backend',
+          schema: 'Schema',
+          flow: 'Flow'
+        };
+    }
   }
 
   /**
@@ -532,7 +621,50 @@ export class ShepVerifyTreeProvider implements vscode.TreeDataProvider<ShepVerif
         vscode.TreeItemCollapsibleState.None
       );
       
-      item.tooltip = `Verified at ${entry.timestamp.toLocaleString()}\n${entry.projectPath}`;
+      // Build tooltip with error details and AI hint
+      let tooltipLines = [`Verified at ${entry.timestamp.toLocaleString()}`];
+      if (entry.filePath) {
+        tooltipLines.push(`File: ${entry.filePath}`);
+      }
+      if (entry.errors && entry.errors.length > 0) {
+        tooltipLines.push('');
+        tooltipLines.push('Errors:');
+        entry.errors.slice(0, 3).forEach(err => {
+          tooltipLines.push(`  • Line ${err.line}: ${err.message}`);
+        });
+        if (entry.errors.length > 3) {
+          tooltipLines.push(`  ... and ${entry.errors.length - 3} more`);
+        }
+        tooltipLines.push('');
+        tooltipLines.push('💡 Tip: Ask your IDE AI (Copilot/Claude) to fix these errors!');
+      }
+      tooltipLines.push('');
+      tooltipLines.push('Click to open file at first error location');
+      item.tooltip = tooltipLines.join('\n');
+      
+      // Make history entry clickable - navigate to first error
+      if (entry.errors && entry.errors.length > 0 && entry.filePath) {
+        const firstError = entry.errors[0];
+        item.command = {
+          command: 'shepverify.openError',
+          title: 'Open Error Location',
+          arguments: [firstError.file || entry.filePath, firstError.line, firstError.column]
+        };
+      } else if (entry.warnings && entry.warnings.length > 0 && entry.filePath) {
+        const firstWarning = entry.warnings[0];
+        item.command = {
+          command: 'shepverify.openError',
+          title: 'Open Warning Location',
+          arguments: [firstWarning.file || entry.filePath, firstWarning.line, firstWarning.column]
+        };
+      } else if (entry.filePath) {
+        // No errors/warnings, just open the file
+        item.command = {
+          command: 'vscode.open',
+          title: 'Open File',
+          arguments: [vscode.Uri.file(entry.filePath)]
+        };
+      }
       
       return item;
     });
