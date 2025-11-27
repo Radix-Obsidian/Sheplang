@@ -137,6 +137,12 @@
         "command": "shepverify.clearHistory",
         "title": "ShepVerify: Clear History",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "sheplang.generateViteApp",
+        "title": "ShepLang: Generate Vite App",
+        "icon": "$(package)",
+        "category": "ShepLang"
       }
     ],
     "menus": {
@@ -144,6 +150,11 @@
         {
           "when": "resourceLangId == sheplang",
           "command": "sheplang.showPreview",
+          "group": "navigation"
+        },
+        {
+          "when": "resourceLangId == sheplang",
+          "command": "sheplang.generateViteApp",
           "group": "navigation"
         }
       ],
@@ -177,8 +188,8 @@
       },
       {
         "command": "shepverify-dashboard.focus",
-        "key": "ctrl+shift+d",
-        "mac": "cmd+shift+d",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
         "when": "editorLangId == sheplang"
       }
     ],

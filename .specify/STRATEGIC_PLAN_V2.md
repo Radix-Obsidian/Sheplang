@@ -472,9 +472,15 @@ IDE AI (Copilot/Claude/Cursor) already understands ShepLang syntax and can fix e
 | getParent() fix | ✅ | TreeDataProvider now complete |
 
 ### Phase 4: Execution Integration (Week 6)
-- [ ] Template generator for Vite projects
-- [ ] StackBlitz/CodeSandbox preview embed
-- [ ] One-click deploy preparation
+**Status:** 🟡 **IN PROGRESS**
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Template generator for Vite projects | ✅ | `viteTemplateGenerator.ts` complete |
+| Command registration | ✅ | `sheplang.generateViteApp` in Command Palette |
+| Editor toolbar button | ✅ | Shows on .shep files |
+| StackBlitz/CodeSandbox preview embed | ⬜ | Future enhancement |
+| One-click deploy preparation | ⬜ | Future enhancement |
 
 ---
 

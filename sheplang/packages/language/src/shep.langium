@@ -139,8 +139,9 @@ FlowStep:
   '-' description=STRING;
 
 // Phase II: Background Jobs Grammar with direct alternatives
+// Supports both 'job' and 'scheduler' keywords
 JobDecl:
-  'job' name=ShepIdentifier '{' 
+  ('job' | 'scheduler') name=ShepIdentifier '{' 
   timing=(JobSchedule | JobTrigger)
   (delay=JobDelay)?
   'action' '{' actions+=Stmt* '}'
@@ -175,10 +176,13 @@ CronExpression:
   'cron' pattern=STRING;
 
 NaturalLanguage:
-  ('daily' 'at' time=STRING) |
-  ('weekly' 'on' day=DayName 'at' time=STRING) |
+  ('daily' 'at' time=TimeValue) |
+  ('weekly' 'on' day=DayName 'at' time=TimeValue) |
   ('every' frequency=FrequencyExpression) |
-  ('every' frequency=FrequencyExpression 'at' time=STRING);
+  ('every' frequency=FrequencyExpression 'at' time=TimeValue);
+
+// Time values can be quoted strings or time literals (9am, 10pm, 14:30)
+TimeValue: value=(STRING | TIME | ID);
 
 FrequencyExpression:
   amount=NUMBER unit=TimeUnit;
@@ -296,6 +300,7 @@ RawStmt: '~' text=STRING;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal STRING: /"[^"]*"|'[^']*'/;
 terminal NUMBER: /[0-9]+(\.[0-9]+)?/;
+terminal TIME: /[0-9]{1,2}(:[0-9]{2})?(am|pm)/;
 
 hidden terminal WS: /\s+/;
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;

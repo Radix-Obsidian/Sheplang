@@ -34,6 +34,11 @@ import { registerSemanticHighlighting } from './features/semanticHighlighting';
 import { initializeShepVerifyDashboard } from './dashboard';
 
 // ========================================
+// Vite Template Generator (Phase 4)
+// ========================================
+import { generateViteApp } from './generators/viteTemplateGenerator';
+
+// ========================================
 // DISABLED FOR ALPHA - Re-enable in Beta
 // ========================================
 // import { newProjectCommand } from './commands/newProject';
@@ -104,10 +109,72 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     
     // Error broadcasting (used by diagnostics)
-    vscode.commands.registerCommand('sheplang.broadcastError', (error: Error | string) => {
-      // Log errors for debugging - preview server handles display
-      const msg = error instanceof Error ? error.message : String(error);
-      outputChannel.error('Broadcast error:', msg);
+    vscode.commands.registerCommand('sheplang.broadcastError', (error: unknown) => {
+      // Silent - preview server handles display. Suppress console spam.
+      // Only log in debug mode if needed
+    }),
+    
+    // Generate Vite App (Phase 4)
+    vscode.commands.registerCommand('sheplang.generateViteApp', async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || editor.document.languageId !== 'sheplang') {
+        vscode.window.showWarningMessage('Please open a .shep file first');
+        return;
+      }
+      
+      // Get the ShepLang content
+      const content = editor.document.getText();
+      
+      // Ask user where to generate
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      const defaultUri = workspaceFolder 
+        ? vscode.Uri.file(workspaceFolder.uri.fsPath)
+        : undefined;
+      
+      const targetFolders = await vscode.window.showOpenDialog({
+        defaultUri,
+        title: 'Select folder for generated Vite app',
+        openLabel: 'Generate Here',
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false
+      });
+      
+      if (!targetFolders || targetFolders.length === 0) return;
+      const targetFolder = targetFolders[0];
+      
+      // Generate the app
+      await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: 'Generating Vite app...',
+        cancellable: false
+      }, async (progress) => {
+        progress.report({ increment: 0, message: 'Parsing ShepLang...' });
+        
+        const result = await generateViteApp(content, targetFolder.fsPath);
+        
+        if (result.success) {
+          progress.report({ increment: 100, message: 'Done!' });
+          
+          const action = await vscode.window.showInformationMessage(
+            `✅ Generated Vite app with ${result.files.length} files!`,
+            'Open Folder',
+            'Run npm install'
+          );
+          
+          if (action === 'Open Folder') {
+            vscode.commands.executeCommand('vscode.openFolder', targetFolder, { forceNewWindow: true });
+          } else if (action === 'Run npm install') {
+            const terminal = vscode.window.createTerminal('ShepLang Vite');
+            terminal.show();
+            terminal.sendText(`cd "${targetFolder.fsPath}"`);
+            terminal.sendText('npm install');
+            terminal.sendText('npm run dev');
+          }
+        } else {
+          vscode.window.showErrorMessage(`Failed to generate: ${result.error}`);
+        }
+      });
     })
   );
   outputChannel.success('ALPHA commands registered');
