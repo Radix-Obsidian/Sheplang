@@ -1,0 +1,46 @@
+app nextjsprisma {
+
+  data Task {
+    fields: {
+      id: number = auto @id
+      title: text
+      completed: yes/no = false
+      priority: text = "medium"
+      createdAt: datetime = now
+      updatedAt: datetime @updatedAt
+    }
+  }
+
+  data User {
+    fields: {
+      id: number = auto @id
+      email: text @unique
+      name: text?
+      createdAt: datetime = now
+      updatedAt: datetime @updatedAt
+    }
+  }
+
+  // Generated views
+  view TaskList {
+    list Task
+    button "New Task" -> CreateTask
+  }
+
+  view UserList {
+    list User
+    button "New User" -> CreateUser
+  }
+
+  // Generated actions
+  action CreateTask(title) {
+    call POST "/api/tasks" with title
+    show TaskList
+  }
+
+  action CreateUser(email, name) {
+    call POST "/api/users" with email, name
+    show UserList
+  }
+
+}

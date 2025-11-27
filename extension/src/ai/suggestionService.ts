@@ -10,7 +10,16 @@
 
 import * as vscode from 'vscode';
 import { callClaude } from './claudeClient';
-import type { ProjectQuestionnaire } from '../wizard/types';
+
+// Local definition of ProjectQuestionnaire (from deleted wizard/types.ts)
+export interface ProjectQuestionnaire {
+  projectName?: string;
+  projectType?: string;
+  description?: string;
+  entities?: any[]; // Changed from string[] to any[] to support complex entity objects
+  features?: Array<{ name: string; description?: string }>;
+  integrations?: Array<{ service: string; category: string }>; // Added to fix integration suggestion
+}
 
 export interface ProjectSuggestion {
   type: 'entity' | 'feature' | 'integration' | 'design' | 'flow';

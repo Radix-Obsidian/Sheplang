@@ -29,6 +29,11 @@ import { registerDiagnostics } from './features/diagnostics';
 import { registerSemanticHighlighting } from './features/semanticHighlighting';
 
 // ========================================
+// ShepVerify Dashboard
+// ========================================
+import { initializeShepVerifyDashboard } from './dashboard';
+
+// ========================================
 // DISABLED FOR ALPHA - Re-enable in Beta
 // ========================================
 // import { newProjectCommand } from './commands/newProject';
@@ -149,6 +154,12 @@ export function activate(context: vscode.ExtensionContext) {
   // Semantic syntax highlighting (beyond basic TextMate)
   registerSemanticHighlighting(context);
   outputChannel.success('✓ Semantic highlighting enabled');
+
+  // ========================================
+  // ShepVerify Dashboard (Core Feature)
+  // ========================================
+  initializeShepVerifyDashboard(context);
+  outputChannel.success('✓ ShepVerify Dashboard enabled');
 
   // Legacy auto-preview code (keeping for backward compatibility)
   const autoPreview = vscode.workspace.getConfiguration('sheplang').get('autoPreview', true);

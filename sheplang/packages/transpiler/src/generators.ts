@@ -1,29 +1,85 @@
 import type { AppModel } from './types';
 
 /**
- * Generate TypeScript type definitions for data models
+ * Generate TypeScript type definitions for data models (Prisma-parity)
  */
 export function generateTypeDefinitions(app: AppModel): string {
-  return app.datas.map(data => {
+  let output = '';
+  
+  // Generate enum types first
+  if (app.enums && app.enums.length > 0) {
+    for (const e of app.enums) {
+      output += `export type ${e.name} = ${e.values.map(v => `'${v}'`).join(' | ')};\n\n`;
+    }
+  }
+  
+  // Generate interface for each data model
+  output += app.datas.map(data => {
     const fields = data.fields.map(field => {
-      let tsType = 'string';
-      if (field.type === 'text') tsType = 'string';
-      else if (field.type === 'yes/no' || field.type === 'boolean') tsType = 'boolean';
-      else if (field.type === 'number') tsType = 'number';
-      return `  ${field.name}: ${tsType};`;
+      let tsType = mapShepTypeToTS(field.type);
+      
+      // Handle arrays
+      if (field.isArray) tsType += '[]';
+      
+      // Handle optional
+      const optional = field.isOptional ? '?' : '';
+      
+      return `  ${field.name}${optional}: ${tsType};`;
     }).join('\n');
+    
+    // Find auto-generated fields
+    const autoFields: string[] = [];
+    for (const f of data.fields) {
+      if (f.isId || f.isUpdatedAt || f.defaultFunction === 'now' || f.defaultFunction === 'cuid' || f.defaultFunction === 'uuid') {
+        autoFields.push(`'${f.name}'`);
+      }
+    }
     
     return `
 export interface ${data.name} {
 ${fields}
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-export type ${data.name}Input = Omit<${data.name}, 'id' | 'createdAt' | 'updatedAt'>;
+export type ${data.name}Input = Omit<${data.name}, ${autoFields.join(' | ') || "'id'"}>;
 `.trim();
   }).join('\n\n');
+  
+  return output;
+}
+
+/**
+ * Map ShepLang types to TypeScript types
+ */
+function mapShepTypeToTS(shepType: string): string {
+  // Handle ref types
+  if (shepType.startsWith('ref[')) {
+    const entity = shepType.match(/ref\[(\w+)\]/)?.[1] || 'unknown';
+    return entity;
+  }
+  
+  const typeMap: Record<string, string> = {
+    'text': 'string',
+    'number': 'number',
+    'yes/no': 'boolean',
+    'boolean': 'boolean',
+    'id': 'string',
+    'date': 'Date',
+    'datetime': 'Date',
+    'email': 'string',
+    'money': 'number',
+    'decimal': 'number',
+    'bigint': 'bigint',
+    'image': 'string',
+    'richtext': 'string',
+    'file': 'string',
+    'json': 'Record<string, unknown>',
+    'bytes': 'Buffer',
+    'uuid': 'string',
+    'url': 'string',
+    'phone': 'string'
+  };
+  
+  return typeMap[shepType] || shepType; // Return as-is for enums
 }
 
 /**

@@ -1,0 +1,68 @@
+// Refactored Full-Stack SaaS Example (Test 4)
+// Renamed entities and fields for clarity
+
+app MyApp {
+
+  // user stuff
+  data User {
+    fields: {
+      name: text
+      email: email
+      password: text
+      created: date
+    }
+  }
+  
+  // the main thing
+  data Product {
+    fields: {
+      title: text
+      description: text
+      done: boolean
+      price: money
+      owner: ref[User]
+      created: date
+    }
+  }
+  
+  // category / misc
+  data Category {
+    fields: {
+      key: text
+      value: number
+    }
+  }
+
+  // main page
+  view Home {
+    list Product
+    button "do something" -> DoIt
+    button "other" -> Other
+  }
+  
+  view Page2 {
+    list Category
+    button "back" -> GoBack
+  }
+
+  // this should add a product
+  action DoIt(title, description, ownerId) {
+    add Product with title, description
+    show Home
+  }
+  
+  // need to figure out what this does
+  action Other() {
+    show Page2
+  }
+  
+  // go back to home
+  action GoBack() {
+    show Home
+  }
+  
+  // TODO: add more actions
+  // TODO: figure out payments
+  // TODO: add user login
+
+}

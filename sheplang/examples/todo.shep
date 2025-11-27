@@ -2,15 +2,73 @@ app MyTodos
 
 data Todo:
   fields:
+    id: uuid
     title: text
+    description: text?
     done: yes/no
+    owner: user
+    created_at: datetime
+    due: date?
+    priority: low|medium|high
   rules:
     - "user can update own items"
+    - "user can delete own items if not done"
+  validations:
+    - "require title"
+    - "title max 200"
 
 view Dashboard:
-  list Todo
-  button "Add Task" -> CreateTodo
+  input "Search" -> query
+  tabs "All|Active|Completed" -> filter
+  list Todo where matches(query) and matches(filter) order by created_at desc
+  button "Add Task" -> AddTodoForm
+  button "Bulk Delete Completed" -> DeleteCompleted
+  item TodoItem for Todo
 
-action CreateTodo(title):
-  add Todo with title, done=false
+view AddTodoForm:
+  field title: text
+  field description: text
+  field due: date
+  field priority: low|medium|high default=low
+  button "Create" -> CreateTodo(title, description, due, priority)
+  button "Cancel" -> Dashboard
+
+view TodoItem:
+  show title
+  show description
+  show due
+  show priority
+  checkbox done -> ToggleDone(id)
+  button "Edit" -> EditTodoForm(id)
+  button "Delete" -> DeleteTodo(id)
+
+view EditTodoForm(id):
+  load Todo where id == id
+  field title: text
+  field description: text
+  field due: date
+  field priority: low|medium|high
+  button "Save" -> UpdateTodo(id, title, description, due, priority)
+  button "Cancel" -> Dashboard
+
+action CreateTodo(title, description=null, due=null, priority=low):
+  add Todo with id=uuid(), title=title, description=description, done=false, owner=current_user, created_at=now(), due=due, priority=priority
+  show Dashboard
+
+action ToggleDone(id):
+  update Todo where id == id set done = not done
+  show Dashboard
+
+action UpdateTodo(id, title, description=null, due=null, priority=low):
+  require_owner Todo where id == id
+  update Todo where id == id set title=title, description=description, due=due, priority=priority
+  show Dashboard
+
+action DeleteTodo(id):
+  require_owner Todo where id == id
+  delete Todo where id == id
+  show Dashboard
+
+action DeleteCompleted():
+  delete Todo where owner == current_user and done == true
   show Dashboard

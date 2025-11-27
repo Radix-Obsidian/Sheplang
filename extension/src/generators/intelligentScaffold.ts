@@ -8,9 +8,37 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AppModel } from '../parsers/astAnalyzer';
-import { ArchitecturePlan } from '../wizard/architectureWizard';
+import { AppModel } from './shepGenerator';
 import { ShepLangCodeAgent, ComponentSpec, EntitySpec } from '../ai/sheplangCodeAgent';
+
+// Architecture plan types (consolidated from deleted architectureWizard.ts)
+export interface ArchitecturePlan {
+  appName: string;
+  structure: 'monorepo' | 'single-app' | 'microservices';
+  folders: ArchitectureFolder[];
+  description: string;
+  projectType?: string;
+  reasoning?: string;
+  conventions?: {
+    naming: string;
+    fileOrganization: string;
+    importStrategy: string;
+  };
+}
+
+export interface ArchitectureFolder {
+  name: string;
+  purpose: string;
+  path?: string;
+  files: ArchitectureFile[];
+}
+
+export interface ArchitectureFile {
+  name: string;
+  type: 'shep' | 'shepthon' | 'config' | 'readme';
+  description: string;
+  purpose?: string;
+}
 
 export interface GeneratedProject {
   rootPath: string;
@@ -42,10 +70,14 @@ export async function generateFromPlan(
   const agent = context ? new ShepLangCodeAgent(context) : null;
   const files: GeneratedFile[] = [];
 
-  // Generate files for each folder in the plan
-  for (const folder of plan.folders) {
-    const folderFiles = await generateFolderFiles(folder, appModel, plan, agent);
-    files.push(...folderFiles);
+  // Generate files for each folder in the plan (with null safety)
+  if (plan.folders && Array.isArray(plan.folders)) {
+    for (const folder of plan.folders) {
+      const folderFiles = await generateFolderFiles(folder, appModel, plan, agent);
+      files.push(...folderFiles);
+    }
+  } else {
+    console.log('[IntelligentScaffold] Warning: plan.folders is undefined or not an array, skipping folder generation');
   }
 
   // CRITICAL FALLBACK: Generate essential files from appModel
@@ -866,20 +898,26 @@ function generateProjectReadme(appModel: AppModel, plan: ArchitecturePlan): stri
   content += `${plan.reasoning}\n\n`;
   
   content += `## Folder Structure\n\n`;
-  for (const folder of plan.folders) {
-    content += `### ${folder.path}/\n\n`;
-    content += `${folder.purpose}\n\n`;
-    content += `**Files:**\n`;
-    for (const file of folder.files) {
-      content += `- \`${file.name}\` - ${file.purpose}\n`;
+  if (plan.folders && Array.isArray(plan.folders)) {
+    for (const folder of plan.folders) {
+      content += `### ${folder.path}/\n\n`;
+      content += `${folder.purpose || 'Project files'}\n\n`;
+      content += `**Files:**\n`;
+      if (folder.files && Array.isArray(folder.files)) {
+        for (const file of folder.files) {
+          content += `- \`${file.name}\` - ${file.purpose || 'Component'}\n`;
+        }
+      }
+      content += `\n`;
     }
-    content += `\n`;
+  } else {
+    content += `*Standard ShepLang project structure*\n\n`;
   }
   
   content += `## Conventions\n\n`;
-  content += `- **Naming:** ${plan.conventions.naming}\n`;
-  content += `- **File Organization:** ${plan.conventions.fileOrganization}\n`;
-  content += `- **Import Strategy:** ${plan.conventions.importStrategy}\n\n`;
+  content += `- **Naming:** ${plan.conventions?.naming || 'PascalCase'}\n`;
+  content += `- **File Organization:** ${plan.conventions?.fileOrganization || 'Feature-based'}\n`;
+  content += `- **Import Strategy:** ${plan.conventions?.importStrategy || 'Relative imports'}\n\n`;
   
   content += `## Getting Started\n\n`;
   content += `1. Review the generated files in each folder\n`;

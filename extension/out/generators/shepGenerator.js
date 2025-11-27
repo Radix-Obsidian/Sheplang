@@ -39,7 +39,7 @@ function generateMainShepFile(appModel) {
     output += `// - Customize view layouts\n`;
     output += `\n`;
     // App declaration
-    output += `app ${appModel.appName}\n\n`;
+    output += `app ${appModel.appName} {\n\n`;
     // High-level TODOs
     if (appModel.todos && appModel.todos.length > 0) {
         output += `// TODOs from import:\n`;
@@ -87,6 +87,7 @@ function generateMainShepFile(appModel) {
     output += `// ========================================\n`;
     output += `// End of ${appModel.appName}\n`;
     output += `// ========================================\n`;
+    output += `}\n`;
     return output;
 }
 /**
@@ -104,13 +105,15 @@ function generateDataBlock(entity) {
     else {
         output += `// Inferred from views\n`;
     }
-    output += `data ${entity.name}:\n`;
-    output += `  fields:\n`;
+    // Updated to use braces syntax
+    output += `data ${entity.name} {\n`;
+    output += `  fields: {\n`;
     // Fields
     for (const field of entity.fields) {
         const requiredComment = field.required ? '' : ' // optional';
         output += `    ${field.name}: ${field.type}${requiredComment}\n`;
     }
+    output += `  }\n`;
     // Add TODO if entity was inferred or user-provided
     if (entity.source === 'inferred') {
         output += `  // TODO: Add more fields as needed\n`;
@@ -118,6 +121,7 @@ function generateDataBlock(entity) {
     else if (entity.source === 'user-input') {
         output += `  // TODO: Add the specific fields you need for ${entity.name}\n`;
     }
+    output += `}\n`;
     return output;
 }
 /**
@@ -127,7 +131,7 @@ function generateViewBlock(view, entities) {
     let output = '';
     // Source comment
     output += `// From: ${view.filePath}\n`;
-    output += `view ${view.name}:\n`;
+    output += `view ${view.name} {\n`;
     // Widgets
     if (!view.widgets || view.widgets.length === 0) {
         output += `  // TODO: Add widgets for this view\n`;
@@ -151,6 +155,7 @@ function generateViewBlock(view, entities) {
             }
         }
     }
+    output += `}\n`;
     return output;
 }
 /**
@@ -164,7 +169,7 @@ function generateActionBlock(action, entities) {
     const params = action.parameters && action.parameters.length > 0
         ? action.parameters.join(', ')
         : 'params';
-    output += `action ${action.name}(${params}):\n`;
+    output += `action ${action.name}(${params}) {\n`;
     // Action TODOs
     if (action.todos && action.todos.length > 0) {
         for (const todo of action.todos || []) {
@@ -199,6 +204,7 @@ function generateActionBlock(action, entities) {
         output += `  // TODO: Implement action logic\n`;
         output += `  show Dashboard\n`;
     }
+    output += `}\n`;
     return output;
 }
 /**

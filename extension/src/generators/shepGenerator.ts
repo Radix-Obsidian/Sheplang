@@ -7,7 +7,54 @@
  * and generates clean, readable ShepLang code with TODOs where needed.
  */
 
-import { AppModel, Entity, View, Action } from '../parsers/astAnalyzer';
+// Local type definitions (consolidated from deleted astAnalyzer.ts)
+export interface Field {
+  name: string;
+  type: string;
+  required?: boolean;
+}
+
+export interface Entity {
+  name: string;
+  filePath: string;
+  fields: Field[];
+  rules?: string[];
+  source?: 'prisma' | 'user-input' | 'inferred';
+}
+
+export interface View {
+  name: string;
+  filePath: string;
+  elements: any[];
+  apiCalls?: any[];
+  widgets?: { kind: string; entityName?: string; label?: string; actionName?: string }[];
+}
+
+export interface APICall {
+  url: string;
+  method: string;
+  body?: any;
+  path?: string;
+}
+
+export interface Action {
+  name: string;
+  filePath: string;
+  params: string[];
+  parameters?: string[];
+  apiCalls: APICall[];
+  todos?: any[];
+  source?: string;
+}
+
+export interface AppModel {
+  appName: string;
+  projectRoot: string;
+  entities: Entity[];
+  views: View[];
+  actions: Action[];
+  todos?: any[];
+}
 
 export interface GeneratedFile {
   fileName: string;
@@ -49,7 +96,7 @@ function generateMainShepFile(appModel: AppModel): string {
   output += `\n`;
 
   // App declaration
-  output += `app ${appModel.appName}\n\n`;
+  output += `app ${appModel.appName} {\n\n`;
 
   // High-level TODOs
   if (appModel.todos && appModel.todos.length > 0) {
@@ -107,6 +154,7 @@ function generateMainShepFile(appModel: AppModel): string {
   output += `// ========================================\n`;
   output += `// End of ${appModel.appName}\n`;
   output += `// ========================================\n`;
+  output += `}\n`;
 
   return output;
 }
@@ -126,14 +174,16 @@ function generateDataBlock(entity: Entity): string {
     output += `// Inferred from views\n`;
   }
 
-  output += `data ${entity.name}:\n`;
-  output += `  fields:\n`;
+  // Updated to use braces syntax
+  output += `data ${entity.name} {\n`;
+  output += `  fields: {\n`;
 
   // Fields
   for (const field of entity.fields) {
     const requiredComment = field.required ? '' : ' // optional';
     output += `    ${field.name}: ${field.type}${requiredComment}\n`;
   }
+  output += `  }\n`;
 
   // Add TODO if entity was inferred or user-provided
   if (entity.source === 'inferred') {
@@ -141,6 +191,8 @@ function generateDataBlock(entity: Entity): string {
   } else if (entity.source === 'user-input') {
     output += `  // TODO: Add the specific fields you need for ${entity.name}\n`;
   }
+  
+  output += `}\n`;
 
   return output;
 }
@@ -153,7 +205,7 @@ function generateViewBlock(view: View, entities: Entity[]): string {
 
   // Source comment
   output += `// From: ${view.filePath}\n`;
-  output += `view ${view.name}:\n`;
+  output += `view ${view.name} {\n`;
 
   // Widgets
   if (!view.widgets || view.widgets.length === 0) {
@@ -175,6 +227,8 @@ function generateViewBlock(view: View, entities: Entity[]): string {
       }
     }
   }
+  
+  output += `}\n`;
 
   return output;
 }
@@ -193,7 +247,7 @@ function generateActionBlock(action: Action, entities: Entity[]): string {
     ? action.parameters.join(', ')
     : 'params';
 
-  output += `action ${action.name}(${params}):\n`;
+  output += `action ${action.name}(${params}) {\n`;
 
   // Action TODOs
   if (action.todos && action.todos.length > 0) {
@@ -230,6 +284,8 @@ function generateActionBlock(action: Action, entities: Entity[]): string {
     output += `  // TODO: Implement action logic\n`;
     output += `  show Dashboard\n`;
   }
+  
+  output += `}\n`;
 
   return output;
 }

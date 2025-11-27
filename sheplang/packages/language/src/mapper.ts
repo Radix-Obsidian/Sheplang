@@ -21,6 +21,8 @@ export function mapToAppModel(ast: ShepFile): AppModel {
     throw new Error('Missing app declaration');
   }
 
+  const enums: AppModel['enums'] = [];
+  const layouts: AppModel['layouts'] = [];
   const datas: AppModel['datas'] = [];
   const views: AppModel['views'] = [];
   const actions: AppModel['actions'] = [];
@@ -46,6 +48,10 @@ export function mapToAppModel(ast: ShepFile): AppModel {
         jobs.push(mapJobDecl(decl));
       } else if (decl.$type === 'WorkflowDecl') {
         workflows.push(mapWorkflowDecl(decl));
+      } else if (decl.$type === 'EnumDecl') {
+        enums.push(mapEnumDecl(decl as any));
+      } else if (decl.$type === 'LayoutDecl') {
+        layouts.push(mapLayoutDecl(decl as any));
       }
     }
   }
@@ -67,7 +73,9 @@ export function mapToAppModel(ast: ShepFile): AppModel {
   }
 
   return { 
-    name: app.name, 
+    name: app.name,
+    enums: enums.length > 0 ? enums : undefined,
+    layouts: layouts.length > 0 ? layouts : undefined,
     datas, 
     views, 
     actions,
@@ -77,13 +85,75 @@ export function mapToAppModel(ast: ShepFile): AppModel {
   };
 }
 
+// Map enum declarations (Prisma parity)
+function mapEnumDecl(decl: any): NonNullable<AppModel['enums']>[0] {
+  return {
+    name: decl.name,
+    values: decl.values?.map((v: any) => v.name || v) || []
+  };
+}
+
+// Map layout declarations (Next.js parity)
+function mapLayoutDecl(decl: any): NonNullable<AppModel['layouts']>[0] {
+  return {
+    name: decl.name,
+    header: decl.header?.ref?.name,
+    sidebar: decl.sidebar?.ref?.name,
+    nav: decl.nav?.ref?.name,
+    footer: decl.footer?.ref?.name
+  };
+}
+
 function mapDataDecl(decl: DataDecl): AppModel['datas'][0] {
-  // Extract fields from data declaration
-  const fields = decl.fields.map(f => ({
-    name: f.name,
-    type: serializeBaseType(f.type.base) + (f.type.isArray ? '[]' : ''),
-    constraints: (f.constraints || []).map(c => serializeConstraint(c))
-  }));
+  // Extract fields from data declaration with full Prisma parity
+  const fields = decl.fields.map(f => {
+    const field: any = {
+      name: f.name,
+      type: serializeBaseType(f.type.base),
+      isArray: f.type.isArray || false,
+      isOptional: (f as any).optional || false,
+      constraints: (f.constraints || []).map(c => serializeConstraint(c))
+    };
+    
+    // Extract default value
+    const defaultVal = (f as any).defaultValue;
+    if (defaultVal) {
+      const value = defaultVal.value;
+      if (value && typeof value === 'object' && value.$type === 'DefaultFunction') {
+        field.defaultFunction = value.func;
+      } else if (value && typeof value === 'object' && value.$type === 'BooleanLiteral') {
+        field.defaultValue = value.value;
+      } else if (typeof value === 'string') {
+        // Could be enum value or string
+        field.defaultValue = value;
+      } else if (typeof value === 'number') {
+        field.defaultValue = String(value);
+      }
+    }
+    
+    // Extract field attributes
+    const attrs = (f as any).fieldAttrs || [];
+    for (const attr of attrs) {
+      if (attr.name === 'id') field.isId = true;
+      if (attr.name === 'unique') field.isUnique = true;
+      if (attr.name === 'updatedAt') field.isUpdatedAt = true;
+    }
+    
+    // Check for relation type
+    if (f.type.base && (f.type.base as any).$type === 'RefType') {
+      field.isRelation = true;
+      field.relatedEntity = (f.type.base as any).entity;
+      
+      // Extract referential actions
+      const refActions = (f.type.base as any).refActions || [];
+      for (const action of refActions) {
+        if (action.actionType === 'onDelete') field.onDelete = action.action;
+        if (action.actionType === 'onUpdate') field.onUpdate = action.action;
+      }
+    }
+    
+    return field;
+  });
   
   // Extract rules if present
   const rules = decl.rules?.map(r => r.text) || [];

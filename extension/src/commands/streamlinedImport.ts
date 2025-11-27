@@ -25,11 +25,10 @@ import { showImportWizardPanel } from '../wizard/importWizardPanel';
 import { trackImportStart, trackImportSuccess, trackImportFailure } from '../services/telemetry';
 
 import { generateShepLangFiles, generateImportReport } from '../generators/shepGenerator';
-import { generateShepThonBackend } from '../generators/shepthonGenerator';
-import { generateFromPlan } from '../generators/intelligentScaffold';
+import { generateShepThonFromRoutes } from '../generators/shepthonRouteGenerator';
+import { generateFromPlan, ArchitecturePlan } from '../generators/intelligentScaffold';
 import { outputChannel } from '../services/outputChannel';
 import { callClaude } from '../ai/claudeClient';
-import type { ArchitecturePlan } from '../wizard/architectureWizard';
 
 // AppModel interface (full version)
 interface AppModel {
@@ -75,8 +74,9 @@ function getDefaultProjectsFolder(): string {
 
 /**
  * Parse all React/TSX files in a project (Slice 2 integration)
+ * Exported for reuse by importFromGitHub.ts
  */
-async function parseReactProject(projectRoot: string): Promise<ReactComponent[]> {
+export async function parseReactProject(projectRoot: string): Promise<ReactComponent[]> {
   const components: ReactComponent[] = [];
   
   // Directories to scan for React components
@@ -386,18 +386,15 @@ export async function streamlinedImport(context: vscode.ExtensionContext): Promi
 
         let backendFile: string | undefined;
         if (generateBackend === 'Yes, generate backend') {
-          progress.report({ message: '⚡ AI is building your backend API...', increment: 15 });
+          progress.report({ message: '⚡ Generating your backend API...', increment: 15 });
           
-          const firstShepContent = approach.value === 'single'
-            ? fs.readFileSync(mainFilePath, 'utf-8')
-            : '// AI will use app model';
+          // Use deterministic ShepThon generator from parsed routes
+          const shepthonResult = generateShepThonFromRoutes(routeResult.routes, entityResult.entities);
           
-          const shepthonResult = await generateShepThonBackend(context, appModel, firstShepContent);
-          
-          if (shepthonResult) {
-            const shepthonPath = path.join(outputFolder, shepthonResult.fileName);
+          if (shepthonResult && shepthonResult.content) {
+            const shepthonPath = path.join(outputFolder, `${appModel.appName}.shepthon`);
             fs.writeFileSync(shepthonPath, shepthonResult.content, 'utf-8');
-            outputChannel.success(`✓ Created: ${shepthonResult.fileName}`);
+            outputChannel.success(`✓ Created: ${appModel.appName}.shepthon`);
             backendFile = shepthonPath;
           }
         }
@@ -569,16 +566,38 @@ async function designArchitecture(
   const prompt = buildArchitecturePrompt(appModel, appType, structure, scale);
   
   const response = await callClaude(context, prompt, 3000);
-  if (!response) return null;
+  if (!response) {
+    console.error('[Architecture] Claude API returned null/empty response');
+    outputChannel.error('❌ AI architecture design failed - API returned no response');
+    outputChannel.info('This could be due to:');
+    outputChannel.info('  1. Invalid or revoked API key');
+    outputChannel.info('  2. Network connectivity issues');
+    outputChannel.info('  3. Rate limiting from Anthropic');
+    return null;
+  }
 
   try {
+    console.log('[Architecture] Raw AI response:', response.substring(0, 200) + '...');
     const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
+    if (!jsonMatch) {
+      console.error('[Architecture] No JSON found in AI response');
+      outputChannel.error('❌ AI response did not contain valid JSON');
+      return null;
+    }
 
     const plan = JSON.parse(jsonMatch[0]) as ArchitecturePlan;
+    
+    // Validate that plan has required fields
+    if (!plan.folders || !Array.isArray(plan.folders)) {
+      console.warn('[Architecture] AI returned plan without folders array, adding default');
+      plan.folders = [];
+    }
+    
+    console.log('[Architecture] Successfully parsed plan with', plan.folders.length, 'folders');
     return plan;
   } catch (error) {
     console.error('[Architecture] Failed to parse AI response:', error);
+    outputChannel.error(`❌ Failed to parse AI architecture response: ${error}`);
     return null;
   }
 }
@@ -808,27 +827,35 @@ function getArchitecturePreviewHTML(plan: ArchitecturePlan): string {
 
 function generateArchitecturePreview(plan: ArchitecturePlan): string {
   let preview = `# 📁 Your Project Layout\n\n`;
-  preview += `**Type:** ${plan.projectType}\n`;
-  preview += `**Style:** ${plan.structure}\n\n`;
+  preview += `**Type:** ${plan.projectType || 'Custom'}\n`;
+  preview += `**Style:** ${plan.structure || 'layer-based'}\n\n`;
   
   preview += `## What Gets Created\n\n`;
   preview += `Here's how your files will be organized:\n\n`;
   
-  for (const folder of plan.folders) {
-    preview += `### 📂 ${folder.path}/\n`;
-    preview += `${folder.purpose}\n\n`;
-    for (const file of folder.files) {
-      preview += `  • **${file.name}** — ${file.purpose}\n`;
+  // Null safety for folders array
+  if (plan.folders && Array.isArray(plan.folders)) {
+    for (const folder of plan.folders) {
+      preview += `### 📂 ${folder.path}/\n`;
+      preview += `${folder.purpose || 'Project files'}\n\n`;
+      // Null safety for files array
+      if (folder.files && Array.isArray(folder.files)) {
+        for (const file of folder.files) {
+          preview += `  • **${file.name}** — ${file.purpose || 'Component'}\n`;
+        }
+      }
+      preview += `\n`;
     }
-    preview += `\n`;
+  } else {
+    preview += `*Standard project structure will be generated*\n\n`;
   }
 
   preview += `## How It Works\n\n`;
-  preview += `${plan.reasoning}\n\n`;
+  preview += `${plan.reasoning || 'AI-designed architecture optimized for your project.'}\n\n`;
   
   preview += `## Quick Reference\n\n`;
-  preview += `- **File Names:** ${plan.conventions.naming}\n`;
-  preview += `- **How Files Talk:** ${plan.conventions.importStrategy}\n\n`;
+  preview += `- **File Names:** ${plan.conventions?.naming || 'PascalCase'}\n`;
+  preview += `- **How Files Talk:** ${plan.conventions?.importStrategy || 'Relative imports'}\n\n`;
   
   preview += `---\n\n`;
   preview += `✅ **Ready to create these files?** Click "Looks Good - Generate Files!" below.\n`;

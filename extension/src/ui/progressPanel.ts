@@ -5,8 +5,18 @@
  */
 
 import * as vscode from 'vscode';
-import { GenerationProgress } from '../wizard/types';
 import { outputChannel } from '../services/outputChannel';
+
+// Define locally instead of importing from deleted wizard/types.ts
+export interface GenerationProgress {
+  current: number;
+  total: number;
+  status: string;
+  details?: string;
+  message?: string; // Added for stepId mapping
+  error?: { message: string }; // Added for error handling
+  percentage?: number; // Added for progress percentage
+}
 
 export interface ProgressStep {
   id: string;

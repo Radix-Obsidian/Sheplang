@@ -58,6 +58,10 @@ const intelligentCompletion_1 = require("./features/intelligentCompletion");
 const diagnostics_1 = require("./features/diagnostics");
 const semanticHighlighting_1 = require("./features/semanticHighlighting");
 // ========================================
+// ShepVerify Dashboard
+// ========================================
+const dashboard_1 = require("./dashboard");
+// ========================================
 // DISABLED FOR ALPHA - Re-enable in Beta
 // ========================================
 // import { newProjectCommand } from './commands/newProject';
@@ -155,6 +159,11 @@ function activate(context) {
     // Semantic syntax highlighting (beyond basic TextMate)
     (0, semanticHighlighting_1.registerSemanticHighlighting)(context);
     outputChannel_1.outputChannel.success('✓ Semantic highlighting enabled');
+    // ========================================
+    // ShepVerify Dashboard (Core Feature)
+    // ========================================
+    (0, dashboard_1.initializeShepVerifyDashboard)(context);
+    outputChannel_1.outputChannel.success('✓ ShepVerify Dashboard enabled');
     // Legacy auto-preview code (keeping for backward compatibility)
     const autoPreview = vscode.workspace.getConfiguration('sheplang').get('autoPreview', true);
     if (autoPreview) {

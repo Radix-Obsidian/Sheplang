@@ -73,10 +73,10 @@ export function friendlyError(technicalError: any): ShepError {
     'invalid_field_type': {
       message: 'This field type isn\'t supported',
       code: 'INVALID_TYPE',
-      suggestion: 'Use: text, number, yes/no, date, or time',
+      suggestion: 'Use: text, number, yes/no, id, date, email, money, image, datetime, richtext, file, or ref[EntityName]',
       fix: {
         description: 'Supported field types',
-        code: 'name: text\nage: number\nactive: yes/no\nbirthday: date\nappointment: time'
+        code: 'name: text\nage: number\nactive: yes/no\nbirthday: date\ncreated: datetime\nemail: email\nprice: money\nphoto: image\ncontent: richtext\nfile: file\nauthor: ref[User]'
       }
     }
   };

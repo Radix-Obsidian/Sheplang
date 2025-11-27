@@ -72,7 +72,7 @@ export async function callClaude(
     }
     
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-5',
+      model: 'claude-sonnet-4-5-20250929',  // Correct model name with date suffix per Anthropic docs
       max_tokens: maxTokens,
       messages: [
         {

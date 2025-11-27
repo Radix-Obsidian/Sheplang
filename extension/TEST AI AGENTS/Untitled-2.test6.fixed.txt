@@ -1,0 +1,68 @@
+// Messy Full-Stack SaaS Example - fixed (Test 6)
+// Fixed semantic issues and improved types; minimal structural changes
+
+app MyApp {
+
+  // user stuff
+  data user {
+    fields: {
+      n: text
+      e: email
+      pw: text
+      created: date
+    }
+  }
+  
+  // the main thing
+  data thing {
+    fields: {
+      title: text
+      desc: text
+      done: yes/no
+      price: money
+      owner: ref[user]
+    }
+  }
+  
+  // idk what to call this
+  data stuff {
+    fields: {
+      x: text
+      y: number
+    }
+  }
+
+  // main page
+  view Home {
+    list thing
+    button "do something" -> DoIt
+    button "other" -> Other
+  }
+  
+  view Page2 {
+    list stuff
+    button "back" -> GoBack
+  }
+
+  // this should add a thing
+  action DoIt(title, desc, ownerId) {
+    add thing with title, desc, owner
+    show Home
+  }
+  
+  // need to figure out what this does
+  action Other() {
+    show Page2
+  }
+  
+  // go back to home
+  action GoBack() {
+    show Home
+  }
+  
+  // Notes:
+  // - Converted `e` to `email` type.
+  // - `owner` is now a `ref[user]` (semantic fix).
+  // - `price` is `money` instead of generic `number`.
+
+}

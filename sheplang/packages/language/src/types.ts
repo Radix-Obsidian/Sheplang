@@ -90,15 +90,65 @@ export type WorkflowDeclaration = {
   events: WorkflowEvent[];
 };
 
+// Field definition with Prisma-parity features
+export type FieldDef = {
+  name: string;
+  type: string;
+  isOptional?: boolean;
+  isArray?: boolean;
+  defaultValue?: string;
+  defaultFunction?: string;
+  isId?: boolean;
+  isUnique?: boolean;
+  isUpdatedAt?: boolean;
+  isRelation?: boolean;
+  relatedEntity?: string;
+  onDelete?: string;
+  onUpdate?: string;
+  constraints: Record<string, unknown>[];
+};
+
+// Enum declaration
+export type EnumDef = {
+  name: string;
+  values: string[];
+};
+
+// Layout declaration (Next.js parity)
+export type LayoutDef = {
+  name: string;
+  header?: string;
+  sidebar?: string;
+  nav?: string;
+  footer?: string;
+};
+
+// Model-level attributes
+export type ModelAttribute = {
+  type: 'id' | 'unique' | 'index';
+  fields: string[];
+};
+
 export type AppModel = {
   name: string;
+  enums?: EnumDef[];
+  layouts?: LayoutDef[];
   datas: { 
     name: string; 
-    fields: { name: string; type: string; constraints: Record<string, unknown>[] }[]; 
+    fields: FieldDef[]; 
     status?: StatusDeclaration;
-    rules: string[] 
+    rules: string[];
+    modelAttributes?: ModelAttribute[];
   }[];
-  views: { name: string; list?: string; buttons: { label: string; action: string }[] }[];
+  views: { 
+    name: string; 
+    params?: { name: string; type?: string }[];
+    layout?: string;
+    loading?: string;
+    error?: string;
+    list?: string; 
+    buttons: { label: string; action: string }[] 
+  }[];
   actions: {
     name: string;
     params: { name: string; type?: string }[];

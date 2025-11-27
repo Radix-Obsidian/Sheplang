@@ -1,0 +1,80 @@
+// Simple Blog platform (Test 5)
+app BlogApp {
+
+  // === DATA MODELS ===
+  data User {
+    fields: {
+      name: text
+      email: email
+      bio: text
+      created: date
+    }
+  }
+
+  data Post {
+    fields: {
+      title: text
+      content: richtext
+      author: ref[User]
+      publishedAt: date
+      created: date
+    }
+  }
+
+  data Comment {
+    fields: {
+      post: ref[Post]
+      author: ref[User]
+      content: text
+      created: date
+    }
+  }
+
+  // === VIEWS ===
+  view Dashboard {
+    list Post
+    button "New Post" -> CreatePost
+    button "Edit Post" -> EditPost
+  }
+
+  view PostForm {
+    button "Save" -> SavePost
+    button "Cancel" -> Dashboard
+  }
+
+  view PostDetail {
+    list Comment
+    button "Add Comment" -> AddComment
+    button "Back" -> Dashboard
+  }
+
+  // === ACTIONS ===
+  action CreatePost(title, content, authorId) {
+    add Post with title, content, author
+    show Dashboard
+  }
+
+  action SavePost(postId, title, content) {
+    call PUT "/api/posts" with postId, title, content
+    load GET "/api/posts" into posts
+    show Dashboard
+  }
+
+  action EditPost(postId) {
+    load GET "/api/posts/" + postId into post
+    show PostForm
+  }
+
+  action AddComment(postId, authorId, content) {
+    call POST "/api/comments" with postId, authorId, content
+    load GET "/api/comments" into comments
+    show PostDetail
+  }
+
+  action DeletePost(postId) {
+    call DELETE "/api/posts" with postId
+    load GET "/api/posts" into posts
+    show Dashboard
+  }
+
+}

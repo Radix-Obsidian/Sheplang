@@ -1,0 +1,44 @@
+app MyTodos
+
+# Conservative, compiler-friendly todo example using only basic types
+
+data Todo:
+  fields:
+    title: text
+    description: text
+    done: yes/no
+    owner_id: text
+    created_at: text
+    due: text
+    priority: text
+  rules:
+    - "user can update own items"
+  validations:
+    - "require title"
+    - "title max 200"
+
+view Dashboard:
+  list Todo
+  button "Add Task" -> CreateTodo
+  button "Bulk Delete Completed" -> DeleteCompleted
+
+view AddTodoForm:
+  field title: text
+  field description: text
+  field due: text
+  field priority: text
+  button "Create" -> CreateTodo(title, description, due, priority)
+  button "Cancel" -> Dashboard
+
+action CreateTodo(title, description=null, due=null, priority=low):
+  add Todo with title, description, done=false, owner_id=current_user_id, created_at=now
+  show Dashboard
+
+action ToggleDone(title):
+  # conservative: uses title as selector because explicit id may not be supported
+  update Todo where title == title set done = not done
+  show Dashboard
+
+action DeleteCompleted():
+  delete Todo where owner_id == current_user_id and done == true
+  show Dashboard

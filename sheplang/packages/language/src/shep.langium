@@ -1,4 +1,5 @@
-// ShepLang Grammar (Alpha v0.1)
+// ShepLang Grammar (Alpha v0.3 - Full-Stack Parity)
+// Implements: Prisma (11 features) + Next.js (4 features)
 grammar Shep
 
 entry ShepFile: app=AppDecl;
@@ -6,14 +7,21 @@ entry ShepFile: app=AppDecl;
 AppDecl:
   'app' name=ID '{' decls+=TopDecl* '}';
 
-TopDecl: DataDecl | ViewDecl | ActionDecl | FlowDecl | JobDecl | WorkflowDecl;
+TopDecl: DataDecl | ViewDecl | ActionDecl | FlowDecl | JobDecl | WorkflowDecl | EnumDecl | LayoutDecl;
 
 DataDecl:
   'data' name=ShepIdentifier '{'
     'fields' ':' '{' fields+=FieldDecl* '}'
     statusBlock=StatusBlock?
     ('rules' ':' '{' rules+=RuleDecl* '}')?
+    modelAttrs+=ModelAttribute*
   '}';
+
+// Gap #3: Enum type declarations (Prisma parity)
+EnumDecl:
+  'enum' name=ShepIdentifier '{' values+=EnumValue (',' values+=EnumValue)* '}';
+
+EnumValue: name=ID;
 
 StatusBlock:
   'states' ':' chain=TransitionChain;
@@ -22,30 +30,95 @@ TransitionChain:
   states+=ShepIdentifier ('->' states+=ShepIdentifier)+;
 
 // Contextual keyword support - allows keywords as identifiers per Langium docs
-ShepIdentifier returns string: ID | 'status' | 'job' | 'background' | 'states' | 'schedule' | 'action' | 'step';
+// Extended to include common field names from Prisma schemas
+ShepIdentifier returns string: ID | 'status' | 'job' | 'background' | 'states' | 'schedule' | 'action' | 'step' |
+  'id' | 'email' | 'name' | 'title' | 'content' | 'author' | 'user' | 'post' | 'comment' |
+  'createdAt' | 'updatedAt' | 'deletedAt' | 'completed' | 'priority' | 'role' | 'password' |
+  'text' | 'number' | 'date' | 'image' | 'file' | 'url' | 'phone';
 
-FieldDecl: name=ShepIdentifier ':' type=TypeRef constraints+=Constraint*;
+// Gap #1, #2, #7, #8, #10: Optional, defaults, attributes (Prisma parity)
+FieldDecl: 
+  name=ShepIdentifier ':' type=TypeRef 
+  optional?='?'?                          // Gap #1: Optional fields (text?)
+  defaultValue=DefaultValue?              // Gap #2: Default values (= "value")
+  fieldAttrs+=FieldAttribute*             // Gap #7, #10: Field attributes (@unique, @updatedAt)
+  constraints+=Constraint*;
 
 Constraint:
   kind=('required' | 'unique' | 'optional')
 | 'max' '=' max=NUMBER
 | 'min' '=' min=NUMBER
-| 'email' '=' emailValidation=('true'|'false')
+| 'isEmail' '=' emailValidation=('true'|'false')
 | 'pattern' '=' pattern=STRING
 | 'minLength' '=' minLength=NUMBER
-| 'maxLength' '=' maxLength=NUMBER
-| 'default' '=' value=(STRING | NUMBER | BooleanLiteral | ShepIdentifier);
+| 'maxLength' '=' maxLength=NUMBER;
 
+// Gap #2: Inline default value syntax (= "value" or = functionName)
+DefaultValue:
+  '=' value=(STRING | NUMBER | BooleanLiteral | DefaultFunction | ShepIdentifier);
+
+// Default functions from Prisma: auto, cuid, uuid, ulid, now
+DefaultFunction:
+  func=('auto' | 'cuid' | 'uuid' | 'ulid' | 'now') ('(' ')')?;
+
+// Gap #7, #10: Field-level attributes (@unique, @updatedAt, @id)
+FieldAttribute:
+  '@' name=('unique' | 'updatedAt' | 'id');
+
+// Gap #11: Model-level attributes (@@id, @@unique, @@index)
+ModelAttribute:
+  '@@' name=('id' | 'unique' | 'index') '(' fields+=ShepIdentifier (',' fields+=ShepIdentifier)* ')';
+
+// Gap #4: Array fields already supported (text[])
 TypeRef: base=BaseType isArray?='[]'?;
 
-BaseType: SimpleType | RefType;
-SimpleType: value=('text'|'number'|'yes/no'|'id'|'date'|'email'|'money'|'image'|'datetime'|'richtext'|'file'|ShepIdentifier);
-RefType: 'ref' '[' entity=ShepIdentifier ']';
+BaseType: SimpleType | RefType | EnumRefType;
+
+// Gap #3: Reference to enum type
+EnumRefType: ref=[EnumDecl];
+// Gap #5, #6, #8: New types for Prisma parity (bigint, json, bytes, decimal, uuid)
+// Note: Removed ShepIdentifier from here to avoid grammar ambiguity with field names
+SimpleType: value=(
+  'text' | 'number' | 'yes/no' | 'id' | 'date' | 
+  'email' | 'money' | 'image' | 'datetime' | 'richtext' | 'file' |
+  'bigint' |    // Gap #5: Large integers (Prisma BigInt)
+  'json' |      // Gap #6: JSON data (Prisma Json)
+  'bytes' |     // Gap #8: Binary data (Prisma Bytes)
+  'decimal' |   // Precise decimals (Prisma Decimal)
+  'uuid' |      // UUID strings
+  'url' |       // URL strings
+  'phone'       // Phone numbers
+);
+// Gap #9: Referential actions (onDelete, onUpdate) for Prisma parity
+RefType: 
+  'ref' '[' entity=ShepIdentifier ']' 
+  refActions+=RefAction*;
+
+RefAction:
+  '@' actionType=('onDelete' | 'onUpdate') '(' action=ReferentialAction ')';
+
+ReferentialAction returns string:
+  'cascade' | 'restrict' | 'setNull' | 'setDefault' | 'noAction';
 
 RuleDecl: '-' text=STRING;
 
+// Next.js Parity: Layout declarations for shared UI structure
+LayoutDecl:
+  'layout' name=ShepIdentifier '{'
+    ('header' ':' header=[ViewDecl])?
+    ('sidebar' ':' sidebar=[ViewDecl])?
+    ('nav' ':' nav=[ViewDecl])?
+    ('footer' ':' footer=[ViewDecl])?
+  '}';
+
+// Next.js Parity: Views with parameters, layout, loading, and error references
 ViewDecl:
-  'view' name=ShepIdentifier '{' widgets+=WidgetDecl* '}';
+  'view' name=ShepIdentifier ('(' params+=ParamDecl (',' params+=ParamDecl)* ')')? '{'
+    ('layout' ':' layout=[LayoutDecl])?
+    ('loading' ':' loading=[ViewDecl])?
+    ('error' ':' errorHandler=[ActionDecl])?
+    widgets+=WidgetDecl*
+  '}';
 
 WidgetDecl: ListDecl | ButtonDecl;
 ListDecl: 'list' ref=[DataDecl];

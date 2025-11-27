@@ -6,6 +6,16 @@ export default defineConfig({
     include: ['test/**/*.test.ts']
   },
   resolve: {
-    conditions: ['node']
+    conditions: ['node'],
+    extensions: ['.ts', '.js', '.mjs', '.json']
+  },
+  esbuild: {
+    // Handle .js imports resolving to .ts files (ESM TypeScript pattern)
+    tsconfigRaw: {
+      compilerOptions: {
+        module: 'ESNext',
+        moduleResolution: 'bundler'
+      }
+    }
   }
 });

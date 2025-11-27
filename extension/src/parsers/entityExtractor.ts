@@ -2,18 +2,17 @@
  * Entity Extractor for Slice 3
  * 
  * Extracts ShepLang data models from React projects using:
- * 1. Primary path: Prisma schema parsing (pure JS - no WASM required)
+ * 1. Primary path: Prisma schema parsing (uses unified prismaParser.ts)
  * 2. Fallback path: Component state heuristics from React AST
  * 
- * Note: We use a simple regex-based parser instead of @prisma/internals
- * because the WASM files required by @prisma/internals don't bundle
- * correctly with esbuild for VS Code extensions.
+ * Updated: November 26, 2025 - Now uses centralized prismaParser for consistency
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { Entity, EntityExtractionResult, mapPrismaTypeToShepLang } from '../types/Entity';
+import { Entity, EntityField, EntityRelation, EntityExtractionResult, mapPrismaTypeToShepLang } from '../types/Entity';
 import { ReactComponent } from './reactParser';
+import { parsePrismaSchema as parsePrismaSchemaV2, findPrismaSchema, PrismaSchema, PrismaModel, PrismaField } from './prismaParser';
 
 /**
  * Extract entities from a React project
@@ -26,12 +25,14 @@ export async function extractEntities(
   let source: 'prisma' | 'heuristics' | 'combined' = 'heuristics';
   const errors: string[] = [];
 
-  // Primary path: Try Prisma schema parsing
+  // Primary path: Try Prisma schema parsing (using unified parser)
   const prismaSchemaPath = findPrismaSchema(projectRoot);
   
   if (prismaSchemaPath) {
     try {
-      const prismaEntities = await parsePrismaSchema(prismaSchemaPath);
+      // Use the unified Prisma parser from prismaParser.ts
+      const prismaSchema = parsePrismaSchemaV2(prismaSchemaPath);
+      const prismaEntities = convertPrismaSchemaToEntities(prismaSchema);
       entities.push(...prismaEntities);
       source = 'prisma';
     } catch (error) {
@@ -79,10 +80,68 @@ export async function extractEntities(
 }
 
 /**
- * Find Prisma schema file in project
- * Searches multiple common locations
+ * Convert PrismaSchema (from unified parser) to Entity[] (for extractor)
  */
-function findPrismaSchema(projectRoot: string): string | null {
+function convertPrismaSchemaToEntities(schema: PrismaSchema): Entity[] {
+  const entities: Entity[] = [];
+  
+  // Convert models
+  for (const model of schema.models) {
+    const entity: Entity = {
+      name: model.name,
+      fields: [],
+      relations: [],
+      enums: []
+    };
+    
+    for (const field of model.fields) {
+      if (field.isRelation) {
+        // This is a relation field
+        entity.relations.push({
+          name: field.name,
+          target: field.relatedModel || field.type,
+          type: field.isArray ? 'hasMany' : 'belongsTo'
+        });
+      } else {
+        // This is a regular field
+        entity.fields.push({
+          name: field.name,
+          type: mapPrismaTypeToShepLang(field.shepType || field.type),
+          required: !field.isOptional,
+          default: field.defaultValue || field.defaultFunction
+        });
+      }
+    }
+    
+    entities.push(entity);
+  }
+  
+  // Convert enums as virtual entities
+  for (const prismaEnum of schema.enums) {
+    entities.push({
+      name: prismaEnum.name,
+      fields: prismaEnum.values.map(v => ({
+        name: v,
+        type: 'text' as const,
+        required: true
+      })),
+      relations: [],
+      enums: prismaEnum.values,
+      isEnum: true
+    });
+  }
+  
+  return entities;
+}
+
+// Note: findPrismaSchema is now imported from prismaParser.ts
+
+/**
+ * Find Prisma schema file in project (LEGACY - now using prismaParser.findPrismaSchema)
+ * Searches multiple common locations
+ * @deprecated Use findPrismaSchema from prismaParser.ts instead
+ */
+function findPrismaSchemaLegacy(projectRoot: string): string | null {
   // Common Prisma schema locations
   const searchPaths = [
     path.join(projectRoot, 'prisma', 'schema.prisma'),           // Standard: ./prisma/schema.prisma

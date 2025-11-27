@@ -1,11 +1,32 @@
 /**
- * Complete app model derived from ShepLang source
+ * Complete app model derived from ShepLang source (v0.3 - Prisma/Next.js parity)
  */
 export type AppModel = {
   name: string;
+  enums?: EnumDefinition[];
+  layouts?: LayoutDefinition[];
   datas: DataModel[];
   views: ViewModel[];
   actions: ActionModel[];
+};
+
+/**
+ * Enum definition (Prisma parity)
+ */
+export type EnumDefinition = {
+  name: string;
+  values: string[];
+};
+
+/**
+ * Layout definition (Next.js parity)
+ */
+export type LayoutDefinition = {
+  name: string;
+  header?: string;
+  sidebar?: string;
+  nav?: string;
+  footer?: string;
 };
 
 /**
@@ -15,15 +36,35 @@ export type DataModel = {
   name: string;
   fields: FieldDefinition[];
   rules?: string[];
+  modelAttributes?: ModelAttribute[];
 };
 
 /**
- * Field definition in a data model
+ * Model-level attribute (@@unique, @@index)
+ */
+export type ModelAttribute = {
+  type: 'id' | 'unique' | 'index';
+  fields: string[];
+};
+
+/**
+ * Field definition in a data model (Prisma parity)
  */
 export type FieldDefinition = {
   name: string;
   type: string;
-  required?: boolean;
+  isOptional?: boolean;
+  isArray?: boolean;
+  defaultValue?: string;
+  defaultFunction?: string;
+  isId?: boolean;
+  isUnique?: boolean;
+  isUpdatedAt?: boolean;
+  isRelation?: boolean;
+  relatedEntity?: string;
+  onDelete?: string;
+  onUpdate?: string;
+  required?: boolean; // backward compat
 };
 
 /**

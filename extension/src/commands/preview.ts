@@ -38,6 +38,15 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
     // Parse ShepLang file
     console.log('[Preview] Parsing .shep file:', editor.document.uri.fsPath);
     const source = editor.document.getText();
+    console.log('[Preview] Source length:', source.length);
+    console.log('[Preview] Source first 100 chars:', source.substring(0, 100));
+    console.log('[Preview] Is document dirty (unsaved)?', editor.document.isDirty);
+    
+    if (!source || source.trim().length === 0) {
+      vscode.window.showErrorMessage('Cannot preview: File is empty. Please add some ShepLang code first.');
+      return;
+    }
+    
     const parseResult = await parseShep(source, editor.document.uri.fsPath);
     
     // Check for parse errors
@@ -48,7 +57,9 @@ export async function showPreviewCommand(context: vscode.ExtensionContext, runti
         .join('\n');
       
       if (errors) {
-        vscode.window.showErrorMessage(`Failed to open preview: ${errors}`);
+        console.error('[Preview] Parse errors:', errors);
+        vscode.window.showErrorMessage(`Cannot preview: Fix syntax errors first\n\n${errors}`);
+        outputChannel.error('Parse errors:', errors);
         return;
       }
     }

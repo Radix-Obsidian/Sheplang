@@ -1,0 +1,96 @@
+// Messy Full-Stack SaaS Example - with auth (Test 3)
+// Preserves existing syntax style and uses the existing `user` data model
+
+app MyApp {
+
+  // user stuff
+  data user {
+    fields: {
+      n: text
+      e: text
+      pw: text
+    }
+  }
+  
+  // the main thing
+  data thing {
+    fields: {
+      title: text
+      desc: text
+      done: yes/no
+      price: number
+      owner: text
+    }
+  }
+  
+  // idk what to call this
+  data stuff {
+    fields: {
+      x: text
+      y: number
+    }
+  }
+
+  // main page
+  view Home {
+    list thing
+    button "do something" -> DoIt
+    button "other" -> Other
+    button "login" -> Login
+    button "signup" -> Signup
+  }
+  
+  view Page2 {
+    list stuff
+    button "back" -> GoBack
+  }
+
+  // simple login view
+  view Login {
+    // fields: e (email), pw (password)
+    button "submit" -> LoginAction
+    button "back" -> Home
+  }
+
+  // simple signup view
+  view Signup {
+    // fields: n (name), e (email), pw (password)
+    button "submit" -> SignupAction
+    button "back" -> Home
+  }
+
+  // this should add a thing
+  action DoIt(a, b, c) {
+    add thing with title, desc
+    show Home
+  }
+  
+  // need to figure out what this does
+  action Other() {
+    show Page2
+  }
+  
+  // go back to home
+  action GoBack() {
+    show Home
+  }
+
+  // login action - uses existing `user` model fields (e,email; pw,password)
+  action LoginAction(e, pw) {
+    call POST "/api/login" with e, pw
+    // expected: returns session/token
+    show Home
+  }
+
+  // signup action - create a new user using the existing `user` model
+  action SignupAction(n, e, pw) {
+    call POST "/api/users" with n, e, pw
+    load GET "/api/users" into users
+    show Home
+  }
+  
+  // TODO: add more actions
+  // TODO: figure out payments
+  // TODO: add user login
+
+}

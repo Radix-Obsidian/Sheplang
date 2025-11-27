@@ -13,6 +13,7 @@ import { extractEntities } from '../parsers/entityExtractor';
 import { parseReactFile, ReactComponent } from '../parsers/reactParser';
 import { mapProjectToShepLang } from '../parsers/viewMapper';
 import { generateFromPlan } from '../generators/intelligentScaffold';
+import { parseReactProject } from './streamlinedImport';
 // AppModel interface for import
 interface AppModel {
     appName: string;
@@ -23,69 +24,7 @@ interface AppModel {
     todos: any[];
 }
 
-/**
- * Parse all React/TSX files in a project
- */
-function parseReactProject(projectRoot: string): ReactComponent[] {
-    const components: ReactComponent[] = [];
-    
-    const scanDirs = [
-        path.join(projectRoot, 'src'),
-        path.join(projectRoot, 'app'),
-        path.join(projectRoot, 'pages'),
-        path.join(projectRoot, 'components'),
-        path.join(projectRoot, 'src', 'components'),
-        path.join(projectRoot, 'src', 'app'),
-        path.join(projectRoot, 'src', 'pages')
-    ];
-    
-    for (const dir of scanDirs) {
-        if (fs.existsSync(dir)) {
-            const files = findReactFiles(dir);
-            for (const file of files) {
-                try {
-                    const component = parseReactFile(file);
-                    if (component) {
-                        components.push(component);
-                    }
-                } catch (error) {
-                    outputChannel.warn(`Failed to parse ${file}: ${error}`);
-                }
-            }
-        }
-    }
-    
-    return components;
-}
-
-/**
- * Recursively find all React/TSX files in a directory
- */
-function findReactFiles(dir: string): string[] {
-    const files: string[] = [];
-    
-    try {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
-            
-            if (entry.name.startsWith('.') || entry.name === 'node_modules') {
-                continue;
-            }
-            
-            if (entry.isDirectory()) {
-                files.push(...findReactFiles(fullPath));
-            } else if (/\.(tsx?|jsx?)$/.test(entry.name)) {
-                files.push(fullPath);
-            }
-        }
-    } catch (error) {
-        // Ignore permission errors
-    }
-    
-    return files;
-}
+// Using the shared implementation imported at the top of file
 
 export async function importFromGitHubCommand() {
     const gitService = new GitService();
@@ -158,8 +97,8 @@ export async function importFromGitHubCommand() {
 
                 progress.report({ message: '🐑 Parsing React components...', increment: 20 });
 
-                // Parse React components
-                const components = parseReactProject(tempCloneDir);
+                // Parse React components (async call)
+                const components = await parseReactProject(tempCloneDir);
                 outputChannel.info(`Found ${components.length} React components`);
 
                 progress.report({ message: '🔄 Converting to ShepLang...', increment: 20 });

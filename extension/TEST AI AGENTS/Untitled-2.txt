@@ -1,0 +1,67 @@
+// Messy Full-Stack SaaS Example
+// This represents what a non-technical founder might write
+// Has common mistakes, unclear naming, incomplete logic
+
+app MyApp {
+
+  // user stuff
+  data user {
+    fields: {
+      n: text
+      e: text
+      pw: text
+    }
+  }
+  
+  // the main thing
+  data thing {
+    fields: {
+      title: text
+      desc: text
+      done: yes/no
+      price: number
+      owner: text
+    }
+  }
+  
+  // idk what to call this
+  data stuff {
+    fields: {
+      x: text
+      y: number
+    }
+  }
+
+  // main page
+  view Home {
+    list thing
+    button "do something" -> DoIt
+    button "other" -> Other
+  }
+  
+  view Page2 {
+    list stuff
+    button "back" -> GoBack
+  }
+
+  // this should add a thing
+  action DoIt(a, b, c) {
+    add thing with title, desc
+    show Home
+  }
+  
+  // need to figure out what this does
+  action Other() {
+    show Page2
+  }
+  
+  // go back to home
+  action GoBack() {
+    show Home
+  }
+  
+  // TODO: add more actions
+  // TODO: figure out payments
+  // TODO: add user login
+
+}
