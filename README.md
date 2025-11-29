@@ -24,7 +24,7 @@
       <img src="https://img.shields.io/badge/tests-163%2F163%20passing-brightgreen" alt="Tests">
     </a>
     <a href="https://github.com/Radix-Obsidian/Sheplang-BobaScript/releases">
-      <img src="https://img.shields.io/badge/version-1.1.9-blue" alt="Version">
+      <img src="https://img.shields.io/badge/version-1.4.0-blue" alt="Version">
     </a>
     <a href="./LICENSE">
       <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
