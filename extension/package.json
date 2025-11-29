@@ -2,7 +2,7 @@
   "name": "sheplang-vscode",
   "displayName": "ShepVerify - Real-Time Code Verification",
   "description": "Ship verified code across 11 languages. Lighthouse-style scores for TypeScript, Python, React, HTML, CSS & more. Click errors to jump to exact line.",
-  "version": "1.4.0",
+  "version": "1.1.0",
   "publisher": "GoldenSheepAI",
   "icon": "media/icon.png",
   "engines": {
